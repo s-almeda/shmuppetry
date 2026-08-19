@@ -1,13 +1,163 @@
 [
   {
     "id": 1,
-    "_note": "Cutout test, first so it loads immediately. debug:true numbers every vertex of the outline in walk order.",
+    "_note": "Whole face. The landmark contour is the silhouette — no colour segmentation.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "face": {
+        "type": "bodyPart",
+        "fasten": "face",
+        "z": 25
+      },
+      "dialogue": {
+        "type": "text",
+        "speaker": "shm",
+        "text": "test 1. face contour.",
+        "y": 0.8,
+        "width": 0.92
+      }
+    }
+  },
+  {
+    "id": 2,
+    "_note": "Face parts. Eyes and mouth are their own contours, each an ordinary object with its own z.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "opacity": 0,
+        "fit": "box",
+        "size": 0.35
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "test 2. eyes and mouth.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "leye": {
+        "type": "bodyPart",
+        "x": 0.025,
+        "y": 0.1,
+        "z": 26,
+        "scale": 1.4,
+        "rotation": 10,
+        "fasten": "leftEye",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.31,
+          "smooth": 0.6,
+          "crown": 0.22,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.215,
+          "color": "#ffffff"
+        }
+      },
+      "reye": {
+        "type": "bodyPart",
+        "x": -0.025,
+        "y": 0.12,
+        "z": 26,
+        "scale": 1.57,
+        "rotation": -18,
+        "fasten": "rightEye",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0,
+          "range": 0.5,
+          "grow": 0.21,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.195,
+          "color": "#ffffff"
+        }
+      },
+      "mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.2,
+        "z": 17,
+        "scale": 2.24,
+        "fasten": "mouth",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 11,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.095,
+          "color": "#ffffff"
+        }
+      },
+      "bodyPart": {
+        "type": "bodyPart",
+        "x": 0.055,
+        "y": 0,
+        "z": 37,
+        "scale": 0.72,
+        "rotation": -86,
+        "fasten": "leftHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.095,
+          "clean": 0.015,
+          "range": 0.5,
+          "grow": 0.04,
+          "smooth": 0.4,
+          "crown": 0.22,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.035,
+          "color": "#ffffff"
+        }
+      },
+      "face": null
+    }
+  },
+  {
+    "id": 3,
+    "_note": "Hands. Cut by colour segmentation bounded by the landmark skeleton (js/silhouette.js).",
     "objects": {
       "cam": {
         "type": "webcam",
         "x": 0.5,
         "y": 0.5,
         "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "test 3. hand segmentation + traced hull.",
+        "speaker": "shm",
+        "width": 0.92
       },
       "lhand": {
         "type": "bodyPart",
@@ -16,20 +166,19 @@
         "z": 30,
         "fasten": "leftHand",
         "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
+          "bound": 0.14,
+          "skeleton": 0.035,
           "clean": 0.015,
-          "range": 1,
-          "grow": 0.08,
-          "smooth": 0.55,
-          "points": 45,
+          "range": 0.7,
+          "grow": 0.085,
+          "smooth": 0.7,
+          "points": 31,
           "join": "miter"
         },
         "outline": {
-          "width": 0.045,
+          "width": 0.05,
           "color": "#ffffff"
-        },
-        "debug": true
+        }
       },
       "rhand": {
         "type": "bodyPart",
@@ -50,64 +199,168 @@
         "outline": {
           "width": 0.045,
           "color": "#ffffff"
-        },
-        "debug": true
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "uwu",
-        "speaker": "shm",
-        "width": 0.92
-      }
-    }
-  },
-  {
-    "id": 2,
-    "_note": "Baseline: webcam + dialogue, cutouts removed.",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "fit": "cover",
-        "z": -100
-      },
-      "dialogue": {
-        "type": "text",
-        "speaker": "shm",
-        "text": "scene 1. webcam + dialogue.",
-        "y": 0.8,
-        "width": 0.92
-      },
-      "lhand": null,
-      "rhand": null
-    }
-  },
-  {
-    "id": 3,
-    "_note": "Sparse scene. Only `line.text` is declared; `cam` is inherited untouched.",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "scene 2. only the text changed.",
-        "speaker": "shm",
-        "width": 0.92
+        }
       }
     }
   },
   {
     "id": 4,
-    "_note": "Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
+    "_note": "TEST: everything at once, webcam removed — face, eyes, mouth and hands as separate cutouts on a black stage.",
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "HELLO THERE!",
+        "speaker": "SOME GUY",
+        "width": 0.92
+      },
+      "lhand": {
+        "type": "bodyPart",
+        "x": -0.155,
+        "y": 0,
+        "z": 30,
+        "scale": 1.67,
+        "rotation": -82,
+        "fasten": "leftHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0,
+          "range": 0.7,
+          "grow": 0.056,
+          "smooth": 0.65,
+          "points": 44,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "rhand": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "rotation": 60,
+        "fasten": "rightHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "face": {
+        "type": "bodyPart",
+        "x": -0.015,
+        "y": 0.09,
+        "z": 25,
+        "scale": 3,
+        "fasten": "rightEye",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "leye": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 26,
+        "scale": 2.55,
+        "fasten": "leftEye",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.25,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 6,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "reye": {
+        "type": "bodyPart",
+        "x": 0.04,
+        "y": 0,
+        "z": 41,
+        "scale": 2.44,
+        "rotation": 3,
+        "fasten": "rightEye",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 3.05,
+          "grow": 0.1,
+          "smooth": 0.3,
+          "crown": 0.16,
+          "points": 6,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.165,
+        "z": 21,
+        "scale": 3,
+        "fasten": "mouth",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 5,
+    "_note": "Test scenes end here; cutouts cleared. Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
     "objects": {
       "cam": {
+        "type": "webcam",
         "fit": "box",
         "size": 0.55,
         "x": 0.32,
@@ -128,11 +381,17 @@
       },
       "dialogue": {
         "text": "scene 3. cam patched to a box. star added at RIGHT + 0.02."
-      }
+      },
+      "face": null,
+      "leye": null,
+      "reye": null,
+      "mouth": null,
+      "lhand": null,
+      "rhand": null
     }
   },
   {
-    "id": 5,
+    "id": 6,
     "_note": "z ordering: sign 20 over star 10 over cam -100. One sorted pass.",
     "objects": {
       "sign": {
@@ -150,7 +409,7 @@
     }
   },
   {
-    "id": 6,
+    "id": 7,
     "_note": "Removal. `star: null` takes it off stage; everything else persists.",
     "objects": {
       "star": null,
@@ -160,7 +419,7 @@
     }
   },
   {
-    "id": 7,
+    "id": 8,
     "_note": "Two TextBoxes at once, different styles. `aside` has no speaker, so no tab.",
     "objects": {
       "dialogue": {
@@ -181,11 +440,12 @@
     }
   },
   {
-    "id": 8,
+    "id": 9,
     "_note": "Fasteners. x/y are offsets from the pin; size multiplies hand span.",
     "objects": {
       "aside": null,
       "cam": {
+        "type": "webcam",
         "fit": "cover",
         "x": 0.5,
         "y": 0.5,
@@ -218,7 +478,7 @@
     }
   },
   {
-    "id": 9,
+    "id": 10,
     "_note": "BodyParts. Hands cut from the feed by stroking the landmark skeleton, dilated, white border, drop shadow.",
     "objects": {
       "star": null,
@@ -239,7 +499,7 @@
     }
   },
   {
-    "id": 10,
+    "id": 11,
     "_note": "Same cutouts with the webcam removed. Only the hands and pinned art remain.",
     "objects": {
       "cam": null,
@@ -258,7 +518,7 @@
     }
   },
   {
-    "id": 11,
+    "id": 12,
     "_note": "Scale and rotation on a BodyPart; cutouts are ordinary objects.",
     "objects": {
       "star": null,
@@ -276,7 +536,7 @@
     }
   },
   {
-    "id": 12,
+    "id": 13,
     "_note": "hoverFade on a caption over the full-bleed webcam.",
     "objects": {
       "lhand": null,
@@ -301,7 +561,7 @@
     }
   },
   {
-    "id": 13,
+    "id": 14,
     "reset": true,
     "_note": "reset: true. Starts from an empty stage instead of inheriting.",
     "objects": {

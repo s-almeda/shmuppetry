@@ -221,3 +221,18 @@ body.editing .textbox-text,
 body.editing .textbox-name { cursor: text; }
 body.editing .textbox-text:focus,
 body.editing .textbox-name:focus { outline: 1px dotted rgba(0, 92, 167, 0.7); outline-offset: 2px; }
+
+/* Object list: add / remove */
+.obj-row .remove {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  line-height: 1.1;
+  color: #a33;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  visibility: hidden;
+}
+.obj-row:hover .remove { visibility: visible; }
+.obj-row .remove:hover { background: rgba(190, 60, 60, 0.15); }
+.add-row select { font-size: 10px; }

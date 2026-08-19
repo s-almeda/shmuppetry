@@ -137,6 +137,18 @@ export class Panel {
         <div class="group">
           <b>on stage</b>
           <div id="p-objects"></div>
+          <div class="panel-row add-row">
+            <select id="p-add-type">
+              <option value="">+ add…</option>
+              <option value="face">face</option>
+              <option value="eye">eye</option>
+              <option value="mouth">mouth</option>
+              <option value="hand">hand</option>
+              <option value="image">image</option>
+              <option value="text">text</option>
+              <option value="webcam">webcam</option>
+            </select>
+          </div>
         </div>
         <div class="group" id="p-inspector-section" hidden>
           <b id="p-inspector-title">object</b>
@@ -163,6 +175,16 @@ export class Panel {
     this.$('#p-copy').addEventListener('click', () => this.edit.copyToClipboard());
     this.$('#p-prev').addEventListener('click', () => this.player.prev());
     this.$('#p-next').addEventListener('click', () => this.player.next());
+    this.$('#p-add-type').addEventListener('change', (e) => {
+      const type = e.target.value;
+      e.target.value = '';
+      if (!type) return;
+      const obj = this.player.addObject(type);
+      if (!obj) return;
+      this.edit.markDirty();
+      this.renderObjectList();
+      this.select(obj.id);          // straight into the inspector, ready to adjust
+    });
     this.$('#p-num').addEventListener('change', (e) => {
       this.player.goto(parseInt(e.target.value, 10) - 1);
     });
@@ -200,12 +222,19 @@ export class Panel {
       row.innerHTML = `
         <input type="checkbox" ${obj.visible === false ? '' : 'checked'} title="visible" />
         <span class="name">${obj.id}</span>
-        <span class="type">${obj.type}</span>`;
+        <span class="type">${obj.type}</span>
+        <button class="remove" type="button" title="remove from this scene">−</button>`;
       row.querySelector('input').addEventListener('change', (e) => {
         obj.visible = e.target.checked;
         this.edit.markDirty();
       });
       row.querySelector('.name').addEventListener('click', () => this.select(obj.id));
+      row.querySelector('.remove').addEventListener('click', () => {
+        this.player.removeObject(obj.id);
+        if (this.selectedId === obj.id) this.select(null);
+        this.edit.markDirty();
+        this.renderObjectList();
+      });
       host.appendChild(row);
     }
   }

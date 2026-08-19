@@ -6,9 +6,10 @@
   "aspect": null,
   "mirror": true,
   "capabilities": [
-    "hands"
+    "hands",
+    "face"
   ],
-  "_paper": "Show-wide paper-cutout defaults (§2.3). Cut widths are MEASURED from the pixels (js/silhouette.js); maxWidth is the clamp that stops a ray leaking into the background. Per-object values override and are what \"save scene\" writes.",
+  "_paper": "Show-wide paper-cutout defaults (§2.3). paper.cut drives HANDS (colour segmentation, js/silhouette.js). paper.face drives FACE PARTS (landmark contour — bound/clean/skeleton/range are inert there), with paper.eye and paper.mouth overriding it per part. Per-object values override everything and are what \"save scene\" writes.",
   "paper": {
     "cut": {
       "bound": 0.11,
@@ -29,6 +30,26 @@
       "dy": 0.012,
       "blur": 0.02,
       "color": "rgba(0,0,0,0.45)"
+    },
+    "face": {
+      "grow": 0.02,
+      "points": 13,
+      "smooth": 0.55,
+      "crown": 0.22,
+      "join": "miter"
+    },
+    "eye": {
+      "grow": 0.8,
+      "points": 7,
+      "outline": {
+        "width": 0.14
+      }
+    },
+    "mouth": {
+      "points": 10,
+      "outline": {
+        "width": 0.08
+      }
     }
   },
   "panelTab": "control panel",

@@ -269,7 +269,7 @@ function trace(mask, w, h) {
 
 // Resample a closed contour to exactly `n` points, spaced evenly along its length. Fixed
 // count and stable order are what make the result smoothable frame to frame.
-function resample(contour, n) {
+export function resample(contour, n) {
   const m = contour.length;
   const cum = [0];
   for (let i = 1; i <= m; i++) {

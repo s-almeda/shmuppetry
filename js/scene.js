@@ -111,6 +111,22 @@ export class ObjectPool {
     return this.objects;
   }
 
+  // Add a new object, with an id unique on this stage.
+  add(spec) {
+    let id = spec.id ?? spec.type;
+    for (let i = 2; this.live.has(id); i++) id = `${spec.type}${i}`;
+    const obj = this.make({ ...spec, id });
+    if (obj) this.live.set(id, obj);
+    return obj;
+  }
+
+  remove(id) {
+    const obj = this.live.get(id);
+    if (!obj) return false;
+    try { obj.dispose(); } catch (err) { console.error(`[scene] disposing ${id} threw`, err); }
+    return this.live.delete(id);
+  }
+
   clear() {
     for (const obj of this.live.values()) { try { obj.dispose(); } catch { /* ignore */ } }
     this.live.clear();
@@ -125,6 +141,23 @@ export class ObjectPool {
     return out;
   }
 }
+
+// What the panel's "+ add" menu can create. Keyed by menu entry rather than by object
+// type, so a cutout is offered as "face"/"eye"/"mouth"/"hand" — each a bodyPart already
+// fastened to the right part, at a z that stacks sensibly, and named for what it is.
+// Picking "bodyPart" and then hunting for the fastener is a worse thing to ask of anyone.
+//
+// `alternates` lets one menu entry fill several slots: adding a hand takes the right hand
+// first, then the left; adding an eye takes whichever is free.
+const NEW_OBJECT = {
+  text: { type: 'text', text: 'new text', y: 0.8 },
+  image: { type: 'image', size: 0.4 },
+  webcam: { type: 'webcam', fit: 'box', size: 0.5 },
+  face: { type: 'bodyPart', fasten: 'face', z: 25 },
+  eye: { type: 'bodyPart', z: 26, alternates: ['leftEye', 'rightEye'] },
+  mouth: { type: 'bodyPart', fasten: 'mouth', z: 26 },
+  hand: { type: 'bodyPart', z: 30, alternates: ['rightHand', 'leftHand'] },
+};
 
 // ── Player ────────────────────────────────────────────────────────────────
 // Walks the script scene by scene, following the stage directions (§2.5).
@@ -183,9 +216,35 @@ export class Player {
   // Apply live edits back into the authored script. The scene becomes fully resolved
   // and absolute (§2.5) — sparse authoring is preserved in the file until you save
   // through the editor, at which point that scene becomes self-contained.
+  // `key` is a menu entry from NEW_OBJECT, not a bare type.
+  addObject(key) {
+    const { alternates, ...spec } = NEW_OBJECT[key] ?? { type: key };
+    if (alternates) {
+      // Take the first slot not already on stage, so adding two hands gives you one of
+      // each rather than two of the same.
+      const taken = new Set(this.pool.objects.map((o) => o.fasten));
+      spec.fasten = alternates.find((a) => !taken.has(a)) ?? alternates[0];
+    }
+    // Name it for what it is — `leftEye`, not `bodyPart3`.
+    const obj = this.pool.add({ id: spec.fasten ?? spec.type, ...spec });
+    if (obj) this.renderer.setObjects(this.pool.objects);
+    return obj;
+  }
+
+  removeObject(id) {
+    const ok = this.pool.remove(id);
+    if (ok) this.renderer.setObjects(this.pool.objects);
+    return ok;
+  }
+
   captureCurrentScene() {
     if (this.index < 0) return null;
     const objects = this.pool.serialize();
+
+    // A scene inherits the previous scene's stage, so an object that is simply ABSENT
+    // here would come back on reload. Removal has to be written as an explicit null.
+    const before = this.index > 0 ? this.resolved[this.index - 1].objects : {};
+    for (const id of Object.keys(before)) if (!(id in objects)) objects[id] = null;
     const existing = this.script[this.index] ?? {};
     const scene = { ...existing, objects };
     if (existing.id != null) scene.id = existing.id;

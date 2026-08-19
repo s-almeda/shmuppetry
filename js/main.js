@@ -121,7 +121,9 @@ async function main() {
   // fastened objects appear when tracking lands (§9.5, §2.6).
   tracking = new Tracking(stage, camera);
   const silhouette = new Silhouette(camera);
-  if (config.capabilities?.includes('hands')) tracking.load();
+  for (const kind of ['hands', 'face']) {
+    if (config.capabilities?.includes(kind)) tracking.load(kind);
+  }
   renderer.beforeFrame = (now) => tracking.update(now);
 
   // Dependencies passed explicitly — NOT a grab-bag that modules mutate to hand
