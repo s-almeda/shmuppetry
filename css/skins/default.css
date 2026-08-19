@@ -1,0 +1,92 @@
+/* ── skin: default (xp.css) ────────────────────────────────────────────────
+   How the SHOW looks. A show config can swap this file for its own (§2.6) without
+   touching base.css or any JS — which is the point of keeping TextBox in the DOM.
+
+   This is 2.5.0's dialogue treatment: the speaker name is an xp.css tab, the line is
+   its tabpanel, translucent beige over the picture, with a blinking caret while the
+   typewriter runs. */
+
+.textbox {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  opacity: var(--o, 1);
+}
+
+/* Speaker name — an xp.css tab sitting on top of the panel. */
+.textbox .textbox-tabs {
+  padding-left: 3px;
+  margin: 0 0 -2px 0;
+  display: block;
+}
+.textbox .textbox-name {
+  font-size: 0.7em;
+  padding: 0.2em 0.7em;
+  cursor: default;
+}
+
+.textbox .textbox-text {
+  background: rgba(236, 233, 216, 0.85);
+  border: 1px solid #888;
+  padding: 0.55em 0.7em;
+  /* 1em, so it inherits the stage-relative size set on .textbox. A fixed px size here
+     would override that and the type would stop scaling with the window. */
+  font-size: 1em;
+  line-height: 1.25;
+  display: block;
+  white-space: pre-wrap;
+  margin-bottom: 0;
+}
+
+/* The main dialogue box holds three lines from the start, so it does not grow line by
+   line as the typewriter runs. Other styles stay free to fit their content. */
+.textbox-speech .textbox-text { min-height: calc(4 * 1.25em + 1.1em); }
+
+/* Blinking caret during the typewriter, and only during it — a finished line sits still. */
+.textbox .textbox-text::after {
+  content: '|';
+  display: inline;
+  font-weight: 100;
+  margin-left: 1px;
+  opacity: 0;
+}
+.textbox.typing .textbox-text::after {
+  opacity: 1;
+  animation: blink 0.6s step-end infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* ── styles ─────────────────────────────────────────────────────────────── */
+
+/* `speech` is the default and needs nothing beyond the above. */
+
+.textbox-thought .textbox-text {
+  border-radius: 42% 58% 46% 54% / 52% 44% 56% 48%;
+  padding: 1.2em 1.5em;
+  font-style: italic;
+}
+
+.textbox-caption .textbox-text {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  font-size: 0.72em;
+  text-align: center;
+  padding: 0.4em 0.8em;
+}
+.textbox-caption .textbox-tabs { display: none !important; }
+
+.textbox-plain .textbox-text {
+  background: none;
+  border: 0;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  text-align: center;
+}
+.textbox-plain .textbox-tabs { display: none !important; }
+
+/* Hover-fade: lets a full-screen slide actually be full-screen, while keeping the line
+   one mouse-move away. In 2.5.0 this was a global body class; here it is a per-object
+   property, so one caption can fade while another stays put. */
+.textbox-hoverfade { opacity: calc(var(--o, 1) * 0.12); transition: opacity 0.4s ease; }
+.textbox-hoverfade:hover, .textbox-hoverfade:focus-within { opacity: var(--o, 1); }

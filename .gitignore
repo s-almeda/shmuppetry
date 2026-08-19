@@ -1,0 +1,20 @@
+# The 2.5.0 rig, kept on disk as a migration reference only. Not part of 3.0.
+reference/
+
+# Show assets live on disk, not in git — shows are performed locally. The exceptions
+# are the small demo set the public page needs, and the manifest that indexes it.
+#
+# The committed manifest lists ONLY the demo assets. Locally, the dev server serves
+# assets/manifest.json dynamically from disk instead, so it lists everything you
+# actually have — the client requests the same path either way and cannot tell which
+# it got. Regenerate the committed one with `node scripts/build-manifests.js`.
+assets/*
+!assets/demo/
+!assets/manifest.json
+
+# Baked at build time by scripts/build-manifests.js for static hosting.
+manifests/
+
+node_modules/
+.DS_Store
+*.log

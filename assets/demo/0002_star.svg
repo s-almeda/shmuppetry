@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- White polygonal border + drop shadow, the paper-cutout language of §2.3 done
+       the cheap way: a stroked-and-filled path, which is the same trick the canvas
+       cutouts will use (stroke at r + border, fill at r). -->
+  <g transform="translate(100,100)">
+    <path d="M0,-84 L20,-26 L82,-26 L32,10 L51,68 L0,32 L-51,68 L-32,10 L-82,-26 L-20,-26 Z"
+          fill="#f2c14e" stroke="#ffffff" stroke-width="11" stroke-linejoin="round"/>
+  </g>
+</svg>

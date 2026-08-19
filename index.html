@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>shmuppetry</title>
+  <!-- The default skin is xp.css, as in 2.5.0. A show config can swap the skin
+       stylesheet below for its own (§2.6); this one stays. -->
+  <link rel="stylesheet" href="https://unpkg.com/xp.css" />
+  <!-- Relative paths, everywhere, without exception. GitHub Pages serves from
+       /<repo>/, so a leading slash 404s there and nowhere else — it works perfectly
+       right up until deploy. 2.5.0 hardcoded /puppets/… throughout. -->
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/skins/default.css" id="skin" />
+</head>
+<body class="show-mode">
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="window main-window">
+    <div class="title-bar">
+      <div class="title-bar-text">
+        <span id="titleMain">shmuppetry rig 3.0</span>
+        <!-- <span id="titleSub">a paper puppet theatre</span> -->
+      </div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" type="button"></button>
+        <button aria-label="Maximize" type="button"></button>
+        <button aria-label="Close" type="button"></button>
+      </div>
+    </div>
+
+    <div class="window-body">
+      <!-- One canvas + one DOM layer, sharing one rect (§2.1). Replaces 2.5.0's
+           <video> + faceCanvas + handCanvas + slideCanvas stack. -->
+      <div id="stage">
+        <canvas id="stage-canvas"></canvas>
+        <div id="dom-layer"></div>
+      </div>
+
+      <div id="dirty-banner" hidden>unsaved changes</div>
+
+      <div id="panel"></div>
+
+      <!-- Pre-camera state -->
+      <div id="boot">
+        <div id="boot-loading">
+          <progress id="boot-bar" max="100" value="0"></progress>
+          <div id="boot-stage">puppets are preparing; please wait warmly.</div>
+        </div>
+        <button id="start-btn" type="button" hidden>it's showtime!</button>
+        <p id="boot-msg"></p>
+      </div>
+    </div>
+
+    <!-- Contextual state, out of the way of the composition. Runtime is time since
+         showtime, which is the number you actually want mid-performance. -->
+    <div class="status-bar">
+      <p class="status-bar-field" id="status-date"></p>
+      <p class="status-bar-field" id="status-runtime">—</p>
+      <p class="status-bar-field" id="status-camera">webcam off</p>
+      <p class="status-bar-field" id="status-mic">mic off</p>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

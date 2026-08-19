@@ -1,0 +1,223 @@
+/* ── shmuppetry 3.0 — base ──────────────────────────────────────────────────
+   Adapted from 2.5.0's css/puppet_rig.css. Values that were already tuned there are
+   kept as-is; only the selectors changed (#webcam → #stage, #analysisPanel → #panel,
+   #startScreen → #boot, #unsavedHint → #dirty-banner).
+
+   How the SHOW looks — dialogue boxes, captions — lives in css/skins/ (§2.6). */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+}
+
+/* Full-bleed background behind the window (blurhash lands here later). */
+#bgCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  transform: scale(1.05);
+  image-rendering: pixelated;
+  transition: opacity 1.2s ease;
+  opacity: 0;
+}
+#bgCanvas.visible { opacity: 1; }
+
+.main-window {
+  position: relative;
+  z-index: 10;
+  width: min(98vw, 1200px);
+  height: min(96vh, 900px);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-window .title-bar {
+  height: 44px;
+  padding-left: 15px;
+  padding-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.title-bar-text { display: flex; flex-direction: column; gap: 1px; }
+#titleMain { font-size: 15px; font-style: italic; font-weight: bold; line-height: 1.2; }
+#titleSub { font-size: 11px; opacity: 0.75; letter-spacing: 0.03em; }
+
+/* As in 2.5.0: only these properties are overridden. xp.css's own `margin: 8px` on
+   .window-body is left alone — that margin is what insets the body from the window
+   frame, and killing it is what made the picture butt against the blue border. */
+.window-body {
+  flex: 1;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ede9d8;
+  position: relative;
+  min-height: 0;
+}
+
+.main-window .status-bar { margin: 0; flex: 0 0 auto;  }
+.main-window .status-bar-field { font-size: 11px; padding: 0.25ch 1ch; }
+
+/* ── Stage — where #webcam used to be ────────────────────────────────────── */
+
+#stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+  z-index: 1;
+}
+#stage-canvas { position: absolute; inset: 0; display: block; }
+
+/* Everything DOM-rendered sits above the single canvas (see js/objects/textBox.js). */
+#dom-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+#dom-layer > * { pointer-events: auto; }
+
+/* ── Pre-camera state — was #startScreen ─────────────────────────────────── */
+
+#boot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ede9d8;
+  z-index: 20;
+  transition: opacity 0.6s ease;
+}
+#boot.hidden { opacity: 0; pointer-events: none; }
+
+#boot-loading { text-align: center; width: 80%; max-width: 380px; }
+#start-btn { font-size: 24px; padding: 12px 16px; }
+#start-btn[hidden] { display: none; }
+#boot-loading progress { width: 100%; }
+#boot-stage { margin-top: 8px; font-size: 13px; color: #4a4a3f; }
+#boot-msg { margin: 10px 0 0; font-size: 12px; color: #7a7a6a; min-height: 1em; }
+
+/* ── Unsaved-changes hint — was #unsavedHint ─────────────────────────────── */
+
+#dirty-banner {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  z-index: 16;
+  background: rgba(190, 60, 60, 0.8);
+  padding: 4px 14px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ── Control panel — was #analysisPanel ──────────────────────────────────── */
+/* Very transparent by default, revealed on hover. Narrow and tall: it must never
+   crowd the picture horizontally. */
+
+#panel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 20%;
+  min-width: 170px;
+  max-width: 240px;
+  height: calc(70% - 14px);   /* stops above the dialogue box, as in 2.5.0 */
+  z-index: 12;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The tab stays legible so there is something to aim at; the body is the part that
+   ghosts. Purely hover — :focus-within only keeps it up while you are typing in it. */
+#panel menu[role="tablist"] { opacity: 0.45; transition: opacity 0.2s ease; }
+#panel > fieldset { opacity: 0.12; transition: opacity 0.2s ease; }
+#panel:hover menu[role="tablist"] { opacity: 1; }
+#panel:hover > fieldset,
+#panel:focus-within > fieldset { opacity: 0.95; }
+
+/* Title tab, right-aligned so it sits in the window's corner. */
+#panel menu[role="tablist"] {
+  padding: 0 3px 0 0;
+  margin: 0 0 -2px 0;
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+#panel menu[role="tablist"] button { font-size: 11px; padding: 3px 10px; cursor: default; }
+
+/* Only this scrolls, and only vertically. A control that is too wide must WRAP, never
+   push the panel sideways — that is the failure the 2.5.0 analysis panel kept hitting. */
+#panel > fieldset {
+  background: rgba(237, 233, 216, 0.85);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 12px 8px 8px;   /* right padding = breathing room from the scrollbar */
+  margin: 0;
+}
+#panel * { max-width: 100%; box-sizing: border-box; }
+
+#panel .group { border-top: 1px solid #c4bfad; padding: 6px 0 3px; min-width: 0; }
+#panel .group:first-of-type { border-top: 0; padding-top: 0; }
+#panel .group > b { display: block; margin-bottom: 3px; }
+#panel button { font-size: 11px; max-width: 100%; white-space: normal; }
+
+.scene-nav { display: flex; align-items: center; gap: 3px; }
+.scene-nav button { min-width: 20px; padding: 1px 5px; }
+.scene-nav input[type="text"] { width: 32px; text-align: center; padding: 1px 2px; flex: 0 0 auto; }
+.scene-nav .count { color: #666; }
+
+/* flex-wrap is the safety net: a control that cannot shrink far enough drops onto its
+   own line instead of overflowing the panel. */
+.panel-row { display: flex; align-items: center; gap: 4px; margin: 2px 0; min-width: 0; flex-wrap: wrap; }
+.panel-row label { flex: 0 0 46px; min-width: 0; color: #444; overflow: hidden; text-overflow: ellipsis; }
+.panel-row input[type="range"] { flex: 1 1 50px; min-width: 0; }
+.panel-row input[type="text"],
+.panel-row input[type="number"],
+.panel-row select { flex: 1 1 60px; min-width: 0; }
+/* Text areas always get their own full-width line. */
+.panel-row textarea { flex: 1 1 100%; min-width: 0; resize: vertical; min-height: 44px; line-height: 1.3; }
+.panel-row .val { flex: 0 0 30px; min-width: 0; text-align: right; color: #666; font-variant-numeric: tabular-nums; }
+
+.obj-row { display: flex; align-items: center; gap: 4px; line-height: 1.6; }
+.obj-row input[type="checkbox"] { margin: 0; }
+.obj-row .name { flex: 1; cursor: default; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.obj-row.selected .name { font-weight: bold; color: #005ca7; }
+.obj-row .type { color: #918d80; }
+
+.hint { color: #777; line-height: 1.35; }
+
+/* ── Mode visibility, carried over from 2.5.0 ────────────────────────────── */
+body.show-mode .freeplay-only { display: none !important; }
+body.freeplay-mode .show-only { display: none !important; }
+body.freeplay-mode #panel > fieldset { opacity: 0.4; }
+
+[hidden] { display: none !important; }
+
+/* In-place text editing (edit mode) — show the affordance, as 2.5.0 did. */
+body.editing .textbox-text,
+body.editing .textbox-name { cursor: text; }
+body.editing .textbox-text:focus,
+body.editing .textbox-name:focus { outline: 1px dotted rgba(0, 92, 167, 0.7); outline-offset: 2px; }

@@ -1,0 +1,36 @@
+{
+  "_aspect": "null fills the window body, as 2.5.0 did. Pin a number (16/9 = 1.778) only if a show needs a guaranteed frame shape.",
+  "_note": "Per-show config (§2.6). A show declares what it needs, so a show without face recognition never loads it. This is the one structural idea from 2.5.0 that worked well and carries over directly. Step 1 registers no capabilities at all, so this list is empty and the page loads zero models.",
+  "title": "demo",
+  "skin": "default",
+  "aspect": null,
+  "mirror": true,
+  "capabilities": [
+    "hands"
+  ],
+  "_paper": "Show-wide paper-cutout defaults (§2.3). Cut widths are MEASURED from the pixels (js/silhouette.js); maxWidth is the clamp that stops a ray leaking into the background. Per-object values override and are what \"save scene\" writes.",
+  "paper": {
+    "cut": {
+      "bound": 0.11,
+      "skeleton": 0.01,
+      "clean": 0.015,
+      "range": 1,
+      "grow": 0.08,
+      "smooth": 0.55,
+      "points": 45,
+      "join": "miter"
+    },
+    "outline": {
+      "width": 0.045,
+      "color": "#ffffff"
+    },
+    "shadow": {
+      "dx": 0,
+      "dy": 0.012,
+      "blur": 0.02,
+      "color": "rgba(0,0,0,0.45)"
+    }
+  },
+  "panelTab": "control panel",
+  "_panelTab": "Label for the panel’s title tab. Omit it entirely on a performance rig — you do not need to be told it is a control panel."
+}

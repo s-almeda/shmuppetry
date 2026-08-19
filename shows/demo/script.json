@@ -1,0 +1,319 @@
+[
+  {
+    "id": 1,
+    "_note": "Cutout test, first so it loads immediately. debug:true numbers every vertex of the outline in walk order.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100
+      },
+      "lhand": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "fasten": "leftHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        },
+        "debug": true
+      },
+      "rhand": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "fasten": "rightHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        },
+        "debug": true
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "uwu",
+        "speaker": "shm",
+        "width": 0.92
+      }
+    }
+  },
+  {
+    "id": 2,
+    "_note": "Baseline: webcam + dialogue, cutouts removed.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "speaker": "shm",
+        "text": "scene 1. webcam + dialogue.",
+        "y": 0.8,
+        "width": 0.92
+      },
+      "lhand": null,
+      "rhand": null
+    }
+  },
+  {
+    "id": 3,
+    "_note": "Sparse scene. Only `line.text` is declared; `cam` is inherited untouched.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "scene 2. only the text changed.",
+        "speaker": "shm",
+        "width": 0.92
+      }
+    }
+  },
+  {
+    "id": 4,
+    "_note": "Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
+    "objects": {
+      "cam": {
+        "fit": "box",
+        "size": 0.55,
+        "x": 0.32,
+        "y": 0.42,
+        "radius": 0.03,
+        "rotation": -3
+      },
+      "star": {
+        "type": "image",
+        "src": 2,
+        "at": {
+          "at": "RIGHT",
+          "dx": 0.02
+        },
+        "y": 0.4,
+        "size": 0.3,
+        "z": 10
+      },
+      "dialogue": {
+        "text": "scene 3. cam patched to a box. star added at RIGHT + 0.02."
+      }
+    }
+  },
+  {
+    "id": 5,
+    "_note": "z ordering: sign 20 over star 10 over cam -100. One sorted pass.",
+    "objects": {
+      "sign": {
+        "type": "image",
+        "src": 3,
+        "x": 0.66,
+        "y": 0.58,
+        "size": 0.34,
+        "z": 20,
+        "rotation": 6
+      },
+      "dialogue": {
+        "text": "scene 4. sign z=20, star z=10, cam z=-100."
+      }
+    }
+  },
+  {
+    "id": 6,
+    "_note": "Removal. `star: null` takes it off stage; everything else persists.",
+    "objects": {
+      "star": null,
+      "dialogue": {
+        "text": "scene 5. star removed with null."
+      }
+    }
+  },
+  {
+    "id": 7,
+    "_note": "Two TextBoxes at once, different styles. `aside` has no speaker, so no tab.",
+    "objects": {
+      "dialogue": {
+        "text": "scene 6. two text boxes.",
+        "x": 0.33,
+        "y": 0.8,
+        "width": 0.92
+      },
+      "aside": {
+        "type": "text",
+        "style": "thought",
+        "text": "thought style, slow speed.",
+        "x": 0.76,
+        "y": 0.22,
+        "width": 0.34,
+        "speed": "slow"
+      }
+    }
+  },
+  {
+    "id": 8,
+    "_note": "Fasteners. x/y are offsets from the pin; size multiplies hand span.",
+    "objects": {
+      "aside": null,
+      "cam": {
+        "fit": "cover",
+        "x": 0.5,
+        "y": 0.5,
+        "rotation": 0,
+        "radius": 0
+      },
+      "star": {
+        "type": "image",
+        "src": 2,
+        "fasten": "rightHand",
+        "x": 0,
+        "y": 0,
+        "size": 1.2,
+        "z": 10
+      },
+      "sign": {
+        "fasten": "leftHand",
+        "x": 0,
+        "y": -0.04,
+        "size": 1.4,
+        "z": 10,
+        "rotation": 0
+      },
+      "dialogue": {
+        "text": "scene 7. star pinned to right hand, sign to left. hold both up.",
+        "x": 0.5,
+        "y": 0.8,
+        "width": 0.92
+      }
+    }
+  },
+  {
+    "id": 9,
+    "_note": "BodyParts. Hands cut from the feed by stroking the landmark skeleton, dilated, white border, drop shadow.",
+    "objects": {
+      "star": null,
+      "sign": null,
+      "lhand": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "z": 30
+      },
+      "rhand": {
+        "type": "bodyPart",
+        "fasten": "rightHand",
+        "z": 30
+      },
+      "dialogue": {
+        "text": "scene 8. hands cut out, drawn over the feed."
+      }
+    }
+  },
+  {
+    "id": 10,
+    "_note": "Same cutouts with the webcam removed. Only the hands and pinned art remain.",
+    "objects": {
+      "cam": null,
+      "star": {
+        "type": "image",
+        "src": 2,
+        "fasten": "rightHand",
+        "x": 0,
+        "y": -0.12,
+        "size": 0.9,
+        "z": 40
+      },
+      "dialogue": {
+        "text": "scene 9. same hands, no webcam. black stage."
+      }
+    }
+  },
+  {
+    "id": 11,
+    "_note": "Scale and rotation on a BodyPart; cutouts are ordinary objects.",
+    "objects": {
+      "star": null,
+      "lhand": {
+        "scale": 1.6,
+        "rotation": -12
+      },
+      "rhand": {
+        "scale": 1.6,
+        "rotation": 12
+      },
+      "dialogue": {
+        "text": "scene 10. cutouts scaled 1.6x and rotated."
+      }
+    }
+  },
+  {
+    "id": 12,
+    "_note": "hoverFade on a caption over the full-bleed webcam.",
+    "objects": {
+      "lhand": null,
+      "rhand": null,
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "x": 0.5,
+        "y": 0.5,
+        "rotation": 0,
+        "z": -100
+      },
+      "dialogue": {
+        "style": "caption",
+        "speaker": null,
+        "text": "scene 11. caption with hoverFade. move the mouse off it.",
+        "x": 0.5,
+        "y": 0.88,
+        "width": 0.66,
+        "hoverFade": true
+      }
+    }
+  },
+  {
+    "id": 13,
+    "reset": true,
+    "_note": "reset: true. Starts from an empty stage instead of inheriting.",
+    "objects": {
+      "end": {
+        "type": "text",
+        "style": "plain",
+        "text": "scene 12. reset — nothing inherited.",
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.6,
+        "speed": "medium"
+      }
+    }
+  }
+]

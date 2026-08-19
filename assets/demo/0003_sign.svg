@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" width="320" height="260">
+  <rect x="146" y="90" width="16" height="164" fill="#8a6a2f" stroke="#ffffff" stroke-width="6" stroke-linejoin="round"/>
+  <rect x="24" y="16" width="272" height="104" rx="4" fill="#fdfaf2" stroke="#ffffff" stroke-width="10" stroke-linejoin="round"/>
+  <text x="160" y="82" font-family="Georgia, serif" font-size="46" fill="#1b1714" text-anchor="middle">this way</text>
+</svg>
