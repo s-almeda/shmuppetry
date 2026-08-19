@@ -9,6 +9,7 @@ import { FACE_PARTS } from './tracking.js';
 import { isReady, naturalSize } from './assets.js';
 
 const round = (n) => (typeof n === 'number' ? +n.toFixed(4) : n);
+const MOUNTS = ['hat', 'glasses', 'nose', 'beard'];
 
 export class StageObject {
   constructor(spec = {}, deps = {}) {
@@ -31,6 +32,11 @@ export class StageObject {
   ];
 
   get fields() { return this.constructor.fields; }
+
+  // Does this object rotate with its fastener? Art mounted on a head does. Geometry built
+  // FROM landmarks does not — a face cutout's outline already reflects the head's roll,
+  // so applying it again rotates the cutout twice.
+  static followsPinAngle = false;
 
   // Become exactly this spec. Resolved scenes are absolute (§2.5), so any property a
   // PREVIOUS spec set that this one omits must be forgotten — otherwise stepping back
@@ -68,18 +74,49 @@ export class StageObject {
     this.pin = null;
     let x = this.x, y = this.y;
     if (this.fasten) {
-      this.pin = this.deps.tracking?.fastener(this.fasten);
+      this.pin = this._resolvePin(stage);
       if (!this.pin) return;
       x += this.pin.x;
       y += this.pin.y;
     }
 
+    // A fastener may carry an angle — the head's roll — so a hat tilts with the head.
+    // The object's own rotation is applied on top of it.
+    const rot = this.rotation + (this.constructor.followsPinAngle ? this.pin?.angle ?? 0 : 0);
+
     g.save();
     g.globalAlpha = this.opacity;
     g.translate(x * stage.w, y * stage.h);
-    if (this.rotation) g.rotate((this.rotation * Math.PI) / 180);
+    if (rot) g.rotate((rot * Math.PI) / 180);
     if (this.scale !== 1) g.scale(this.scale, this.scale);
     try { this.render(g, stage, t); } finally { g.restore(); }
+  }
+
+  // `fasten: "hat"` pins to the live face. `fasten: "face.hat"` pins to the hat mount AS
+  // CARRIED BY the object with id `face` — so a hat on a cut-out face moves, scales and
+  // rotates with that cutout instead of with the raw webcam (§2.2).
+  _resolvePin(stage) {
+    const dot = this.fasten.indexOf('.');
+    if (dot < 0) return this.deps.tracking?.fastener(this.fasten);
+
+    const host = this.deps.find?.(this.fasten.slice(0, dot));
+    const base = this.deps.tracking?.fastener(this.fasten.slice(dot + 1));
+    if (!base || !host?.pin) return null;
+
+    // Re-express the mount point in the host's transformed space: offset from the host's
+    // own pin, scaled and rotated the way the host is, then placed at the host's origin.
+    const rot = ((host.rotation ?? 0) * Math.PI) / 180;
+    const dx = (base.x - host.pin.x) * stage.w * (host.scale ?? 1);
+    const dy = (base.y - host.pin.y) * stage.h * (host.scale ?? 1);
+    const cos = Math.cos(rot), sin = Math.sin(rot);
+    return {
+      x: host.pin.x + host.x + (dx * cos - dy * sin) / stage.w,
+      y: host.pin.y + host.y + (dx * sin + dy * cos) / stage.h,
+      size: base.size * (host.scale ?? 1),
+      angle: (base.angle ?? 0) + (host.rotation ?? 0),
+      anchor: base.anchor,
+      fit: base.fit,
+    };
   }
 
   render() {}
@@ -106,12 +143,24 @@ export class StageObject {
 // it is an image at BACKGROUND with fit:'cover' (§7).
 
 export class ImageObject extends StageObject {
+  static followsPinAngle = true;   // a hat tilts with the head it sits on
+
+  // Offer every mount on the live face, plus the same mounts carried by any cut-out
+  // BodyPart on stage — `face.hat` puts a hat on the cutout rather than on the webcam.
+  get fields() {
+    const hosts = (this.deps.list?.() ?? []).filter((o) => o.type === 'bodyPart' && o.fasten === 'face');
+    const nested = hosts.flatMap((h) => MOUNTS.map((m) => `${h.id}.${m}`));
+    return ImageObject.fields.map((f) =>
+      f.key === 'fasten' ? { ...f, options: [...f.options, ...nested] } : f);
+  }
+
   static fields = [
     ...StageObject.fields,
     { key: 'src', label: 'src', type: 'text' },
     { key: 'size', label: 'size', type: 'range', min: 0.02, max: 2, step: 0.01 },
     { key: 'fit', label: 'fit', type: 'select', options: ['height', 'cover', 'contain'] },
-    { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'face', 'leftEye', 'rightEye', 'mouth'] },
+    { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'hat', 'glasses', 'nose', 'beard', 'face', 'leftEye', 'rightEye', 'mouth'] },
+    { key: 'anchor', label: 'anchor', type: 'select', options: ['', 'center', 'top', 'bottom'] },
   ];
 
   apply(spec) {
@@ -121,6 +170,17 @@ export class ImageObject extends StageObject {
     if (this.src !== this._loaded) {
       this.el = this.src != null ? this.deps.assets?.get(this.src) : null;
       this._loaded = this.src;
+      // `001_beret_hat.png` mounts itself at the hat unless the scene says otherwise, so
+      // dropping art in and naming it is enough (§7).
+      if (!this.fasten && !('fasten' in spec)) {
+        this.fasten = this.deps.assets?.mount(this.src) ?? undefined;
+        // super.apply() has already defaulted x/y to 0.5 (unfastened), so they have to be
+        // reset to a zero OFFSET here — unless the scene set them deliberately.
+        if (this.fasten) {
+          if (!('x' in spec)) this.x = 0;
+          if (!('y' in spec)) this.y = 0;
+        }
+      }
     }
     if (this.el?.tagName === 'VIDEO') {
       this.el.muted = !this.audio;   // videos are muted unless a scene opts in
@@ -142,11 +202,22 @@ export class ImageObject extends StageObject {
       // fastener's own size, so a hand puppet scales with the hand — matching 2.5.0's
       // puppetSize, which multiplied the measured hand span.
       const base = this.pin ? this.pin.size : 1;
-      h = base * this.size * stage.h;
-      w = h * (nat.w / nat.h);
+      if (this.pin?.fit === 'width') {
+        // Head-worn art scales by WIDTH: a hat matches head width, a beard jaw width.
+        w = base * this.size * stage.h;
+        h = w * (nat.h / nat.w);
+      } else {
+        h = base * this.size * stage.h;
+        w = h * (nat.w / nat.h);
+      }
     }
+    // The mount says which EDGE of the art meets the point: a hat rests its bottom on the
+    // crown, a beard hangs its top off the chin. Without this, every asset needs its own
+    // nudge offsets, which is what 2.5.0 ended up doing (§2.2).
+    const anchor = this.anchor ?? this.pin?.anchor ?? 'center';
+    const dy = anchor === 'bottom' ? -h : anchor === 'top' ? 0 : -h / 2;
     // No clip needed: the canvas is exactly the stage, so it clips its own bounds.
-    g.drawImage(this.el, -w / 2, -h / 2, w, h);
+    g.drawImage(this.el, -w / 2, dy, w, h);
   }
 
   dispose() { if (this.el?.tagName === 'VIDEO') this.el.muted = true; }
@@ -156,6 +227,7 @@ export class ImageObject extends StageObject {
     if (this.src != null) out.src = this.src;
     if (this.fit !== 'height') out.fit = this.fit; else out.size = round(this.size);
     if (this.audio) out.audio = true;
+    if (this.anchor) out.anchor = this.anchor;
     return out;
   }
 }
@@ -382,6 +454,9 @@ const PAPER = {
   mouth: { points: 10, outline: { width: 0.08 } },
   outline: { width: 0.045, color: '#ffffff' },
   shadow: { dx: 0, dy: 0.012, blur: 0.02, color: 'rgba(0,0,0,0.45)' },
+  // Paper grain over the cutout (§2.3). `src` empty turns it off entirely — no pattern
+  // is built and the pass is skipped, so it costs nothing when unused.
+  texture: { src: 'textures/paper.jpeg', opacity: 0.35, blend: 'multiply', scale: 1 },
 };
 
 export class BodyPart extends StageObject {
@@ -397,6 +472,10 @@ export class BodyPart extends StageObject {
     { key: 'crown', label: 'crown', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'smooth', label: 'smooth', type: 'range', min: 0, max: 0.95, step: 0.05 },
     { key: 'points', label: 'points', type: 'range', min: 8, max: 96, step: 1 },
+    { key: 'texture', label: 'texture', type: 'text' },
+    { key: 'textureOpacity', label: 'tex α', type: 'range', min: 0, max: 1, step: 0.05 },
+    { key: 'textureBlend', label: 'tex mix', type: 'select', options: ['multiply', 'overlay', 'soft-light', 'source-over'] },
+    { key: 'textureScale', label: 'tex size', type: 'range', min: 0.2, max: 4, step: 0.1 },
     { key: 'debug', label: 'show mask', type: 'checkbox' },
   ];
 
@@ -439,6 +518,11 @@ export class BodyPart extends StageObject {
     this.outlineWidth ??= spec.outline?.width ?? pickOutline('width');
     this.outlineColor ??= spec.outline?.color ?? pickOutline('color');
     this.shadow ??= { ...PAPER.shadow, ...(paper.shadow ?? {}), ...(spec.shadow ?? {}) };
+    const tex = { ...PAPER.texture, ...(paper.texture ?? {}), ...(spec.texture ?? {}) };
+    this.texture ??= tex.src;
+    this.textureOpacity ??= tex.opacity;
+    this.textureBlend ??= tex.blend;
+    this.textureScale ??= tex.scale;
     this.debug ??= false;
     this.showCut ??= true;   // false → a bare mount for pinned puppets (§2.2)
     return this;
@@ -564,6 +648,55 @@ export class BodyPart extends StageObject {
     g.translate(stage.w / 2, stage.h / 2);
     stage.drawVideoInto(g, cam.video, stage.w, stage.h);
     g.restore();
+
+    this._paper(g, stage, poly, border);
+  }
+
+  // Paper grain over the whole cutout, border included. Clipping to the polygon OFFSET
+  // BY the border width covers both the white paper edge and the image inside it in one
+  // pass — the alternative is compositing the cutout offscreen just to reach its pixels.
+  _paper(g, stage, poly, border) {
+    if (!this.texture || !(this.textureOpacity > 0)) return;
+    const pattern = this._pattern(g);
+    if (!pattern) return;
+
+    const outer = border ? offset(poly, border) : poly;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [x, y] of outer) {
+      x0 = Math.min(x0, x); y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+    }
+
+    g.save();
+    const clip = new Path2D();
+    clip.moveTo(...outer[0]);
+    for (let i = 1; i < outer.length; i++) clip.lineTo(...outer[i]);
+    clip.closePath();
+    g.clip(clip);
+    g.globalAlpha = this.textureOpacity;
+    g.globalCompositeOperation = this.textureBlend ?? 'multiply';
+    g.fillStyle = pattern;
+    g.fillRect(x0, y0, x1 - x0, y1 - y0);
+    g.restore();
+  }
+
+  // Built once per texture and reused. The pattern is anchored in the object's own
+  // transformed space, so the grain travels with the cutout rather than sliding under it
+  // — paper does not swim.
+  _pattern(g) {
+    if (this._patternFor === this.texture && this._patternScale === this.textureScale) {
+      return this._patternCache;
+    }
+    const el = this.deps.assets?.get(this.texture);
+    if (!isReady(el)) return null;
+    const p = g.createPattern(el, 'repeat');
+    if (p && this.textureScale && this.textureScale !== 1 && typeof DOMMatrix !== 'undefined') {
+      p.setTransform(new DOMMatrix().scale(this.textureScale));
+    }
+    this._patternCache = p;
+    this._patternFor = this.texture;
+    this._patternScale = this.textureScale;
+    return p;
   }
 
   // The mask, the hull and its vertices, in three colours — so it is obvious which stage
@@ -613,6 +746,10 @@ export class BodyPart extends StageObject {
       points: this.points, join: this.join,
     };
     out.outline = { width: round(this.outlineWidth), color: this.outlineColor };
+    out.texture = {
+      src: this.texture, opacity: round(this.textureOpacity),
+      blend: this.textureBlend, scale: round(this.textureScale),
+    };
     if (!this.showCut) out.showCut = false;
     if (this.debug) out.debug = true;
     return out;

@@ -5,6 +5,15 @@
 
 const VIDEO_EXT = /\.(mp4|webm|mov)$/i;
 
+// Placement baked into the filename — `001_beret_hat.png` mounts at the hat. Carried
+// over from 2.5.0, where it was one of the few things that genuinely worked (§7):
+// the asset says where it goes, so a scene only has to name the asset.
+const MOUNTS = ['hat', 'glasses', 'nose', 'beard', 'mouth'];
+export function parseMount(file) {
+  const base = String(file).replace(/\.[^.]+$/, '').toLowerCase();
+  return MOUNTS.find((m) => base.endsWith('_' + m)) ?? null;
+}
+
 // Returns an <img> or a looping muted <video> from one call, so every code path that
 // takes an asset handles both without caring which it got (§8.7).
 export function makeMediaEl(src) {
@@ -45,6 +54,12 @@ export class AssetLibrary {
       if (Number.isNaN(n)) { console.warn(`[assets] "${file}" has no number in its name — not addressable`); continue; }
       this.byNumber.set(n, file);
     }
+  }
+
+  // The mount baked into an asset's filename, if it has one.
+  mount(ref) {
+    const file = typeof ref === 'number' ? this.byNumber.get(ref) : ref;
+    return file ? parseMount(file) : null;
   }
 
   // Accepts a manifest number (2) or a direct path/URL, so a one-off asset never needs

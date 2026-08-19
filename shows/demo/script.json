@@ -1,22 +1,18 @@
 [
   {
     "id": 1,
-    "_note": "Whole face. The landmark contour is the silhouette — no colour segmentation.",
+    "reset": true,
+    "_note": "Opening. reset:true so it inherits nothing — a bare stage with the webcam and one line, which is also what the panel's 'reset stage' button returns you to.",
     "objects": {
       "cam": {
         "type": "webcam",
         "fit": "cover",
         "z": -100
       },
-      "face": {
-        "type": "bodyPart",
-        "fasten": "face",
-        "z": 25
-      },
       "dialogue": {
         "type": "text",
         "speaker": "shm",
-        "text": "test 1. face contour.",
+        "text": "shmuppetry 3.0. press space.",
         "y": 0.8,
         "width": 0.92
       }
@@ -24,6 +20,48 @@
   },
   {
     "id": 2,
+    "_note": "Whole face. The landmark contour is the silhouette — no colour segmentation.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "test 1. face contour.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "face": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 25,
+        "fasten": "face",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 3,
     "_note": "Face parts. Eyes and mouth are their own contours, each an ordinary object with its own z.",
     "objects": {
       "cam": {
@@ -142,7 +180,7 @@
     }
   },
   {
-    "id": 3,
+    "id": 4,
     "_note": "Hands. Cut by colour segmentation bounded by the landmark skeleton (js/silhouette.js).",
     "objects": {
       "cam": {
@@ -204,7 +242,7 @@
     }
   },
   {
-    "id": 4,
+    "id": 5,
     "_note": "TEST: everything at once, webcam removed — face, eyes, mouth and hands as separate cutouts on a black stage.",
     "objects": {
       "dialogue": {
@@ -356,8 +394,233 @@
     }
   },
   {
-    "id": 5,
-    "_note": "Test scenes end here; cutouts cleared. Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
+    "id": 6,
+    "_note": "Face mounts. The hat and glasses name no fastener — `_hat` and `_glasses` in their filenames place them (§7). A hat rests its BOTTOM edge on the crown, so it sits on the head rather than through it.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "face": null,
+      "leye": null,
+      "reye": null,
+      "mouth": null,
+      "lhand": null,
+      "rhand": null,
+      "hat": {
+        "type": "image",
+        "src": 1,
+        "z": 40
+      },
+      "specs": {
+        "type": "image",
+        "src": 2,
+        "z": 41
+      },
+      "dialogue": {
+        "type": "text",
+        "speaker": "shm",
+        "text": "hat and glasses, mounted by filename.",
+        "y": 0.8,
+        "width": 0.92
+      }
+    }
+  },
+  {
+    "id": 7,
+    "_note": "Miku has no suffix, so she is mounted explicitly — on the nose, with the cutout off. §2.2's case: a BodyPart that is a bare mount rather than a cut-out.",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "miku pinned to the nose. goggles swapped in.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "bodyPart": {
+        "type": "bodyPart",
+        "x": 0.055,
+        "y": 0,
+        "z": 37,
+        "scale": 0.72,
+        "rotation": -86,
+        "fasten": "leftHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.095,
+          "clean": 0.015,
+          "range": 0.5,
+          "grow": 0.04,
+          "smooth": 0.4,
+          "crown": 0.22,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.035,
+          "color": "#ffffff"
+        }
+      },
+      "hat": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 40,
+        "scale": 1.89,
+        "fasten": "hat",
+        "src": 1,
+        "size": 0.5
+      },
+      "specs": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 41,
+        "scale": 2.69,
+        "fasten": "glasses",
+        "src": 3,
+        "size": 0.5
+      },
+      "miku": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 42,
+        "fasten": "nose",
+        "src": 13,
+        "size": 1.6
+      }
+    }
+  },
+  {
+    "id": 8,
+    "_note": "Mounts follow head roll. Tilt your head and everything tilts with it.",
+    "objects": {
+      "miku": null,
+      "beard": {
+        "type": "image",
+        "src": 13,
+        "fasten": "beard",
+        "size": 0.8,
+        "z": 39
+      },
+      "dialogue": {
+        "text": "tilt your head — mounts carry the roll."
+      }
+    }
+  },
+  {
+    "id": 9,
+    "_note": "Hat on a CUT-OUT face, not on the webcam. `fasten: \"facecut.hat\"` resolves the hat mount in that object's space, so the hat follows the cutout (§2.2).",
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "hat pinned to the face cutout.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "bodyPart": {
+        "type": "bodyPart",
+        "x": 0.055,
+        "y": 0,
+        "z": 37,
+        "scale": 0.72,
+        "rotation": -86,
+        "fasten": "leftHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.095,
+          "clean": 0.015,
+          "range": 0.5,
+          "grow": 0.04,
+          "smooth": 0.4,
+          "crown": 0.22,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.035,
+          "color": "#ffffff"
+        }
+      },
+      "facecut": {
+        "type": "bodyPart",
+        "x": 0.29,
+        "y": 0,
+        "z": 25,
+        "rotation": -18,
+        "fasten": "face",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "cuthat": {
+        "type": "image",
+        "x": 0.035,
+        "y": 0.085,
+        "z": 40,
+        "rotation": 16,
+        "fasten": "facecut.hat",
+        "src": 1,
+        "size": 1.1
+      },
+      "image": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "size": 0.4
+      },
+      "hat": null,
+      "specs": null,
+      "beard": null
+    }
+  },
+  {
+    "id": 10,
+    "_note": "The cutout is moved, scaled and rotated — the hat goes with it, because it is pinned to the object rather than to the webcam.",
+    "objects": {
+      "cam": null,
+      "facecut": {
+        "x": -0.18,
+        "scale": 1.3,
+        "rotation": -14
+      },
+      "dialogue": {
+        "text": "move the cutout — the hat follows."
+      }
+    }
+  },
+  {
+    "id": 11,
+    "_note": "Face mounts cleared. Test scenes end here; cutouts cleared. Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
     "objects": {
       "cam": {
         "type": "webcam",
@@ -370,7 +633,7 @@
       },
       "star": {
         "type": "image",
-        "src": 2,
+        "src": 900,
         "at": {
           "at": "RIGHT",
           "dx": 0.02
@@ -387,16 +650,21 @@
       "reye": null,
       "mouth": null,
       "lhand": null,
-      "rhand": null
+      "rhand": null,
+      "hat": null,
+      "specs": null,
+      "beard": null,
+      "facecut": null,
+      "cuthat": null
     }
   },
   {
-    "id": 6,
+    "id": 12,
     "_note": "z ordering: sign 20 over star 10 over cam -100. One sorted pass.",
     "objects": {
       "sign": {
         "type": "image",
-        "src": 3,
+        "src": 901,
         "x": 0.66,
         "y": 0.58,
         "size": 0.34,
@@ -409,7 +677,7 @@
     }
   },
   {
-    "id": 7,
+    "id": 13,
     "_note": "Removal. `star: null` takes it off stage; everything else persists.",
     "objects": {
       "star": null,
@@ -419,7 +687,7 @@
     }
   },
   {
-    "id": 8,
+    "id": 14,
     "_note": "Two TextBoxes at once, different styles. `aside` has no speaker, so no tab.",
     "objects": {
       "dialogue": {
@@ -440,7 +708,7 @@
     }
   },
   {
-    "id": 9,
+    "id": 15,
     "_note": "Fasteners. x/y are offsets from the pin; size multiplies hand span.",
     "objects": {
       "aside": null,
@@ -454,7 +722,7 @@
       },
       "star": {
         "type": "image",
-        "src": 2,
+        "src": 900,
         "fasten": "rightHand",
         "x": 0,
         "y": 0,
@@ -478,7 +746,7 @@
     }
   },
   {
-    "id": 10,
+    "id": 16,
     "_note": "BodyParts. Hands cut from the feed by stroking the landmark skeleton, dilated, white border, drop shadow.",
     "objects": {
       "star": null,
@@ -499,13 +767,13 @@
     }
   },
   {
-    "id": 11,
+    "id": 17,
     "_note": "Same cutouts with the webcam removed. Only the hands and pinned art remain.",
     "objects": {
       "cam": null,
       "star": {
         "type": "image",
-        "src": 2,
+        "src": 900,
         "fasten": "rightHand",
         "x": 0,
         "y": -0.12,
@@ -518,7 +786,7 @@
     }
   },
   {
-    "id": 12,
+    "id": 18,
     "_note": "Scale and rotation on a BodyPart; cutouts are ordinary objects.",
     "objects": {
       "star": null,
@@ -536,7 +804,7 @@
     }
   },
   {
-    "id": 13,
+    "id": 19,
     "_note": "hoverFade on a caption over the full-bleed webcam.",
     "objects": {
       "lhand": null,
@@ -561,7 +829,7 @@
     }
   },
   {
-    "id": 14,
+    "id": 20,
     "reset": true,
     "_note": "reset: true. Starts from an empty stage instead of inheriting.",
     "objects": {

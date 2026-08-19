@@ -216,6 +216,17 @@ export class Player {
   // Apply live edits back into the authored script. The scene becomes fully resolved
   // and absolute (§2.5) — sparse authoring is preserved in the file until you save
   // through the editor, at which point that scene becomes self-contained.
+  // Back to a bare stage: the webcam, full frame, nothing on top. The starting point for
+  // authoring a scene, and the way out when one has accumulated too much to reason about.
+  //
+  // Everything inherited from the previous scene is dropped, which `captureCurrentScene`
+  // records as explicit nulls — so a reset survives save and reload.
+  resetScene() {
+    this.pool.clear();
+    this.pool.add({ id: 'cam', type: 'webcam', fit: 'cover', z: -100 });
+    this.renderer.setObjects(this.pool.objects);
+  }
+
   // `key` is a menu entry from NEW_OBJECT, not a bare type.
   addObject(key) {
     const { alternates, ...spec } = NEW_OBJECT[key] ?? { type: key };

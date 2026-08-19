@@ -22,6 +22,29 @@ const PERFORMER_RIGHT = 'Right';
 export const HAND_PARTS = ['leftHand', 'rightHand'];
 export const FACE_PARTS = ['face', 'leftEye', 'rightEye', 'mouth'];
 
+// ── Face mounts (§2.2) ────────────────────────────────────────────────────
+// A mount is not just a point. HAT and BEARD both sit near the face's vertical axis but
+// attach OPPOSITELY: a hat rests its bottom edge on the top of the head, a beard hangs
+// its top edge off the chin. So a mount carries a point, WHICH EDGE of the art meets it,
+// and what its size is measured against. Getting this wrong is what forced 2.5.0 into
+// per-asset headXOffset/headYOffset nudges.
+//
+// Sizes are widths, because that is how head-worn things actually scale — a hat matches
+// head width, a beard matches jaw width.
+const MESH = {
+  crown: 10, chin: 152, noseTip: 1,
+  eyeL: 33, eyeR: 263,        // outer eye corners — also the head-roll reference
+  cheekL: 234, cheekR: 454,   // face width
+  jawL: 172, jawR: 397,       // jaw width
+};
+
+export const FACE_MOUNTS = {
+  hat:     { at: [MESH.crown], anchor: 'bottom', width: ['cheekL', 'cheekR'], scale: 1 },
+  glasses: { at: [MESH.eyeL, MESH.eyeR], anchor: 'center', width: ['cheekL', 'cheekR'], scale: 1 },
+  nose:    { at: [MESH.noseTip], anchor: 'center', width: ['cheekL', 'cheekR'], scale: 0.35 },
+  beard:   { at: [MESH.chin], anchor: 'top', width: ['jawL', 'jawR'], scale: 1 },
+};
+
 // Turn MediaPipe's connection list (unordered {start,end} edges) into ordered rings of
 // landmark indices. Some sets contain more than one cycle — the lips set has an outer
 // contour AND the inner mouth opening — so return them all and choose later.
@@ -170,6 +193,7 @@ export class Tracking {
   // Returns null when the part isn't visible — a pinned object with nothing to pin to
   // simply isn't on stage this frame.
   fastener(name) {
+    if (FACE_MOUNTS[name]) return this._mountFastener(name);
     if (FACE_PARTS.includes(name)) return this._faceFastener(name);
     const h = this.hands[name];
     if (!h) return null;
@@ -183,6 +207,35 @@ export class Tracking {
     return { x: palm.x, y: palm.y, size: Math.hypot(dx, tip.y - wrist.y) };
   }
 
+  // Head roll, from the line between the outer eye corners. Computed in STAGE space, so
+  // the mirror is already accounted for and a tilted head tilts its hat the right way.
+  _roll(P) {
+    let a = P(MESH.eyeL), b = P(MESH.eyeR);
+    // Order by STAGE x, not by landmark index. The stage is mirrored, so the landmark
+    // MediaPipe calls "left" lands on the right — and measuring right-to-left makes dx
+    // negative, which turns a level head into atan2(0, -1) = 180°. Everything mounted on
+    // the face was upside down.
+    if (a.x > b.x) [a, b] = [b, a];
+    return (Math.atan2(b.y - a.y, (b.x - a.x) * this.stage.aspect) * 180) / Math.PI;
+  }
+
+  _mountFastener(name) {
+    if (!this.face) return null;
+    const m = FACE_MOUNTS[name];
+    const v = this.camera.video;
+    const P = (i) => this.stage.videoNormToStage(this.face[i].x, this.face[i].y, v);
+
+    const pts = m.at.map(P);
+    const x = pts.reduce((t, q) => t + q.x, 0) / pts.length;
+    const y = pts.reduce((t, q) => t + q.y, 0) / pts.length;
+
+    const a = P(MESH[m.width[0]]), b = P(MESH[m.width[1]]);
+    // In fractions of stage HEIGHT, so it means the same as every other size.
+    const width = Math.hypot((b.x - a.x) * this.stage.aspect, b.y - a.y) * m.scale;
+
+    return { x, y, size: width, angle: this._roll(P), anchor: m.anchor, fit: 'width' };
+  }
+
   _faceFastener(part) {
     const pts = this.contour(part);
     if (!pts?.length) return null;
@@ -191,7 +244,13 @@ export class Tracking {
       x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y);
       x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y);
     }
+    const v = this.camera.video;
+    const P = (i) => this.stage.videoNormToStage(this.face[i].x, this.face[i].y, v);
     // Size in fractions of stage HEIGHT, so it means the same as every other size.
-    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, size: Math.max(y1 - y0, (x1 - x0) / this.stage.aspect) };
+    return {
+      x: (x0 + x1) / 2, y: (y0 + y1) / 2,
+      size: Math.max(y1 - y0, (x1 - x0) / this.stage.aspect),
+      angle: this._roll(P), anchor: 'center',
+    };
   }
 }

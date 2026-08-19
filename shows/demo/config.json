@@ -50,6 +50,12 @@
       "outline": {
         "width": 0.08
       }
+    },
+    "texture": {
+      "src": "textures/paper.jpeg",
+      "opacity": 0.35,
+      "blend": "multiply",
+      "scale": 1
     }
   },
   "panelTab": "control panel",

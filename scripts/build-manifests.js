@@ -17,6 +17,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ASSET_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)$/i;
+// Textures are referenced by PATH, not by number — and numbering them would be actively
+// harmful: `lined_paper2.jpeg` parses to asset 2 and would collide with real art.
+const UNNUMBERED = ['textures/'];
 const all = process.argv.includes('--all');
 
 // Only assets/demo/ is committed (see .gitignore), so that is the public set.
@@ -40,7 +43,8 @@ async function walk(dir, base = '') {
 
 async function main() {
   const assetsDir = path.join(ROOT, 'assets');
-  let files = (await walk(assetsDir)).sort();
+  let files = (await walk(assetsDir)).sort()
+    .filter((f) => !UNNUMBERED.some((d) => f.startsWith(d)));
   if (!all) files = files.filter((f) => PUBLIC_DIRS.some((d) => f.startsWith(`${d}/`)));
 
   // Warn about anything the number-keyed addressing cannot see. Silent drops here

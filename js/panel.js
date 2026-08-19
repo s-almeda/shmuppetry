@@ -158,6 +158,7 @@ export class Panel {
           <div class="panel-row">
             <label style="flex:1"><input type="checkbox" id="p-editing" /> edit text in place</label>
           </div>
+          <div class="panel-row"><button id="p-reset" type="button">reset stage</button></div>
           <div class="panel-row" style="gap:3px" id="p-save-row" hidden>
             <button id="p-save" type="button">save scene</button>
             <button id="p-revert" type="button">revert</button>
@@ -170,6 +171,12 @@ export class Panel {
 
     this.edit.onDirtyChange = (dirty) => { this.$('#p-save-row').hidden = !dirty; };
     this.$('#p-editing').addEventListener('change', (e) => this.edit.setEditing(e.target.checked));
+    this.$('#p-reset').addEventListener('click', () => {
+      this.player.resetScene();
+      this.select(null);
+      this.edit.markDirty();
+      this.renderObjectList();
+    });
     this.$('#p-save').addEventListener('click', () => this.edit.save());
     this.$('#p-revert').addEventListener('click', () => this.edit.revert());
     this.$('#p-copy').addEventListener('click', () => this.edit.copyToClipboard());

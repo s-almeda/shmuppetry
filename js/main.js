@@ -149,6 +149,10 @@ async function main() {
   const player = new Player({ make, renderer, onSceneChange: (s) => { panel.onSceneChange(s); edit.onSceneChange(); } });
   const panel = new Panel({ el: el.panel, player, edit, tabLabel: config.panelTab ?? null });
   edit.player = player;
+  // Lets one object pin to another (`fasten: "face.hat"`), and lets the panel offer those
+  // combinations. Wired after the player exists, since the pool lives there.
+  deps.find = (id) => player.pool.live.get(id);
+  deps.list = () => player.pool.objects;
   player.load(scenes);
   panel.mount();
 

@@ -84,7 +84,9 @@ async function walk(dir, base = '') {
 
 // The same shape scripts/build-manifests.js bakes.
 export async function buildAssetManifest() {
-  const files = (await walk(path.join(ROOT, 'assets'))).sort();
+  // Textures are referenced by path; numbering them would collide with real art.
+  const files = (await walk(path.join(ROOT, 'assets'))).sort()
+    .filter((f) => !f.startsWith('textures/'));
   return {
     _note: 'Generated. Assets are keyed by the number in the filename, not by position in this list.',
     base: './assets/',
