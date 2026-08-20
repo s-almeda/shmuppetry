@@ -7,7 +7,8 @@
   "mirror": true,
   "capabilities": [
     "hands",
-    "face"
+    "face",
+    "potato"
   ],
   "_paper": "Show-wide paper defaults (§2.3). paper.cut drives HANDS (colour segmentation), paper.face drives FACE PARTS (landmark contour), with paper.eye / paper.mouth overriding per part. No live texturing — it was measured as the dominant per-frame cost.",
   "paper": {

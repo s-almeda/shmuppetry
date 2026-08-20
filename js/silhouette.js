@@ -58,6 +58,7 @@ export class Silhouette {
     this.sctx = this.skel.getContext('2d', { willReadFrequently: true });
     this.octx = this.out.getContext('2d');
     this.prev = new Map();       // hand → smoothed radii
+    this.last = new Map();       // hand → last full result, returned while frozen
   }
 
   drop(name) { this.prev.delete(name); }
@@ -67,6 +68,11 @@ export class Silhouette {
    *          video-space rect it covers.
    */
   compute(name, hand, p) {
+    // Frozen: hand back the previous result rather than re-deriving. Landmarks are held
+    // upstream, but this reads PIXELS, which keep changing — without this the outline
+    // would keep crawling while everything else stood still.
+    if (p.frozen) return this.last.get(name) ?? null;
+
     const video = this.camera.video;
     const vw = video.videoWidth, vh = video.videoHeight;
     if (!vw || !vh || !hand) return null;
@@ -204,7 +210,9 @@ export class Silhouette {
     // Buffer space → video pixels, which is what the renderer maps to the stage.
     const out = prev.map(([bx, by]) => [x0 + bx / scale, y0 + by / scale]);
 
-    return { canvas: this.out, polygon: out, rect: { x0, y0, x1, y1, vw, vh } };
+    const result = { canvas: this.out, polygon: out, rect: { x0, y0, x1, y1, vw, vh } };
+    this.last.set(name, result);
+    return result;
   }
 }
 

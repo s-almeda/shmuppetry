@@ -243,6 +243,254 @@
   },
   {
     "id": 5,
+    "_note": "POTATO TEST. `p` toggles the manual fallback (armed by potatoManual). Verify the fallback BEFORE trusting the detector.",
+    "potato": true,
+    "potatoManual": true,
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "opacity": 0
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "potato test. hold one up, or press p.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "spud": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 40,
+        "fasten": "potato",
+        "src": 900,
+        "size": 1.4
+      },
+      "webcam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5
+      },
+      "leye": null,
+      "reye": null,
+      "mouth": null,
+      "bodyPart": null,
+      "lhand": null,
+      "rhand": null
+    }
+  },
+  {
+    "id": 6,
+    "_note": "TEST axis lock + clamp. The marquee is lockX 0.5 / maxY 0.5: held to centre, dragged DOWN by your right hand, unable to pass halfway. Raise your hand and it follows back up — a clamp, not a latch.",
+    "potato": false,
+    "potatoManual": false,
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "opacity": 0
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "TEST: pull the sign down with your right hand.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "webcam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5
+      },
+      "marquee": {
+        "type": "image",
+        "x": 0,
+        "y": -0.34,
+        "z": 40,
+        "fasten": "rightHand",
+        "lockX": 0.5,
+        "maxY": 0.5,
+        "src": 901,
+        "size": 0.5
+      },
+      "spud": null
+    }
+  },
+  {
+    "id": 7,
+    "_note": "TEST masking. Circles on both hands reveal the curtain; everything else is black. The circles themselves are isMask, so they are never drawn.",
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "TEST: spotlights. move both hands.",
+        "speaker": "???",
+        "width": 0.92
+      },
+      "spotL": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 5,
+        "fasten": "leftHand",
+        "isMask": true,
+        "src": 100,
+        "size": 1.8
+      },
+      "spotR": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 5,
+        "fasten": "rightHand",
+        "isMask": true,
+        "src": 100,
+        "size": 1.8
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": 10,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "src": 101,
+        "fit": "cover"
+      },
+      "cam": null,
+      "webcam": null,
+      "marquee": null
+    }
+  },
+  {
+    "id": 8,
+    "_note": "TEST drumroll. Click the button to grant the mic; it removes itself and the bar appears. The bar fills ONLY on sustained noise and takes at least 10s.",
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "TEST: drumroll please.",
+        "speaker": "???",
+        "width": 0.92
+      },
+      "spotL": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 5,
+        "scale": 0.47,
+        "fasten": "leftHand",
+        "isMask": true,
+        "src": 100,
+        "size": 1.8
+      },
+      "spotR": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 5,
+        "scale": 0.54,
+        "fasten": "rightHand",
+        "isMask": true,
+        "src": 100,
+        "size": 1.8
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": 10,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "src": 101,
+        "fit": "cover"
+      },
+      "go": {
+        "type": "button",
+        "x": 0.5,
+        "y": 0.55,
+        "z": 250,
+        "text": "enable mic",
+        "action": "enableMic"
+      },
+      "bar": {
+        "type": "progress",
+        "x": 0.5,
+        "y": 0.55,
+        "z": 250,
+        "seconds": 10,
+        "threshold": 0.06,
+        "width": 0.4
+      }
+    }
+  },
+  {
+    "id": 9,
+    "_note": "TEST freeze + flip. Cutouts hold their pose while you keep moving; rhand is flipped.",
+    "freeze": false,
+    "objects": {
+      "go": null,
+      "bar": null,
+      "spotL": null,
+      "spotR": null,
+      "curtain": null,
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "lhand": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "z": 30
+      },
+      "rhand": {
+        "type": "bodyPart",
+        "fasten": "rightHand",
+        "z": 30,
+        "flipX": true
+      },
+      "dialogue": {
+        "text": "TEST: live. right hand is flipped. next scene freezes."
+      }
+    }
+  },
+  {
+    "id": 10,
+    "_note": "TEST freeze, engaged. Everything holds; keep moving and talking.",
+    "freeze": true,
+    "objects": {
+      "dialogue": {
+        "text": "TEST: frozen. the cutouts should not move at all."
+      }
+    }
+  },
+  {
+    "id": 11,
+    "_note": "Freeze released.",
+    "freeze": false,
+    "objects": {
+      "dialogue": {
+        "text": "TEST: live again."
+      }
+    }
+  },
+  {
+    "id": 12,
     "_note": "TEST: everything at once, webcam removed — face, eyes, mouth and hands as separate cutouts on a black stage.",
     "objects": {
       "cam": {
@@ -425,10 +673,12 @@
           "color": "#ffffff"
         }
       }
-    }
+    },
+    "potato": false,
+    "potatoManual": false
   },
   {
-    "id": 6,
+    "id": 13,
     "_note": "Face mounts. The hat and glasses name no fastener — `_hat` and `_glasses` in their filenames place them (§7). A hat rests its BOTTOM edge on the crown, so it sits on the head rather than through it.",
     "objects": {
       "cam": {
@@ -462,7 +712,7 @@
     }
   },
   {
-    "id": 7,
+    "id": 14,
     "_note": "Miku has no suffix, so she is mounted explicitly — on the nose, with the cutout off. §2.2's case: a BodyPart that is a bare mount rather than a cut-out.",
     "objects": {
       "cam": {
@@ -535,7 +785,7 @@
     }
   },
   {
-    "id": 8,
+    "id": 15,
     "_note": "Mounts follow head roll. Tilt your head and everything tilts with it.",
     "objects": {
       "miku": null,
@@ -552,7 +802,7 @@
     }
   },
   {
-    "id": 9,
+    "id": 16,
     "_note": "Hat on a CUT-OUT face, not on the webcam. `fasten: \"facecut.hat\"` resolves the hat mount in that object's space, so the hat follows the cutout (§2.2).",
     "objects": {
       "cam": {
@@ -638,7 +888,7 @@
     }
   },
   {
-    "id": 10,
+    "id": 17,
     "_note": "The cutout is moved, scaled and rotated — the hat goes with it, because it is pinned to the object rather than to the webcam.",
     "objects": {
       "cam": null,
@@ -653,7 +903,7 @@
     }
   },
   {
-    "id": 11,
+    "id": 18,
     "_note": "Face mounts cleared. Test scenes end here; cutouts cleared. Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
     "objects": {
       "cam": {
@@ -693,7 +943,7 @@
     }
   },
   {
-    "id": 12,
+    "id": 19,
     "_note": "z ordering: sign 20 over star 10 over cam -100. One sorted pass.",
     "objects": {
       "sign": {
@@ -711,7 +961,7 @@
     }
   },
   {
-    "id": 13,
+    "id": 20,
     "_note": "Removal. `star: null` takes it off stage; everything else persists.",
     "objects": {
       "star": null,
@@ -721,7 +971,7 @@
     }
   },
   {
-    "id": 14,
+    "id": 21,
     "_note": "Two TextBoxes at once, different styles. `aside` has no speaker, so no tab.",
     "objects": {
       "dialogue": {
@@ -742,7 +992,7 @@
     }
   },
   {
-    "id": 15,
+    "id": 22,
     "_note": "Fasteners. x/y are offsets from the pin; size multiplies hand span.",
     "objects": {
       "aside": null,
@@ -780,7 +1030,7 @@
     }
   },
   {
-    "id": 16,
+    "id": 23,
     "_note": "BodyParts. Hands cut from the feed by stroking the landmark skeleton, dilated, white border, drop shadow.",
     "objects": {
       "star": null,
@@ -801,7 +1051,7 @@
     }
   },
   {
-    "id": 17,
+    "id": 24,
     "_note": "Same cutouts with the webcam removed. Only the hands and pinned art remain.",
     "objects": {
       "cam": null,
@@ -820,7 +1070,7 @@
     }
   },
   {
-    "id": 18,
+    "id": 25,
     "_note": "Scale and rotation on a BodyPart; cutouts are ordinary objects.",
     "objects": {
       "star": null,
@@ -838,7 +1088,7 @@
     }
   },
   {
-    "id": 19,
+    "id": 26,
     "_note": "hoverFade on a caption over the full-bleed webcam.",
     "objects": {
       "lhand": null,
@@ -863,7 +1113,7 @@
     }
   },
   {
-    "id": 20,
+    "id": 27,
     "reset": true,
     "_note": "reset: true. Starts from an empty stage instead of inheriting.",
     "objects": {

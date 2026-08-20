@@ -20,6 +20,11 @@ assets/textures/*
 !assets/textures/cardstock.jpeg
 !assets/textures/paper-tile.png
 
+# Potato training artefacts — best.pt, dataset/, runs/, train.log. ~97MB, kept on disk
+# because retraining needs them, but never committed (§9.9). The runtime model itself
+# lives in assets/models/ and is already covered by `assets/*`.
+potato_model/
+
 # Baked at build time by scripts/build-manifests.js for static hosting.
 manifests/
 

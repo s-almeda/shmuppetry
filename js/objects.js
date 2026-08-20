@@ -9,7 +9,27 @@ import { FACE_PARTS } from './tracking.js';
 import { isReady, naturalSize } from './assets.js';
 
 const round = (n) => (typeof n === 'number' ? +n.toFixed(4) : n);
-const MOUNTS = ['hat', 'glasses', 'nose', 'beard'];
+const MOUNTS = ['hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom'];
+
+// Shared placement for DOM-rendered objects (text, buttons, progress). They live above the
+// canvas rather than in it (see the deviation note on TextBox), but they position by the
+// same rules as everything else: fastener, then locks and clamps, then normalized x/y.
+function placeDom(el, obj, stage) {
+  let x = obj.x, y = obj.y;
+  if (obj.fasten) {
+    const pin = obj._resolvePin(stage);
+    if (!pin) { el.hidden = true; return false; }
+    x += pin.x;
+    y += pin.y;
+  }
+  ({ x, y } = obj._constrain(x, y));
+  el.style.left = `${x * 100}%`;
+  el.style.top = `${y * 100}%`;
+  el.style.zIndex = String(Math.round(obj.z));
+  el.style.setProperty('--o', obj.opacity);
+  el.hidden = obj.visible === false;
+  return obj.visible !== false;
+}
 
 export class StageObject {
   constructor(spec = {}, deps = {}) {
@@ -29,6 +49,7 @@ export class StageObject {
     { key: 'scale', label: 'scale', type: 'range', min: 0.05, max: 3, step: 0.01 },
     { key: 'rotation', label: 'rotate', type: 'range', min: -180, max: 180, step: 1 },
     { key: 'opacity', label: 'opacity', type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'flipX', label: 'flip', type: 'checkbox' },
   ];
 
   get fields() { return this.constructor.fields; }
@@ -66,7 +87,41 @@ export class StageObject {
   // Apply position + transform in stage CSS px, then hand the subclass a context whose
   // origin is the object's centre. Nothing mirrors anything — the mirror was resolved
   // once at the video→stage boundary (stage.js).
+  // `maskedBy: ["spotL","spotR"]` shows this object only where those objects are opaque.
+  // Scene 11's spotlights: white circles on the hands revealing a curtain over black.
+  //
+  // The mask is the masking objects' own PIXELS, not a shape — so any art works, a circle
+  // SVG included, and alpha edges come through soft.
   draw(g, stage, t) {
+    if (this.maskedBy?.length) return this._drawMasked(g, stage, t);
+    this._paintSelf(g, stage, t);
+  }
+
+  _drawMasked(g, stage, t) {
+    if (!this._maskCanvas) this._maskCanvas = document.createElement('canvas');
+    const off = this._maskCanvas;
+    const W = Math.round(stage.w * stage.dpr), H = Math.round(stage.h * stage.dpr);
+    if (!W || !H) return;
+    if (off.width !== W || off.height !== H) { off.width = W; off.height = H; }
+    const og = off.getContext('2d');
+    og.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0);
+    og.clearRect(0, 0, stage.w, stage.h);
+
+    for (const id of this.maskedBy) {
+      const m = this.deps.find?.(id);
+      if (m && m.visible !== false) m._paintSelf(og, stage, t);
+    }
+    og.globalCompositeOperation = 'source-in';
+    this._paintSelf(og, stage, t);
+    og.globalCompositeOperation = 'source-over';
+
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.drawImage(off, 0, 0);
+    g.restore();
+  }
+
+  _paintSelf(g, stage, t) {
     if (this.opacity <= 0) return;
 
     // Pinned objects follow their fastener. If the hand isn't visible there is nothing
@@ -79,6 +134,11 @@ export class StageObject {
       x += this.pin.x;
       y += this.pin.y;
     }
+    // Locks and clamps apply AFTER the fastener, so an object can follow one axis of a
+    // hand while the other is pinned. The marquee is `lockX: 0.5, maxY: 0.5` — held to
+    // centre horizontally, dragged down by the hand, and unable to pass halfway. A clamp,
+    // not a latch: it follows the hand back up freely.
+    ({ x, y } = this._constrain(x, y));
 
     // A fastener may carry an angle — the head's roll — so a hat tilts with the head.
     // The object's own rotation is applied on top of it.
@@ -88,6 +148,7 @@ export class StageObject {
     g.globalAlpha = this.opacity;
     g.translate(x * stage.w, y * stage.h);
     if (rot) g.rotate((rot * Math.PI) / 180);
+    if (this.flipX) g.scale(-1, 1);
     if (this.scale !== 1) g.scale(this.scale, this.scale);
     try { this.render(g, stage, t); } finally { g.restore(); }
   }
@@ -119,6 +180,18 @@ export class StageObject {
     };
   }
 
+  // Flat rather than nested (`maxY: 0.5`, not `clampY: { max: 0.5 }`) — easier to read in
+  // a scene file and it maps straight onto a panel field.
+  _constrain(x, y) {
+    if (this.lockX !== undefined && this.lockX !== null) x = this.lockX;
+    if (this.lockY !== undefined && this.lockY !== null) y = this.lockY;
+    if (this.minX != null) x = Math.max(this.minX, x);
+    if (this.maxX != null) x = Math.min(this.maxX, x);
+    if (this.minY != null) y = Math.max(this.minY, y);
+    if (this.maxY != null) y = Math.min(this.maxY, y);
+    return { x, y };
+  }
+
   render() {}
   dispose() {}
 
@@ -133,6 +206,12 @@ export class StageObject {
     if (this.opacity !== 1) out.opacity = round(this.opacity);
     if (!this.visible) out.visible = false;
     if (this.fasten) out.fasten = this.fasten;
+    if (this.flipX) out.flipX = true;
+    if (this.maskedBy?.length) out.maskedBy = this.maskedBy;
+    if (this.isMask) out.isMask = true;
+    for (const k of ['lockX', 'lockY', 'minX', 'maxX', 'minY', 'maxY']) {
+      if (this[k] != null) out[k] = round(this[k]);
+    }
     if (this._note) out._note = this._note;
     return out;
   }
@@ -159,7 +238,7 @@ export class ImageObject extends StageObject {
     { key: 'src', label: 'src', type: 'text' },
     { key: 'size', label: 'size', type: 'range', min: 0.02, max: 2, step: 0.01 },
     { key: 'fit', label: 'fit', type: 'select', options: ['height', 'cover', 'contain'] },
-    { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'hat', 'glasses', 'nose', 'beard', 'face', 'leftEye', 'rightEye', 'mouth'] },
+    { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom', 'face', 'leftEye', 'rightEye', 'mouth'] },
     { key: 'anchor', label: 'anchor', type: 'select', options: ['', 'center', 'top', 'bottom'] },
   ];
 
@@ -261,7 +340,7 @@ export class WebcamFeed extends StageObject {
   render(g, stage) {
     const { w, h } = this._box(stage);
     const cam = this.deps.camera;
-    if (cam?.live) { stage.drawVideoInto(g, cam.video, w, h); return; }
+    if (cam?.live) { stage.drawVideoInto(g, cam.source, w, h); return; }
 
     // A visible frame before permission, so the object is positionable while the camera
     // is still off — the same reason stagePuppets drew a 🙂 placeholder.
@@ -520,15 +599,9 @@ export class BodyPart extends StageObject {
     return this;
   }
 
-  // GEOMETRY happens here, one phase before anything paints.
+  // GEOMETRY happens here, one phase before anything paints — so the expensive work runs
+  // once per frame regardless of draw order.
   //
-  // Renderer.frame calls update() on every object before ANY object draws, so by paint
-  // time every cutout's outline exists. That is what lets a shadow drawn at a lower z use
-  // THIS frame's outlines instead of trailing a frame behind.
-  //
-  // Note update() runs on every object while draw() filters by `visible` — so the outline
-  // is only recorded when this object will actually be painted, or hidden cutouts would
-  // still cast shadows and collect grain.
   update(dt, now, stage) {
     this._poly = null;
     if (!this.showCut || this.visible === false) return;
@@ -550,6 +623,7 @@ export class BodyPart extends StageObject {
       const sil = raw && this.deps.silhouette?.compute(this.fasten, raw, {
         bound: this.bound, skeleton: this.skeleton, clean: this.clean,
         range: this.range, grow: this.grow, smooth: this.smooth, points: this.points,
+        frozen: this.deps.tracking?.frozen,
       });
       if (perf) perf.silhouette += performance.now() - t0;
       if (!sil?.polygon) { this._sil = null; return; }
@@ -565,23 +639,6 @@ export class BodyPart extends StageObject {
     }
     if (!this._poly) return;
 
-    // Record the outline for whatever consumes the union of all cutouts this frame.
-    // The matrix is built explicitly rather than read from the canvas, so it exists
-    // before any drawing has happened and stays in one coordinate space (CSS px).
-    const shapes = this.deps.shapes;
-    if (!shapes) return;
-    const path = new Path2D();
-    path.moveTo(...this._poly[0]);
-    for (let i = 1; i < this._poly.length; i++) path.lineTo(...this._poly[i]);
-    path.closePath();
-    shapes.push({
-      path,
-      m: new DOMMatrix()
-        .translate((this.x + this.pin.x) * stage.w, (this.y + this.pin.y) * stage.h)
-        .rotate(this.rotation)
-        .scale(this.scale),
-      border: this.outlineWidth * this.pin.size * stage.h,
-    });
   }
 
   render(g, stage) {
@@ -677,7 +734,7 @@ export class BodyPart extends StageObject {
     g.save();
     g.translate(-ox, -oy);
     g.translate(stage.w / 2, stage.h / 2);
-    stage.drawVideoInto(g, cam.video, stage.w, stage.h);
+    stage.drawVideoInto(g, cam.source, stage.w, stage.h);
     g.restore();
     g.restore();
   }
@@ -754,4 +811,106 @@ function offset(poly, d) {
   });
 }
 
-export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart };
+// ── Button ────────────────────────────────────────────────────────────────
+// A real xp.css button on the stage. Scene 11 wants one clicked live: it reads as a UI
+// moment to the audience, and the mic grant genuinely has to be user-initiated.
+
+export class ButtonObject extends StageObject {
+  static fields = [
+    ...StageObject.fields,
+    { key: 'text', label: 'label', type: 'text' },
+    { key: 'action', label: 'action', type: 'select', options: ['', 'enableMic'] },
+  ];
+
+  apply(spec) {
+    super.apply(spec);
+    this.text ??= 'click me';
+    this.z ??= 250;
+    return this;
+  }
+
+  update(dt, now, stage) {
+    if (!this._el) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'stage-button';
+      el.addEventListener('click', () => this._fire());
+      this.deps.domLayer.appendChild(el);
+      this._el = el;
+    }
+    // Its job done, it takes itself off stage — the script replaces it with the bar.
+    if (this.action === 'enableMic' && this.deps.mic?.ready) { this._el.hidden = true; return; }
+    if (this._el.textContent !== this.text) this._el.textContent = this.text;
+    placeDom(this._el, this, stage);
+  }
+
+  _fire() {
+    if (this.action === 'enableMic') this.deps.mic?.enable();
+  }
+
+  dispose() { this._el?.remove(); this._el = null; }
+
+  serialize() {
+    const out = super.serialize();
+    out.text = this.text;
+    if (this.action) out.action = this.action;
+    return out;
+  }
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────
+// An xp.css progress bar that fills only while the room is loud. Scene 11's drumroll: it
+// takes AT LEAST `seconds` of sustained noise, and stalls the moment the room goes quiet.
+
+export class ProgressObject extends StageObject {
+  static fields = [
+    ...StageObject.fields,
+    { key: 'seconds', label: 'min secs', type: 'range', min: 2, max: 30, step: 1 },
+    { key: 'threshold', label: 'loud at', type: 'range', min: 0.02, max: 0.8, step: 0.02 },
+    { key: 'width', label: 'width', type: 'range', min: 0.1, max: 1, step: 0.01 },
+  ];
+
+  apply(spec) {
+    super.apply(spec);
+    this.seconds ??= 10;
+    this.threshold ??= 0.12;
+    this.width ??= 0.5;
+    this.value ??= 0;
+    this.z ??= 250;
+    this.needsMic ??= true;   // hidden until the mic is granted
+    return this;
+  }
+
+  update(dt, now, stage) {
+    if (!this._el) {
+      const el = document.createElement('progress');
+      el.max = 100;
+      el.className = 'stage-progress';
+      this.deps.domLayer.appendChild(el);
+      this._el = el;
+    }
+    const mic = this.deps.mic;
+    if (this.needsMic && !mic?.ready) { this._el.hidden = true; return; }
+
+    // Judged on the ~1s average, not the instant level — one clap should not advance it,
+    // and the script asks for sustained noise.
+    if (mic && mic.avg > this.threshold) {
+      this.value = Math.min(100, this.value + (dt / (this.seconds * 1000)) * 100);
+    }
+    this._el.value = this.value;
+    this._el.style.width = `${this.width * 100}%`;
+    placeDom(this._el, this, stage);
+  }
+
+  dispose() { this._el?.remove(); this._el = null; }
+
+  serialize() {
+    const out = super.serialize();
+    out.seconds = this.seconds;
+    out.threshold = round(this.threshold);
+    out.width = round(this.width);
+    return out;
+  }
+}
+
+export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject };

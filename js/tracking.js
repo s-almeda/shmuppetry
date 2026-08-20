@@ -38,6 +38,19 @@ const MESH = {
   jawL: 172, jawR: 397,       // jaw width
 };
 
+// Mounts on the MOUTH rather than the face. The BricolMage hangs a hat off the top lip
+// and a little body off the bottom one, so both edges need a mount with the right
+// attachment: the hat rests its bottom edge on the upper lip, the body hangs its top edge
+// from the lower one — the same opposite-attachment problem as hat vs beard (§2.2).
+//
+// Derived from the lips CONTOUR rather than fixed landmarks, so they track the mouth as it
+// opens instead of sitting at a guessed offset. Usable nested — `fasten: "mouth.mouthTop"`
+// resolves in the mouth cutout's own space, so the hat follows it as you move and rotate it.
+const CONTOUR_MOUNTS = {
+  mouthTop: { part: 'mouth', edge: 'top', anchor: 'bottom' },
+  mouthBottom: { part: 'mouth', edge: 'bottom', anchor: 'top' },
+};
+
 export const FACE_MOUNTS = {
   hat:     { at: [MESH.crown], anchor: 'bottom', width: ['cheekL', 'cheekR'], scale: 1 },
   glasses: { at: [MESH.eyeL, MESH.eyeR], anchor: 'center', width: ['cheekL', 'cheekR'], scale: 1 },
@@ -102,6 +115,10 @@ export class Tracking {
     this.rings = {};        // region name → ordered landmark indices
     this._models = {};
     this._lastAt = -1;
+    // When frozen, detection stops and the last landmarks stand. Everything downstream —
+    // cutouts, mounts, fasteners — freezes without needing to know about it.
+    this.frozen = false;
+    this.detector = null;      // set by main.js when the potato capability loads
   }
 
   ready(kind) { return this.state[kind] === 'ready'; }
@@ -141,7 +158,7 @@ export class Tracking {
   // Called once per frame, before objects draw.
   update(now) {
     const video = this.camera.video;
-    if (!this.camera.live) return;
+    if (!this.camera.live || this.frozen) return;
     if (now === this._lastAt) return;   // detectForVideo needs a rising timestamp
     this._lastAt = now;
 
@@ -193,6 +210,10 @@ export class Tracking {
   // Returns null when the part isn't visible — a pinned object with nothing to pin to
   // simply isn't on stage this frame.
   fastener(name) {
+    // The potato is another fastener source, resolved through the same door as hands and
+    // face mounts so no object needs to know it is special.
+    if (name === 'potato') return this.detector?.fastener() ?? null;
+    if (CONTOUR_MOUNTS[name]) return this._contourMount(name);
     if (FACE_MOUNTS[name]) return this._mountFastener(name);
     if (FACE_PARTS.includes(name)) return this._faceFastener(name);
     const h = this.hands[name];
@@ -234,6 +255,27 @@ export class Tracking {
     const width = Math.hypot((b.x - a.x) * this.stage.aspect, b.y - a.y) * m.scale;
 
     return { x, y, size: width, angle: this._roll(P), anchor: m.anchor, fit: 'width' };
+  }
+
+  // A mount on one edge of a tracked contour, sized to that contour's width.
+  _contourMount(name) {
+    const m = CONTOUR_MOUNTS[name];
+    const pts = this.contour(m.part);
+    if (!pts?.length) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of pts) {
+      x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y);
+      x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y);
+    }
+    const P = (i) => this.stage.videoNormToStage(this.face[i].x, this.face[i].y, this.camera.video);
+    return {
+      x: (x0 + x1) / 2,
+      y: m.edge === 'top' ? y0 : y1,
+      size: (x1 - x0) / this.stage.aspect,
+      angle: this._roll(P),
+      anchor: m.anchor,
+      fit: 'width',
+    };
   }
 
   _faceFastener(part) {

@@ -106,10 +106,11 @@ export class EditMode {
 }
 
 export class Panel {
-  constructor({ el, player, edit, tabLabel = null }) {
+  constructor({ el, player, edit, detector = null, tabLabel = null }) {
     this.el = el;
     this.player = player;
     this.edit = edit;
+    this.detector = detector;
     this.tabLabel = tabLabel;   // omit → no tab at all (performance rigs)
     this.selectedId = null;
     this._inspectorFor = null;
@@ -153,6 +154,10 @@ export class Panel {
         <div class="group" id="p-inspector-section" hidden>
           <b id="p-inspector-title">object</b>
           <div id="p-inspector"></div>
+        </div>
+        <div class="group" id="p-potato-section" hidden>
+          <b>🥔 potato</b>
+          <div id="p-potato"></div>
         </div>
         <div class="group" id="p-edit-section" hidden>
           <div class="panel-row">
@@ -198,6 +203,16 @@ export class Panel {
   }
 
   onSceneChange(scene) {
+    // Detector controls appear only when the capability is loaded AND the scene uses it —
+    // a slider for something that is not running reads as broken (§9.5).
+    const det = this.detector;
+    const show = det && det.state === 'ready' && (det.enabled || det.manual);
+    this.$('#p-potato-section').hidden = !show;
+    if (show && this._potatoFor !== det.state) {
+      this._potatoFor = det.state;
+      this.renderFields(this.$('#p-potato'), det);
+    }
+
     this.$('#p-num').value = String(this.player.index + 1);
     this.$('#p-count').textContent = `/ ${this.player.length}`;
     const note = this.$('#p-note');
@@ -268,8 +283,14 @@ export class Panel {
     // the element being dragged.
     if (this._inspectorFor === obj.id) return;
     this._inspectorFor = obj.id;
-    host.innerHTML = '';
+    this.renderFields(host, obj, () => this.edit.markDirty());
+  }
 
+  // The generic field renderer, driven by a `fields` array. Used for stage objects and for
+  // instruments like the detector alike — writing a bespoke panel block per feature is
+  // what 2.5.0 did, and it is why adding a capability there meant hand-writing HTML (§6).
+  renderFields(host, obj, onChange = () => {}) {
+    host.innerHTML = '';
     for (const field of obj.fields ?? []) {
       const row = document.createElement('div');
       row.className = 'panel-row';
@@ -318,7 +339,7 @@ export class Panel {
         obj[field.key] = field.type === 'checkbox' ? input.checked
           : numeric ? parseFloat(input.value) : input.value;
         if (readout) readout.textContent = fmt(obj[field.key]);
-        this.edit.markDirty();
+        onChange();
       };
       input.addEventListener('input', commit);
       input.addEventListener('change', commit);

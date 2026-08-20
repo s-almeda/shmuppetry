@@ -9,6 +9,8 @@ import { Panel, EditMode } from './panel.js';
 import { TYPES } from './objects.js';
 import { Tracking } from './tracking.js';
 import { Silhouette } from './silhouette.js';
+import { Detector } from './detector.js';
+import { Mic } from './mic.js';
 
 const params = new URLSearchParams(location.search);
 const showName = params.get('show') || 'demo';
@@ -34,6 +36,26 @@ const camera = {
   video: Object.assign(document.createElement('video'), { autoplay: true, muted: true, playsInline: true }),
   state: 'off',
   get live() { return this.state === 'live' && this.video.readyState >= 2; },
+
+  // Freezing must hold the PIXELS as well as the tracking. Holding only the landmarks
+  // freezes a cutout's outline while live video keeps playing through it — the shape
+  // stops, the face inside it does not.
+  //
+  // Everything that draws the feed reads `source`, so a snapshot swaps in without any
+  // drawing code knowing. Captured at native resolution, so every cover-fit and
+  // coordinate mapping downstream is unchanged.
+  get source() { return this._still ?? this.video; },
+
+  snap() {
+    if (this._still || !this.live) return;
+    const c = document.createElement('canvas');
+    c.width = this.video.videoWidth;
+    c.height = this.video.videoHeight;
+    c.getContext('2d').drawImage(this.video, 0, 0);
+    this._still = c;
+  },
+
+  release() { this._still = null; },
   async start() {
     if (this.state === 'live') return true;
     this.state = 'starting';
@@ -77,6 +99,7 @@ const loadJSON = (url, fallback = null) =>
   fetch(url, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : fallback)).catch(() => fallback);
 
 let tracking = null;
+let mic = { ready: false, denied: false };
 
 function startStatusBar() {
   let startedAt = null;
@@ -91,8 +114,8 @@ function startStatusBar() {
     el.statusRuntime.textContent = startedAt === null ? '—' : fmt(performance.now() - startedAt);
     el.statusCamera.textContent = camera.live ? 'webcam on' : 'webcam off';
     // Camera and mic are separate getUserMedia grants (§9.4) — in 2.5.0 people turned on
-    // ventriloquy and wondered why nothing moved. No audio capability yet, so: off.
-    el.statusMic.textContent = 'mic off';
+    // ventriloquy and wondered why nothing moved, so mic state is surfaced.
+    el.statusMic.textContent = mic.ready ? 'mic on' : mic.denied ? 'mic blocked' : 'mic off';
   };
   paint();
   setInterval(paint, 1000);
@@ -125,17 +148,32 @@ async function main() {
   // fastened objects appear when tracking lands (§9.5, §2.6).
   tracking = new Tracking(stage, camera);
   const silhouette = new Silhouette(camera);
+  const detector = new Detector(stage, camera, tracking);
+  mic = new Mic();
+  tracking.detector = detector;
   for (const kind of ['hands', 'face']) {
     if (config.capabilities?.includes(kind)) tracking.load(kind);
   }
-  // Outlines recorded by cutouts this frame, for whatever draws their union. Cleared
-  // here so it cannot grow when nothing consumes it.
-  const shapes = [];
-  renderer.beforeFrame = (now) => { tracking.update(now); shapes.length = 0; };
+  if (config.capabilities?.includes('potato')) detector.load();
+  let lastNow = performance.now();
+  renderer.beforeFrame = (now) => {
+    mic.update(now - lastNow);
+    lastNow = now;
+    tracking.update(now);
+    detector.update();
+  };
+
+  // The manual fallback. Bound early and unconditionally so it is available the moment
+  // the detector lets you down, which is the only time it matters.
+  document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (e.key.toLowerCase() === 'p') detector.toggleManual();
+  });
 
   // Dependencies passed explicitly — NOT a grab-bag that modules mutate to hand
   // capability back to the core, which is what 2.5.0's featureCtx became (§6).
-  const deps = { stage, camera, assets, tracking, silhouette, shapes, renderer, paper: config.paper, domLayer: el.domLayer };
+  const deps = { stage, camera, assets, tracking, silhouette, detector, mic, renderer, paper: config.paper, domLayer: el.domLayer };
   const make = (spec) => {
     const Type = TYPES[spec.type];
     if (!Type) { console.warn(`[scene] unknown object type "${spec.type}" (${spec.id})`); return null; }
@@ -153,8 +191,12 @@ async function main() {
 
   const edit = new EditMode({ showName, banner: el.dirty });
   deps.edit = edit;
-  const player = new Player({ make, renderer, onSceneChange: (s) => { panel.onSceneChange(s); edit.onSceneChange(); } });
-  const panel = new Panel({ el: el.panel, player, edit, tabLabel: config.panelTab ?? null });
+  const player = new Player({
+    make, renderer, tracking, camera,
+    bodyBase: document.body.className,
+    onSceneChange: (s) => { panel.onSceneChange(s); edit.onSceneChange(); },
+  });
+  const panel = new Panel({ el: el.panel, player, edit, detector, tabLabel: config.panelTab ?? null });
   edit.player = player;
   // Lets one object pin to another (`fasten: "face.hat"`), and lets the panel offer those
   // combinations. Wired after the player exists, since the pool lives there.
@@ -189,7 +231,7 @@ async function main() {
 
   if (params.has('nocam')) { el.boot.classList.add('hidden'); el.boot.hidden = true; }
 
-  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, tracking, silhouette };
+  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, tracking, silhouette, detector, mic };
 }
 
 main().catch((err) => {

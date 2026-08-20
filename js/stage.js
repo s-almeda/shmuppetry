@@ -65,8 +65,9 @@ export class Stage {
   // The one cover-fit in the codebase. In 2.5.0 this math was copy-pasted into four
   // modules (§8.1). Expressed source-side: which rect OF THE VIDEO is visible.
   coverFit(video, targetW, targetH) {
-    const vw = video.videoWidth || video.naturalWidth || 0;
-    const vh = video.videoHeight || video.naturalHeight || 0;
+    // Accepts a <video>, an <img>, or a canvas — the last is how a frozen frame arrives.
+    const vw = video.videoWidth || video.naturalWidth || video.width || 0;
+    const vh = video.videoHeight || video.naturalHeight || video.height || 0;
     if (!vw || !vh) return null;
     const scale = Math.max(targetW / vw, targetH / vh);
     const sw = targetW / scale, sh = targetH / scale;
@@ -80,8 +81,8 @@ export class Stage {
     if (!video) return { x: nx, y: ny };
     const f = this.coverFit(video, this.w, this.h);
     if (!f) return { x: nx, y: ny };
-    const vw = video.videoWidth || video.naturalWidth;
-    const vh = video.videoHeight || video.naturalHeight;
+    const vw = video.videoWidth || video.naturalWidth || video.width;
+    const vh = video.videoHeight || video.naturalHeight || video.height;
     const x = (nx * vw - f.sx) / f.sw;
     const y = (ny * vh - f.sy) / f.sh;
     return { x: this.mirror ? 1 - x : x, y };
@@ -152,7 +153,9 @@ export class Renderer {
     const g = stage.beginFrame();
     // One sorted pass, painter's algorithm (§2.1) — not stacked canvases with
     // hand-picked z-index ints, which is what collided in 2.5.0.
-    const drawable = this.objects.filter((o) => o.draw && o.visible !== false);
+    // `isMask` objects are painted only into the mask buffer of whatever they mask, never
+    // onto the stage — the spotlight circles themselves are never visible.
+    const drawable = this.objects.filter((o) => o.draw && o.visible !== false && !o.isMask);
     drawable.sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
     for (const o of drawable) {
       try { o.draw(g, stage, now); }

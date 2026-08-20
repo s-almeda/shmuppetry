@@ -236,3 +236,11 @@ body.editing .textbox-name:focus { outline: 1px dotted rgba(0, 92, 167, 0.7); ou
 .obj-row:hover .remove { visibility: visible; }
 .obj-row .remove:hover { background: rgba(190, 60, 60, 0.15); }
 .add-row select { font-size: 10px; }
+
+/* Stage widgets — DOM, positioned like TextBox, above the canvas. */
+.stage-button, .stage-progress {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  opacity: var(--o, 1);
+}
+.stage-button { font-size: 18px; padding: 8px 20px; }

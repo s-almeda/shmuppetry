@@ -16,13 +16,21 @@
 // gives byte-identical state to stepping there one scene at a time — in 2.5.0 those two
 // paths could differ, because sticky state depended on the route you took.
 
+// Scene-level settings, as opposed to objects. They inherit exactly like objects do —
+// omit one and it carries forward — which is what lets scene 23 say "still frozen"
+// without restating it.
+const SCENE_FLAGS = ['freeze', 'bodyClass', 'potato', 'potatoManual'];
+
 export function resolveScript(scenes) {
   const out = [];
   let previous = {};
+  let flags = {};
   for (let i = 0; i < scenes.length; i++) {
     const scene = scenes[i] ?? {};
     const base = scene.reset ? {} : previous;
     const objects = {};
+    if (scene.reset) flags = {};
+    for (const k of SCENE_FLAGS) if (k in scene) flags[k] = scene[k];
 
     // Inherit everything from the previous resolved stage.
     for (const [id, spec] of Object.entries(base)) objects[id] = { ...spec };
@@ -51,6 +59,7 @@ export function resolveScript(scenes) {
       index: i,
       _note: scene._note,
       objects,
+      ...flags,
     });
     previous = objects;
   }
@@ -163,8 +172,11 @@ const NEW_OBJECT = {
 // Walks the script scene by scene, following the stage directions (§2.5).
 
 export class Player {
-  constructor({ make, renderer, onSceneChange } = {}) {
+  constructor({ make, renderer, tracking, camera, bodyBase, onSceneChange } = {}) {
     this.renderer = renderer;
+    this.tracking = tracking;
+    this.camera = camera;
+    this.bodyBase = bodyBase;   // classes that survive every scene, e.g. 'show-mode'
     this.pool = new ObjectPool(make);
     this.script = [];       // raw, as authored — what gets saved back
     this.resolved = [];     // fully resolved absolute stages
@@ -192,7 +204,23 @@ export class Player {
     if (!this.resolved.length) return;
     const next = Math.max(0, Math.min(i, this.resolved.length - 1));
     this.index = next;
-    const objects = this.pool.sync(this.resolved[next].objects);
+    const scene = this.resolved[next];
+    // Freeze holds ALL tracking: landmarks stop updating, so every cutout, mount and
+    // fastener downstream holds its pose without knowing anything about freezing.
+    if (this.tracking) this.tracking.frozen = !!scene.freeze;
+    // Freeze holds the picture as well as the tracking, or a frozen cutout would keep
+    // showing live video through a still outline.
+    if (this.camera) { if (scene.freeze) this.camera.snap(); else this.camera.release(); }
+    const det = this.tracking?.detector;
+    if (det) {
+      det.enabled = !!scene.potato;
+      det.manual = !!scene.potatoManual;
+      if (!det.manual) det.manualOn = false;   // never leave the override armed by accident
+    }
+    // Scene chrome is a body class; the CSS does the rest. Not a skin system.
+    document.body.className = `${this.bodyBase ?? ''} ${scene.bodyClass ?? ''}`.trim();
+
+    const objects = this.pool.sync(scene.objects);
     if (instant) for (const o of objects) o.finishTyping?.();
     this.renderer.setObjects(objects);
     this.onSceneChange(this.resolved[next], this);

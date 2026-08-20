@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- A mask, not artwork: only the alpha matters. The soft edge gives the spotlight a
+       falloff instead of a cookie-cutter rim. -->
+  <defs>
+    <radialGradient id="s">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.62" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#s)"/>
+</svg>
