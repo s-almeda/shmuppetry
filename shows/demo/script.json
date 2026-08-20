@@ -491,6 +491,89 @@
   },
   {
     "id": 12,
+    "_note": "TEST face label — green box with a literal name, exactly scene 5a.",
+    "objects": {
+      "lhand": null,
+      "rhand": null,
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "flabel": {
+        "type": "faceLabel",
+        "text": "shm garanganao almeda",
+        "color": "#b4dd1e",
+        "textColor": "#000000"
+      },
+      "dialogue": {
+        "type": "text",
+        "speaker": "shm",
+        "text": "TEST: face box, literal label.",
+        "y": 0.8,
+        "width": 0.92
+      }
+    }
+  },
+  {
+    "id": 13,
+    "_note": "TEST live label — white box, templated text. Change expression and watch it move. Race is hardcoded, not inferred.",
+    "objects": {
+      "flabel": {
+        "text": "{emotion} {age} year-old Asian {gender}",
+        "color": "#ffffff",
+        "textColor": "#000000"
+      },
+      "dialogue": {
+        "text": "TEST: live age / gender / expression."
+      }
+    }
+  },
+  {
+    "id": 14,
+    "_note": "TEST label override — same object, literal text again.",
+    "objects": {
+      "flabel": {
+        "text": "bored mf",
+        "color": "#ffffff",
+        "textColor": "#000000"
+      },
+      "dialogue": {
+        "text": "TEST: bored mf."
+      }
+    }
+  },
+  {
+    "id": 15,
+    "_note": "TEST puppet cycling — press ] to step, shift+] to go back. Entries may carry their own size.",
+    "objects": {
+      "flabel": null,
+      "puppets": {
+        "type": "image",
+        "fasten": "leftHand",
+        "size": 1.2,
+        "cycleKey": "]",
+        "z": 40,
+        "srcs": [
+          900,
+          {
+            "src": 4,
+            "size": 1.8
+          },
+          {
+            "src": 13,
+            "size": 1.0
+          },
+          901
+        ]
+      },
+      "dialogue": {
+        "text": "TEST: hold up your left hand, press ]."
+      }
+    }
+  },
+  {
+    "id": 16,
     "_note": "TEST: everything at once, webcam removed — face, eyes, mouth and hands as separate cutouts on a black stage.",
     "objects": {
       "cam": {
@@ -678,7 +761,7 @@
     "potatoManual": false
   },
   {
-    "id": 13,
+    "id": 17,
     "_note": "Face mounts. The hat and glasses name no fastener — `_hat` and `_glasses` in their filenames place them (§7). A hat rests its BOTTOM edge on the crown, so it sits on the head rather than through it.",
     "objects": {
       "cam": {
@@ -712,7 +795,7 @@
     }
   },
   {
-    "id": 14,
+    "id": 18,
     "_note": "Miku has no suffix, so she is mounted explicitly — on the nose, with the cutout off. §2.2's case: a BodyPart that is a bare mount rather than a cut-out.",
     "objects": {
       "cam": {
@@ -785,7 +868,7 @@
     }
   },
   {
-    "id": 15,
+    "id": 19,
     "_note": "Mounts follow head roll. Tilt your head and everything tilts with it.",
     "objects": {
       "miku": null,
@@ -802,7 +885,7 @@
     }
   },
   {
-    "id": 16,
+    "id": 20,
     "_note": "Hat on a CUT-OUT face, not on the webcam. `fasten: \"facecut.hat\"` resolves the hat mount in that object's space, so the hat follows the cutout (§2.2).",
     "objects": {
       "cam": {
@@ -888,7 +971,7 @@
     }
   },
   {
-    "id": 17,
+    "id": 21,
     "_note": "The cutout is moved, scaled and rotated — the hat goes with it, because it is pinned to the object rather than to the webcam.",
     "objects": {
       "cam": null,
@@ -903,7 +986,7 @@
     }
   },
   {
-    "id": 18,
+    "id": 22,
     "_note": "Face mounts cleared. Test scenes end here; cutouts cleared. Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
     "objects": {
       "cam": {
@@ -943,7 +1026,7 @@
     }
   },
   {
-    "id": 19,
+    "id": 23,
     "_note": "z ordering: sign 20 over star 10 over cam -100. One sorted pass.",
     "objects": {
       "sign": {
@@ -961,7 +1044,7 @@
     }
   },
   {
-    "id": 20,
+    "id": 24,
     "_note": "Removal. `star: null` takes it off stage; everything else persists.",
     "objects": {
       "star": null,
@@ -971,7 +1054,7 @@
     }
   },
   {
-    "id": 21,
+    "id": 25,
     "_note": "Two TextBoxes at once, different styles. `aside` has no speaker, so no tab.",
     "objects": {
       "dialogue": {
@@ -992,7 +1075,7 @@
     }
   },
   {
-    "id": 22,
+    "id": 26,
     "_note": "Fasteners. x/y are offsets from the pin; size multiplies hand span.",
     "objects": {
       "aside": null,
@@ -1030,7 +1113,7 @@
     }
   },
   {
-    "id": 23,
+    "id": 27,
     "_note": "BodyParts. Hands cut from the feed by stroking the landmark skeleton, dilated, white border, drop shadow.",
     "objects": {
       "star": null,
@@ -1051,7 +1134,7 @@
     }
   },
   {
-    "id": 24,
+    "id": 28,
     "_note": "Same cutouts with the webcam removed. Only the hands and pinned art remain.",
     "objects": {
       "cam": null,
@@ -1070,7 +1153,7 @@
     }
   },
   {
-    "id": 25,
+    "id": 29,
     "_note": "Scale and rotation on a BodyPart; cutouts are ordinary objects.",
     "objects": {
       "star": null,
@@ -1088,7 +1171,7 @@
     }
   },
   {
-    "id": 26,
+    "id": 30,
     "_note": "hoverFade on a caption over the full-bleed webcam.",
     "objects": {
       "lhand": null,
@@ -1113,7 +1196,7 @@
     }
   },
   {
-    "id": 27,
+    "id": 31,
     "reset": true,
     "_note": "reset: true. Starts from an empty stage instead of inheriting.",
     "objects": {

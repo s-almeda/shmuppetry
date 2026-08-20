@@ -11,6 +11,7 @@ import { Tracking } from './tracking.js';
 import { Silhouette } from './silhouette.js';
 import { Detector } from './detector.js';
 import { Mic } from './mic.js';
+import { FaceAnalysis } from './facelabel.js';
 
 const params = new URLSearchParams(location.search);
 const showName = params.get('show') || 'demo';
@@ -99,6 +100,7 @@ const loadJSON = (url, fallback = null) =>
   fetch(url, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : fallback)).catch(() => fallback);
 
 let tracking = null;
+let player = null;
 let mic = { ready: false, denied: false };
 
 function startStatusBar() {
@@ -150,17 +152,20 @@ async function main() {
   const silhouette = new Silhouette(camera);
   const detector = new Detector(stage, camera, tracking);
   mic = new Mic();
+  const faces = new FaceAnalysis(stage, camera);
   tracking.detector = detector;
   for (const kind of ['hands', 'face']) {
     if (config.capabilities?.includes(kind)) tracking.load(kind);
   }
   if (config.capabilities?.includes('potato')) detector.load();
+  if (config.capabilities?.includes('faceLabels')) faces.load();
   let lastNow = performance.now();
   renderer.beforeFrame = (now) => {
     mic.update(now - lastNow);
     lastNow = now;
     tracking.update(now);
     detector.update();
+    faces.update(now);
   };
 
   // The manual fallback. Bound early and unconditionally so it is available the moment
@@ -169,11 +174,18 @@ async function main() {
     const t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     if (e.key.toLowerCase() === 'p') detector.toggleManual();
+
+    // Any object declaring `cycleKey` steps its source list. The script drives the hand
+    // puppets with ']' while talking, so the binding is per-object rather than global —
+    // two puppets can cycle on different keys.
+    for (const o of player?.pool.objects ?? []) {
+      if (o.cycleKey === e.key) o.cycle?.(e.shiftKey ? -1 : 1);
+    }
   });
 
   // Dependencies passed explicitly — NOT a grab-bag that modules mutate to hand
   // capability back to the core, which is what 2.5.0's featureCtx became (§6).
-  const deps = { stage, camera, assets, tracking, silhouette, detector, mic, renderer, paper: config.paper, domLayer: el.domLayer };
+  const deps = { stage, camera, assets, tracking, silhouette, detector, mic, faces, renderer, paper: config.paper, domLayer: el.domLayer };
   const make = (spec) => {
     const Type = TYPES[spec.type];
     if (!Type) { console.warn(`[scene] unknown object type "${spec.type}" (${spec.id})`); return null; }
@@ -191,7 +203,7 @@ async function main() {
 
   const edit = new EditMode({ showName, banner: el.dirty });
   deps.edit = edit;
-  const player = new Player({
+  player = new Player({
     make, renderer, tracking, camera,
     bodyBase: document.body.className,
     onSceneChange: (s) => { panel.onSceneChange(s); edit.onSceneChange(); },
@@ -231,7 +243,7 @@ async function main() {
 
   if (params.has('nocam')) { el.boot.classList.add('hidden'); el.boot.hidden = true; }
 
-  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, tracking, silhouette, detector, mic };
+  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, tracking, silhouette, detector, mic, faces };
 }
 
 main().catch((err) => {

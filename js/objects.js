@@ -246,6 +246,42 @@ export class ImageObject extends StageObject {
     super.apply(spec);
     this.size ??= this.fasten ? 1.1 : 0.5;
     this.fit ??= 'height';
+    // A puppet can carry a LIST and be cycled live with a key (§7 — 2.5.0 stepped through
+    // a numbered folder with `;`/`'`). Here the scene names the set explicitly, so what
+    // you cycle through is what the script says rather than whatever is in a directory.
+    //
+    // An entry is either a bare src or a small object of overrides:
+    //
+    //   "srcs": [ 10, { "src": 11, "size": 1.6 }, { "src": 12, "size": 0.9, "y": -0.1 } ]
+    //
+    // because puppets are not interchangeable — a wide video and a tall drawing want
+    // different scales on the same hand. Not a container object: nothing else in the
+    // system nests, and per-entry overrides buy the same thing without it.
+    this._load(spec);
+    return this;
+  }
+
+  // Resolve `src` (or the current entry of `srcs`) to a media element. Separate from
+  // apply() because apply means "become exactly this spec" and deletes anything the spec
+  // omits — so cycling through apply({}) would wipe srcs, index and cycleKey.
+  _load(spec = {}) {
+    if (this.srcs?.length) {
+      this.index = ((this.index ?? 0) % this.srcs.length + this.srcs.length) % this.srcs.length;
+      const entry = this.srcs[this.index];
+      if (entry && typeof entry === 'object') {
+        // Remember the object's own values the first time an entry overrides them, so
+        // stepping to a plain entry restores them rather than keeping the last puppet's.
+        this._base ??= {};
+        for (const k of Object.keys(entry)) {
+          if (k !== 'src' && !(k in this._base)) this._base[k] = this[k];
+        }
+        for (const [k, v] of Object.entries(this._base)) this[k] = v;
+        Object.assign(this, entry);
+      } else {
+        for (const [k, v] of Object.entries(this._base ?? {})) this[k] = v;
+        this.src = entry;
+      }
+    }
     if (this.src !== this._loaded) {
       this.el = this.src != null ? this.deps.assets?.get(this.src) : null;
       this._loaded = this.src;
@@ -265,7 +301,6 @@ export class ImageObject extends StageObject {
       this.el.muted = !this.audio;   // videos are muted unless a scene opts in
       this.el.play?.().catch(() => {});
     }
-    return this;
   }
 
   render(g, stage) {
@@ -299,11 +334,21 @@ export class ImageObject extends StageObject {
     g.drawImage(this.el, -w / 2, dy, w, h);
   }
 
+  // Step to the next source. The video element is swapped by apply(), so a .webm puppet
+  // starts from the top each time it comes round.
+  cycle(by = 1) {
+    if (!this.srcs?.length) return;
+    this.index = (((this.index ?? 0) + by) % this.srcs.length + this.srcs.length) % this.srcs.length;
+    this._load();
+  }
+
   dispose() { if (this.el?.tagName === 'VIDEO') this.el.muted = true; }
 
   serialize() {
     const out = super.serialize();
-    if (this.src != null) out.src = this.src;
+    if (this.srcs?.length) { out.srcs = this.srcs; out.index = this.index ?? 0; }
+    else if (this.src != null) out.src = this.src;
+    if (this.cycleKey) out.cycleKey = this.cycleKey;
     if (this.fit !== 'height') out.fit = this.fit; else out.size = round(this.size);
     if (this.audio) out.audio = true;
     if (this.anchor) out.anchor = this.anchor;
@@ -913,4 +958,77 @@ export class ProgressObject extends StageObject {
   }
 }
 
-export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject };
+// ── FaceLabel ─────────────────────────────────────────────────────────────
+// The bounding box and caption over a detected face. Three beats in the script differ
+// only in colour and text — `#b4dd1e` with a name, then white with a live description,
+// then "bored mf" — so it is one object, not three.
+//
+// `text` is a template: {emotion} {age} {gender} are filled from face-api, and anything
+// without a placeholder is a literal. Race is not inferred; the script writes the word.
+
+export class FaceLabelObject extends StageObject {
+  static fields = [
+    { key: 'z', label: 'z', type: 'number', min: -400, max: 400, step: 1 },
+    { key: 'opacity', label: 'opacity', type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'text', label: 'text', type: 'text' },
+    { key: 'color', label: 'box', type: 'text' },
+    { key: 'textColor', label: 'text col', type: 'text' },
+    { key: 'pad', label: 'pad', type: 'range', min: 0, max: 0.3, step: 0.01 },
+  ];
+
+  apply(spec) {
+    super.apply(spec);
+    this.text ??= '{emotion} {age} year-old Asian {gender}';
+    this.color ??= '#b4dd1e';
+    this.textColor ??= '#000000';
+    this.pad ??= 0.06;
+    this.z ??= 60;
+    return this;
+  }
+
+  // Drawn in STAGE space, not at an object position — the box IS wherever the face is.
+  draw(g, stage) {
+    const face = this.deps.faces;
+    const r = face?.result;
+    if (!r || this.visible === false || this.opacity <= 0) return;
+
+    const pad = this.pad * r.box.h;
+    const x = (r.box.x - pad / stage.aspect) * stage.w;
+    const y = (r.box.y - pad) * stage.h;
+    const w = (r.box.w + (2 * pad) / stage.aspect) * stage.w;
+    const h = (r.box.h + 2 * pad) * stage.h;
+
+    g.save();
+    g.globalAlpha = this.opacity;
+    g.lineWidth = Math.max(2, stage.h * 0.004);
+    g.strokeStyle = this.color;
+    g.strokeRect(x, y, w, h);
+
+    const label = face.fill(this.text);
+    if (label) {
+      const size = Math.max(11, stage.h * 0.032);
+      g.font = `${size}px system-ui, sans-serif`;
+      const tw = g.measureText(label).width;
+      const th = size * 1.5;
+      // Caption sits under the box, flipping above it if that would leave the stage.
+      const ly = y + h + th > stage.h ? y - th : y + h;
+      g.fillStyle = this.color;
+      g.fillRect(x, ly, tw + size * 0.8, th);
+      g.fillStyle = this.textColor;
+      g.textBaseline = 'middle';
+      g.fillText(label, x + size * 0.4, ly + th / 2);
+    }
+    g.restore();
+  }
+
+  serialize() {
+    const out = super.serialize();
+    out.text = this.text;
+    out.color = this.color;
+    out.textColor = this.textColor;
+    out.pad = round(this.pad);
+    return out;
+  }
+}
+
+export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, faceLabel: FaceLabelObject };
