@@ -245,6 +245,15 @@
     "id": 5,
     "_note": "TEST: everything at once, webcam removed — face, eyes, mouth and hands as separate cutouts on a black stage.",
     "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "opacity": 0,
+        "fit": "box",
+        "size": 0.35
+      },
       "dialogue": {
         "type": "text",
         "x": 0.5,
@@ -252,6 +261,101 @@
         "text": "HELLO THERE!",
         "speaker": "SOME GUY",
         "width": 0.92
+      },
+      "leye": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 26,
+        "scale": 2.55,
+        "rotation": 10,
+        "fasten": "leftEye",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.25,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 6,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.215,
+          "color": "#ffffff"
+        }
+      },
+      "reye": {
+        "type": "bodyPart",
+        "x": 0.04,
+        "y": 0,
+        "z": 41,
+        "scale": 2.44,
+        "rotation": 3,
+        "fasten": "rightEye",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 3.05,
+          "grow": 0.1,
+          "smooth": 0.3,
+          "crown": 0.16,
+          "points": 6,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.195,
+          "color": "#ffffff"
+        }
+      },
+      "mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.165,
+        "z": 21,
+        "scale": 3,
+        "fasten": "mouth",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.095,
+          "color": "#ffffff"
+        }
+      },
+      "bodyPart": {
+        "type": "bodyPart",
+        "x": 0.055,
+        "y": 0,
+        "z": 37,
+        "scale": 0.72,
+        "rotation": -86,
+        "fasten": "leftHand",
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.095,
+          "clean": 0.015,
+          "range": 0.5,
+          "grow": 0.04,
+          "smooth": 0.4,
+          "crown": 0.22,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.035,
+          "color": "#ffffff"
+        }
       },
       "lhand": {
         "type": "bodyPart",
@@ -272,7 +376,7 @@
           "join": "miter"
         },
         "outline": {
-          "width": 0.045,
+          "width": 0.05,
           "color": "#ffffff"
         }
       },
@@ -305,76 +409,6 @@
         "z": 25,
         "scale": 3,
         "fasten": "rightEye",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.02,
-          "smooth": 0.55,
-          "crown": 0.22,
-          "points": 13,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.045,
-          "color": "#ffffff"
-        }
-      },
-      "leye": {
-        "type": "bodyPart",
-        "x": 0,
-        "y": 0,
-        "z": 26,
-        "scale": 2.55,
-        "fasten": "leftEye",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.25,
-          "smooth": 0.55,
-          "crown": 0.22,
-          "points": 6,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.045,
-          "color": "#ffffff"
-        }
-      },
-      "reye": {
-        "type": "bodyPart",
-        "x": 0.04,
-        "y": 0,
-        "z": 41,
-        "scale": 2.44,
-        "rotation": 3,
-        "fasten": "rightEye",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 3.05,
-          "grow": 0.1,
-          "smooth": 0.3,
-          "crown": 0.16,
-          "points": 6,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.045,
-          "color": "#ffffff"
-        }
-      },
-      "mouth": {
-        "type": "bodyPart",
-        "x": 0,
-        "y": -0.165,
-        "z": 21,
-        "scale": 3,
-        "fasten": "mouth",
         "cut": {
           "bound": 0.11,
           "skeleton": 0.01,

@@ -108,7 +108,12 @@ export class Renderer {
     this.beforeFrame = null;   // optional fn(now) — tracking runs here, before objects draw
     this.running = false;
     this._last = 0;
+    // ?perf — where the frame actually goes. Measuring beats guessing; every stage that
+    // could plausibly be the cost gets its own timer.
+    this.perf = null;
   }
+
+  _mark(key, ms) { if (this.perf) this.perf[key] = (this.perf[key] ?? 0) + ms; }
 
   setObjects(objects) { this.objects = objects; }
 
@@ -120,7 +125,9 @@ export class Renderer {
       if (!this.running) return;
       const dt = Math.min(now - this._last, 100);  // clamp: a backgrounded tab must not
       this._last = now;                            // fast-forward every animation at once
+      const t0 = this.perf && performance.now();
       try { this.frame(dt, now); } catch (err) { console.error('[renderer]', err); }
+      if (this.perf) this.perf.total += performance.now() - t0;
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
@@ -130,12 +137,17 @@ export class Renderer {
 
   frame(dt, now) {
     const stage = this.stage;
+    const P = this.perf;
     stage.sync();
+
+    let t = P && performance.now();
     this.beforeFrame?.(now);
+    if (P) { this._mark('tracking', performance.now() - t); t = performance.now(); }
 
     // Every object ticks, including DOM-rendered ones (a TextBox drives its typewriter
     // here — off the frame clock, so heavy work can never starve it).
     for (const o of this.objects) o.update?.(dt, now, stage);
+    if (P) { this._mark('update', performance.now() - t); t = performance.now(); }
 
     const g = stage.beginFrame();
     // One sorted pass, painter's algorithm (§2.1) — not stacked canvases with
@@ -147,6 +159,18 @@ export class Renderer {
       catch (err) {
         console.error(`[renderer] ${o.type}#${o.id}`, err);
         o.visible = false;   // one bad object must not kill the show mid-performance
+      }
+    }
+
+    if (P) {
+      this._mark('draw', performance.now() - t);
+      if (++P.frames >= 60) {
+        const per = (k) => (P[k] / P.frames).toFixed(2).padStart(6);
+        console.log(
+          `[perf] frame ${(P.total / P.frames).toFixed(1)}ms  ·  tracking ${per('tracking')}` +
+          `  update ${per('update')}  draw ${per('draw')}  ·  silhouette ${per('silhouette')}` +
+          `  objects ${this.objects.length}`);
+        for (const k of Object.keys(P)) P[k] = 0;
       }
     }
   }

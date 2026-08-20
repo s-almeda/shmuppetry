@@ -454,9 +454,10 @@ const PAPER = {
   mouth: { points: 10, outline: { width: 0.08 } },
   outline: { width: 0.045, color: '#ffffff' },
   shadow: { dx: 0, dy: 0.012, blur: 0.02, color: 'rgba(0,0,0,0.45)' },
-  // Paper grain over the cutout (§2.3). `src` empty turns it off entirely — no pattern
-  // is built and the pass is skipped, so it costs nothing when unused.
-  texture: { src: 'textures/paper.jpeg', opacity: 0.35, blend: 'multiply', scale: 1 },
+  // NO live texturing. Per-frame grain was measured as the dominant cost — blend passes
+  // clipped per cutout, seven cutouts deep — and removing it was the single biggest win
+  // available. If paper grain comes back it should be a CSS overlay on the stage element,
+  // which the compositor handles on the GPU outside this loop entirely.
 };
 
 export class BodyPart extends StageObject {
@@ -472,10 +473,6 @@ export class BodyPart extends StageObject {
     { key: 'crown', label: 'crown', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'smooth', label: 'smooth', type: 'range', min: 0, max: 0.95, step: 0.05 },
     { key: 'points', label: 'points', type: 'range', min: 8, max: 96, step: 1 },
-    { key: 'texture', label: 'texture', type: 'text' },
-    { key: 'textureOpacity', label: 'tex α', type: 'range', min: 0, max: 1, step: 0.05 },
-    { key: 'textureBlend', label: 'tex mix', type: 'select', options: ['multiply', 'overlay', 'soft-light', 'source-over'] },
-    { key: 'textureScale', label: 'tex size', type: 'range', min: 0.2, max: 4, step: 0.1 },
     { key: 'debug', label: 'show mask', type: 'checkbox' },
   ];
 
@@ -518,56 +515,85 @@ export class BodyPart extends StageObject {
     this.outlineWidth ??= spec.outline?.width ?? pickOutline('width');
     this.outlineColor ??= spec.outline?.color ?? pickOutline('color');
     this.shadow ??= { ...PAPER.shadow, ...(paper.shadow ?? {}), ...(spec.shadow ?? {}) };
-    const tex = { ...PAPER.texture, ...(paper.texture ?? {}), ...(spec.texture ?? {}) };
-    this.texture ??= tex.src;
-    this.textureOpacity ??= tex.opacity;
-    this.textureBlend ??= tex.blend;
-    this.textureScale ??= tex.scale;
     this.debug ??= false;
     this.showCut ??= true;   // false → a bare mount for pinned puppets (§2.2)
     return this;
   }
 
-  render(g, stage) {
-    if (!this.showCut) return;
+  // GEOMETRY happens here, one phase before anything paints.
+  //
+  // Renderer.frame calls update() on every object before ANY object draws, so by paint
+  // time every cutout's outline exists. That is what lets a shadow drawn at a lower z use
+  // THIS frame's outlines instead of trailing a frame behind.
+  //
+  // Note update() runs on every object while draw() filters by `visible` — so the outline
+  // is only recorded when this object will actually be painted, or hidden cutouts would
+  // still cast shadows and collect grain.
+  update(dt, now, stage) {
+    this._poly = null;
+    if (!this.showCut || this.visible === false) return;
     const cam = this.deps.camera;
+    this.pin = this._resolvePin(stage);
     if (!cam?.live || !this.pin) return;
-    const ox0 = this.pin.x * stage.w, oy0 = this.pin.y * stage.h;
 
-    // A face needs none of the hand's colour segmentation: the landmark contour IS the
-    // silhouette. A face also doesn't rotate or fold over itself the way a hand does, so
-    // there is nothing for a pixel pass to recover. Cheaper, and exact.
-    if (FACE_PARTS.includes(this.fasten)) {
-      const poly = this._contourPoly(stage, ox0, oy0);
-      if (!poly) return;
-      this._paint(g, stage, poly, ox0, oy0, cam);
-      if (this.debug) this._debugPoly(g, stage, poly);
-      return;
-    }
-
-    const raw = this.deps.tracking?.hands?.[this.fasten];
-    if (!raw) return;
-
-    const sil = this.deps.silhouette?.compute(this.fasten, raw, {
-      bound: this.bound, skeleton: this.skeleton, clean: this.clean,
-      range: this.range, grow: this.grow, smooth: this.smooth, points: this.points,
-    });
-    if (!sil?.polygon) return;
-
-    // Video px → local stage px. The mirror is resolved here, at the video→stage
-    // boundary, as everywhere else (§9.2).
-    const { vw, vh } = sil.rect;
     const ox = this.pin.x * stage.w, oy = this.pin.y * stage.h;
-    const toLocal = ([vx, vy]) => {
-      const q = stage.videoNormToStage(vx / vw, vy / vh, cam.video);
-      return [q.x * stage.w - ox, q.y * stage.h - oy];
-    };
-    const poly = sil.polygon.map(toLocal);
 
-    this._paint(g, stage, poly, ox, oy, cam);
-    if (this.debug) this._debug(g, stage, sil, poly, toLocal);
+    if (FACE_PARTS.includes(this.fasten)) {
+      // A face needs none of the hand's colour segmentation: the landmark contour IS the
+      // silhouette, and a face does not fold over itself the way a hand does.
+      this._poly = this._contourPoly(stage, ox, oy);
+      this._sil = null;
+    } else {
+      const raw = this.deps.tracking?.hands?.[this.fasten];
+      const perf = this.deps.renderer?.perf;
+      const t0 = perf && performance.now();
+      const sil = raw && this.deps.silhouette?.compute(this.fasten, raw, {
+        bound: this.bound, skeleton: this.skeleton, clean: this.clean,
+        range: this.range, grow: this.grow, smooth: this.smooth, points: this.points,
+      });
+      if (perf) perf.silhouette += performance.now() - t0;
+      if (!sil?.polygon) { this._sil = null; return; }
+      // Video px → local stage px. The mirror is resolved here, at the video→stage
+      // boundary, as everywhere else (§9.2).
+      const { vw, vh } = sil.rect;
+      this._toLocal = ([vx, vy]) => {
+        const q = stage.videoNormToStage(vx / vw, vy / vh, cam.video);
+        return [q.x * stage.w - ox, q.y * stage.h - oy];
+      };
+      this._poly = sil.polygon.map(this._toLocal);
+      this._sil = sil;
+    }
+    if (!this._poly) return;
+
+    // Record the outline for whatever consumes the union of all cutouts this frame.
+    // The matrix is built explicitly rather than read from the canvas, so it exists
+    // before any drawing has happened and stays in one coordinate space (CSS px).
+    const shapes = this.deps.shapes;
+    if (!shapes) return;
+    const path = new Path2D();
+    path.moveTo(...this._poly[0]);
+    for (let i = 1; i < this._poly.length; i++) path.lineTo(...this._poly[i]);
+    path.closePath();
+    shapes.push({
+      path,
+      m: new DOMMatrix()
+        .translate((this.x + this.pin.x) * stage.w, (this.y + this.pin.y) * stage.h)
+        .rotate(this.rotation)
+        .scale(this.scale),
+      border: this.outlineWidth * this.pin.size * stage.h,
+    });
   }
 
+  render(g, stage) {
+    const cam = this.deps.camera;
+    if (!this._poly || !cam?.live || !this.pin) return;
+    const ox = this.pin.x * stage.w, oy = this.pin.y * stage.h;
+    this._paint(g, stage, this._poly, ox, oy, cam);
+    if (this.debug) {
+      if (this._sil) this._debug(g, stage, this._sil, this._poly, this._toLocal);
+      else this._debugPoly(g, stage, this._poly);
+    }
+  }
 
   // A face region's contour, grown and smoothed. Fixed landmark indices in ring order,
   // so the parameterisation is already stable — no anchoring needed the way the traced
@@ -644,59 +670,16 @@ export class BodyPart extends StageObject {
     // A single closed path, so clip() works directly — no offscreen compositing.
     g.save();
     g.clip(path);
+
+    // The video is drawn in STAGE space, so it needs its own transform — and its own
+    // save/restore. Anything after it must be back in local space or it lands half a
+    // stage away.
+    g.save();
     g.translate(-ox, -oy);
     g.translate(stage.w / 2, stage.h / 2);
     stage.drawVideoInto(g, cam.video, stage.w, stage.h);
     g.restore();
-
-    this._paper(g, stage, poly, border);
-  }
-
-  // Paper grain over the whole cutout, border included. Clipping to the polygon OFFSET
-  // BY the border width covers both the white paper edge and the image inside it in one
-  // pass — the alternative is compositing the cutout offscreen just to reach its pixels.
-  _paper(g, stage, poly, border) {
-    if (!this.texture || !(this.textureOpacity > 0)) return;
-    const pattern = this._pattern(g);
-    if (!pattern) return;
-
-    const outer = border ? offset(poly, border) : poly;
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const [x, y] of outer) {
-      x0 = Math.min(x0, x); y0 = Math.min(y0, y);
-      x1 = Math.max(x1, x); y1 = Math.max(y1, y);
-    }
-
-    g.save();
-    const clip = new Path2D();
-    clip.moveTo(...outer[0]);
-    for (let i = 1; i < outer.length; i++) clip.lineTo(...outer[i]);
-    clip.closePath();
-    g.clip(clip);
-    g.globalAlpha = this.textureOpacity;
-    g.globalCompositeOperation = this.textureBlend ?? 'multiply';
-    g.fillStyle = pattern;
-    g.fillRect(x0, y0, x1 - x0, y1 - y0);
     g.restore();
-  }
-
-  // Built once per texture and reused. The pattern is anchored in the object's own
-  // transformed space, so the grain travels with the cutout rather than sliding under it
-  // — paper does not swim.
-  _pattern(g) {
-    if (this._patternFor === this.texture && this._patternScale === this.textureScale) {
-      return this._patternCache;
-    }
-    const el = this.deps.assets?.get(this.texture);
-    if (!isReady(el)) return null;
-    const p = g.createPattern(el, 'repeat');
-    if (p && this.textureScale && this.textureScale !== 1 && typeof DOMMatrix !== 'undefined') {
-      p.setTransform(new DOMMatrix().scale(this.textureScale));
-    }
-    this._patternCache = p;
-    this._patternFor = this.texture;
-    this._patternScale = this.textureScale;
-    return p;
   }
 
   // The mask, the hull and its vertices, in three colours — so it is obvious which stage
@@ -746,10 +729,6 @@ export class BodyPart extends StageObject {
       points: this.points, join: this.join,
     };
     out.outline = { width: round(this.outlineWidth), color: this.outlineColor };
-    out.texture = {
-      src: this.texture, opacity: round(this.textureOpacity),
-      blend: this.textureBlend, scale: round(this.textureScale),
-    };
     if (!this.showCut) out.showCut = false;
     if (this.debug) out.debug = true;
     return out;

@@ -12,6 +12,14 @@ assets/*
 !assets/demo/
 !assets/manifest.json
 
+# The textures folder is source material and stays local, EXCEPT the one the show
+# actually uses — otherwise the public build 404s and silently has no paper. Re-include
+# the directory, re-exclude its contents, then name the exceptions.
+!assets/textures/
+assets/textures/*
+!assets/textures/cardstock.jpeg
+!assets/textures/paper-tile.png
+
 # Baked at build time by scripts/build-manifests.js for static hosting.
 manifests/
 

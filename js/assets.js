@@ -44,6 +44,39 @@ export const naturalSize = (el) => ({
   h: el.naturalHeight ?? el.videoHeight,
 });
 
+// Prepare a scanned texture for blending: greyscale, with its mean shifted to exactly
+// mid-grey. `overlay` lightens above 128 and darkens below it, so a scan with an overall
+// tone would push the whole image lighter or darker instead of just adding texture.
+//
+// Contrast is left alone deliberately — that IS the wrinkles and folds. Only the overall
+// exposure is neutralised, so the structure of the paper survives intact.
+export function neutralize(img) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth || img.width;
+  c.height = img.naturalHeight || img.height;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0);
+
+  const image = g.getImageData(0, 0, c.width, c.height);
+  const px = image.data;
+  const n = c.width * c.height;
+  const lum = new Float32Array(n);
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const l = 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+    lum[i] = l;
+    sum += l;
+  }
+  const mean = sum / n;
+  for (let i = 0; i < n; i++) {
+    const v = Math.max(0, Math.min(255, Math.round(128 + (lum[i] - mean))));
+    px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = v;
+    px[i * 4 + 3] = 255;
+  }
+  g.putImageData(image, 0, 0);
+  return c;
+}
+
 export class AssetLibrary {
   constructor(manifest) {
     this.base = manifest?.base ?? './assets/';

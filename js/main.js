@@ -115,6 +115,10 @@ async function main() {
   const assets = new AssetLibrary(await loadJSON('./assets/manifest.json'));
 
   const renderer = new Renderer(stage);
+  if (params.has('perf')) {
+    renderer.perf = { frames: 0, total: 0, tracking: 0, update: 0, draw: 0, silhouette: 0 };
+    console.log('[perf] measuring — one line per 60 frames');
+  }
 
   // Hand tracking, loaded only if the show asks for it — and never awaited. The wasm
   // bundle and model are the biggest download here, so the show starts without them and
@@ -124,11 +128,14 @@ async function main() {
   for (const kind of ['hands', 'face']) {
     if (config.capabilities?.includes(kind)) tracking.load(kind);
   }
-  renderer.beforeFrame = (now) => tracking.update(now);
+  // Outlines recorded by cutouts this frame, for whatever draws their union. Cleared
+  // here so it cannot grow when nothing consumes it.
+  const shapes = [];
+  renderer.beforeFrame = (now) => { tracking.update(now); shapes.length = 0; };
 
   // Dependencies passed explicitly — NOT a grab-bag that modules mutate to hand
   // capability back to the core, which is what 2.5.0's featureCtx became (§6).
-  const deps = { stage, camera, assets, tracking, silhouette, paper: config.paper, domLayer: el.domLayer };
+  const deps = { stage, camera, assets, tracking, silhouette, shapes, renderer, paper: config.paper, domLayer: el.domLayer };
   const make = (spec) => {
     const Type = TYPES[spec.type];
     if (!Type) { console.warn(`[scene] unknown object type "${spec.type}" (${spec.id})`); return null; }

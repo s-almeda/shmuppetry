@@ -9,7 +9,7 @@
     "hands",
     "face"
   ],
-  "_paper": "Show-wide paper-cutout defaults (§2.3). paper.cut drives HANDS (colour segmentation, js/silhouette.js). paper.face drives FACE PARTS (landmark contour — bound/clean/skeleton/range are inert there), with paper.eye and paper.mouth overriding it per part. Per-object values override everything and are what \"save scene\" writes.",
+  "_paper": "Show-wide paper defaults (§2.3). paper.cut drives HANDS (colour segmentation), paper.face drives FACE PARTS (landmark contour), with paper.eye / paper.mouth overriding per part. No live texturing — it was measured as the dominant per-frame cost.",
   "paper": {
     "cut": {
       "bound": 0.11,
@@ -50,12 +50,6 @@
       "outline": {
         "width": 0.08
       }
-    },
-    "texture": {
-      "src": "textures/paper.jpeg",
-      "opacity": 0.35,
-      "blend": "multiply",
-      "scale": 1
     }
   },
   "panelTab": "control panel",
