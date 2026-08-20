@@ -13,6 +13,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -41,11 +42,38 @@ async function walk(dir, base = '') {
   return out;
 }
 
+// Paths git tracks under assets/, relative to assets/ — or null if git cannot answer.
+function gitTracked(assetsDir) {
+  try {
+    const out = execFileSync('git', ['ls-files', '-z', '--', assetsDir], { cwd: ROOT });
+    return new Set(
+      out.toString('utf8').split('\0').filter(Boolean)
+        .map((f) => path.relative('assets', f)));
+  } catch {
+    return null;
+  }
+}
+
 async function main() {
   const assetsDir = path.join(ROOT, 'assets');
   let files = (await walk(assetsDir)).sort()
     .filter((f) => !UNNUMBERED.some((d) => f.startsWith(d)));
-  if (!all) files = files.filter((f) => PUBLIC_DIRS.some((d) => f.startsWith(`${d}/`)));
+  if (!all) {
+    files = files.filter((f) => PUBLIC_DIRS.some((d) => f.startsWith(`${d}/`)));
+    // ...and then only what git ACTUALLY TRACKS. Walking the disk is not the same as
+    // knowing what GitHub Pages will have: a file that is on disk but gitignored (the
+    // 2.6MB demo mp3) would be advertised in the manifest and 404 for every visitor.
+    // Asking git makes "public set" mean literally "what is committed".
+    const tracked = gitTracked(assetsDir);
+    if (tracked) {
+      const before = files.length;
+      files = files.filter((f) => tracked.has(f));
+      const dropped = before - files.length;
+      if (dropped) console.log(`  (${dropped} on-disk asset(s) omitted — not tracked by git)`);
+    } else {
+      console.warn('  ! git unavailable — manifest lists what is on disk, which may 404 publicly');
+    }
+  }
 
   // Warn about anything the number-keyed addressing cannot see. Silent drops here
   // become a scene that renders nothing, hours later.

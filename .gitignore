@@ -18,6 +18,13 @@ assets/*
 # page never asks for a file that is not there.
 assets/demo/005_circus_theme.mp3
 
+# The potato model itself is 12MB and loads from jsDelivr in production, but its 35-byte
+# metadata does not — and a missing imgsz silently falls back to a default that would be
+# wrong the moment the model is retrained at another size.
+!assets/models/
+assets/models/*
+!assets/models/potato.meta.json
+
 # The textures folder is source material and stays local, EXCEPT the one the show
 # actually uses — otherwise the public build 404s and silently has no paper. Re-include
 # the directory, re-exclude its contents, then name the exceptions.

@@ -1,14 +1,14 @@
 {
   "shows": [
     {
-      "name": "shmidpoint",
-      "title": "shm's stochastic midpoint presentation",
-      "scenes": 37
-    },
-    {
       "name": "demo",
       "title": "shmuppetry rig 3.0",
       "scenes": 38
+    },
+    {
+      "name": "shmidpoint",
+      "title": "shm's stochastic midpoint presentation",
+      "scenes": 37
     }
   ]
 }
