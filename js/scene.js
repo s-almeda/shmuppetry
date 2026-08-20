@@ -68,7 +68,7 @@ export function resolveScript(scenes) {
 
 // Shallow merge, except that the nested style groups (§2.3) merge one level down so a
 // scene can adjust `outline.width` without restating `outline.color`.
-const NESTED = new Set(['cut', 'outline', 'shadow', 'texture', 'anchor']);
+const NESTED = new Set(['cut', 'outline', 'shadow', 'texture', 'anchor', 'orbit']);
 
 function mergeSpec(prior, patch, id) {
   const next = { ...prior, id };
@@ -166,6 +166,7 @@ const NEW_OBJECT = {
   eye: { type: 'bodyPart', z: 26, alternates: ['leftEye', 'rightEye'] },
   mouth: { type: 'bodyPart', fasten: 'mouth', z: 26 },
   hand: { type: 'bodyPart', z: 30, alternates: ['rightHand', 'leftHand'] },
+  audio: { type: 'audio', playing: true },
 };
 
 // ── Player ────────────────────────────────────────────────────────────────
@@ -221,6 +222,11 @@ export class Player {
     document.body.className = `${this.bodyBase ?? ''} ${scene.bodyClass ?? ''}`.trim();
 
     const objects = this.pool.sync(scene.objects);
+    // Freeze holds the SOUND as well as the picture and the tracking. Applied AFTER sync
+    // so it overrides the resolved spec for the length of the freeze without editing it —
+    // step to a scene that is not frozen and the scene's own `playing` value comes back,
+    // resuming from where it stopped rather than restarting the cue.
+    if (scene.freeze) for (const o of objects) if (o.type === 'audio') o.playing = false;
     if (instant) for (const o of objects) o.finishTyping?.();
     this.renderer.setObjects(objects);
     this.onSceneChange(this.resolved[next], this);

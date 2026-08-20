@@ -20,6 +20,19 @@ const PERFORMER_LEFT = 'Left';
 const PERFORMER_RIGHT = 'Right';
 
 export const HAND_PARTS = ['leftHand', 'rightHand'];
+
+// Fingertip mounts — scene 30 puts a finger puppet on each finger. Flat names rather than
+// `leftHand.index`, because a dot already means "in that OBJECT's space" and the two would
+// be indistinguishable.
+//
+// MediaPipe tips: thumb 4, index 8, middle 12, ring 16, pinky 20. The joint below each is
+// what gives a puppet its size and its angle, so it sits along the finger rather than
+// upright on a tilted hand.
+const FINGERTIPS = {
+  Thumb: [3, 4], Index: [6, 8], Middle: [10, 12], Ring: [14, 16], Pinky: [18, 20],
+};
+export const FINGER_PARTS = ['leftHand', 'rightHand'].flatMap((h) =>
+  Object.keys(FINGERTIPS).map((f) => h.replace('Hand', '') + f));
 export const FACE_PARTS = ['face', 'leftEye', 'rightEye', 'mouth'];
 
 // ── Face mounts (§2.2) ────────────────────────────────────────────────────
@@ -214,6 +227,8 @@ export class Tracking {
     // face mounts so no object needs to know it is special.
     if (name === 'potato') return this.detector?.fastener() ?? null;
     if (CONTOUR_MOUNTS[name]) return this._contourMount(name);
+    const finger = this._fingerFastener(name);
+    if (finger !== undefined) return finger;
     if (FACE_MOUNTS[name]) return this._mountFastener(name);
     if (FACE_PARTS.includes(name)) return this._faceFastener(name);
     const h = this.hands[name];
@@ -255,6 +270,30 @@ export class Tracking {
     const width = Math.hypot((b.x - a.x) * this.stage.aspect, b.y - a.y) * m.scale;
 
     return { x, y, size: width, angle: this._roll(P), anchor: m.anchor, fit: 'width' };
+  }
+
+  // `leftIndex`, `rightThumb`, … Returns undefined when the name is not a fingertip, so
+  // the caller can fall through to the other kinds.
+  _fingerFastener(name) {
+    const m = name.match(/^(left|right)(Thumb|Index|Middle|Ring|Pinky)$/);
+    if (!m) return undefined;
+    const h = this.hands[`${m[1]}Hand`];
+    if (!h) return null;
+    const [below, tip] = FINGERTIPS[m[2]];
+    const v = this.camera.video;
+    const a = this.stage.videoNormToStage(h[below].x, h[below].y, v);
+    const b = this.stage.videoNormToStage(h[tip].x, h[tip].y, v);
+    const dx = (b.x - a.x) * this.stage.aspect, dy = b.y - a.y;
+    return {
+      x: b.x,
+      y: b.y,
+      // The last segment's length: a puppet on a finger held near the camera gets bigger,
+      // which is the same rule every other fastener uses.
+      size: Math.hypot(dx, dy) * 2,
+      // Along the finger, so a puppet stands up the finger rather than up the screen.
+      angle: (Math.atan2(dy, dx) * 180) / Math.PI + 90,
+      anchor: 'center',
+    };
   }
 
   // A mount on one edge of a tracked contour, sized to that contour's width.

@@ -24,7 +24,7 @@ const el = {
   stage: $('stage'), canvas: $('stage-canvas'), domLayer: $('dom-layer'),
   boot: $('boot'), bootMsg: $('boot-msg'), bootBar: $('boot-bar'),
   bootStage: $('boot-stage'), bootLoading: $('boot-loading'), startBtn: $('start-btn'),
-  panel: $('panel'), skin: $('skin'), dirty: $('dirty-banner'), titleSub: $('titleSub'),
+  panel: $('panel'), skin: $('skin'), dirty: $('dirty-banner'), titleMain: $('titleMain'),
   statusDate: $('status-date'), statusRuntime: $('status-runtime'),
   statusCamera: $('status-camera'), statusMic: $('status-mic'),
 };
@@ -130,7 +130,10 @@ async function main() {
   if (config.skin) el.skin.href = `./css/skins/${config.skin}.css`;
   if (config.title) {
     document.title = `shmuppetry — ${config.title}`;
-    if (el.titleSub) el.titleSub.textContent = config.title;
+    // The titlebar itself. This used to write to #titleSub, which is commented out in
+    // index.html — so a show's title was set and then never shown. Scene 12's
+    // `chrome-marquee` body class replaces this text with the circus banner.
+    if (el.titleMain) el.titleMain.textContent = config.title;
   }
 
   const stage = new Stage({ el: el.stage, canvas: el.canvas, mirror: config.mirror !== false });

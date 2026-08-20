@@ -12,6 +12,10 @@
 const LIB = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
 const WEIGHTS = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
 const EVERY_MS = 250;
+// Per-frame chase toward the latest detection. Lifted from 2.5.0's constants.js, where it
+// smoothed exactly this box. Detection only fires ~4×/second, so without it the box jumps
+// in visible steps.
+const LERP = 0.18;
 
 function loadLib() {
   if (window.faceapi) return Promise.resolve(window.faceapi);
@@ -29,7 +33,8 @@ export class FaceAnalysis {
     this.stage = stage;
     this.camera = camera;
     this.state = 'idle';
-    this.result = null;      // { box: {x,y,w,h} in stage units, age, gender, emotion }
+    this.result = null;      // smoothed — what gets drawn
+    this.target = null;      // the latest raw detection
     this._at = 0;
     this._busy = false;
   }
@@ -56,10 +61,28 @@ export class FaceAnalysis {
   }
 
   update(now) {
+    this._ease();
     if (this.state !== 'ready' || !this.camera.live || this._busy) return;
     if (now - this._at < EVERY_MS) return;
     this._at = now;
     this._detect();
+  }
+
+  // Runs every frame, while detection runs four times a second — so the box glides to each
+  // new reading instead of stepping to it. Text is NOT interpolated: it snaps, because a
+  // half-faded word is worse than a changed one.
+  _ease() {
+    const t = this.target;
+    if (!t) { this.result = null; return; }
+    if (!this.result) { this.result = { ...t, box: { ...t.box } }; return; }
+    const b = this.result.box, n = t.box;
+    b.x += (n.x - b.x) * LERP;
+    b.y += (n.y - b.y) * LERP;
+    b.w += (n.w - b.w) * LERP;
+    b.h += (n.h - b.h) * LERP;
+    this.result.age = t.age;
+    this.result.gender = t.gender;
+    this.result.emotion = t.emotion;
   }
 
   async _detect() {
@@ -72,7 +95,7 @@ export class FaceAnalysis {
         .withAgeAndGender()
         .withFaceExpressions();
       const r = found?.[0];
-      if (!r) { this.result = null; return; }
+      if (!r) { this.target = null; return; }
 
       // face-api boxes are in the source's own pixels. Map both corners through the stage
       // so the mirror is resolved once at the boundary, as everywhere else (§9.2).
@@ -84,7 +107,7 @@ export class FaceAnalysis {
       const emotion = r.expressions
         ? Object.entries(r.expressions).sort((p, q) => q[1] - p[1])[0][0]
         : '';
-      this.result = {
+      this.target = {
         box: {
           x: Math.min(a.x, c.x), y: Math.min(a.y, c.y),
           w: Math.abs(c.x - a.x), h: Math.abs(c.y - a.y),

@@ -1,7 +1,7 @@
 {
   "_aspect": "null fills the window body, as 2.5.0 did. Pin a number (16/9 = 1.778) only if a show needs a guaranteed frame shape.",
-  "_note": "Per-show config (§2.6). A show declares what it needs, so a show without face recognition never loads it. This is the one structural idea from 2.5.0 that worked well and carries over directly. Step 1 registers no capabilities at all, so this list is empty and the page loads zero models.",
-  "title": "demo",
+  "_note": "Per-show config (\u00a72.6). A show declares what it needs, so a show without face recognition never loads it. This is the one structural idea from 2.5.0 that worked well and carries over directly. Step 1 registers no capabilities at all, so this list is empty and the page loads zero models.",
+  "title": "shmuppetry rig 3.0",
   "skin": "default",
   "aspect": null,
   "mirror": true,
@@ -11,7 +11,7 @@
     "potato",
     "faceLabels"
   ],
-  "_paper": "Show-wide paper defaults (§2.3). paper.cut drives HANDS (colour segmentation), paper.face drives FACE PARTS (landmark contour), with paper.eye / paper.mouth overriding per part. No live texturing — it was measured as the dominant per-frame cost.",
+  "_paper": "Show-wide paper defaults (\u00a72.3). paper.cut drives HANDS (colour segmentation), paper.face drives FACE PARTS (landmark contour), with paper.eye / paper.mouth overriding per part. No live texturing \u2014 it was measured as the dominant per-frame cost.",
   "paper": {
     "cut": {
       "bound": 0.11,
@@ -55,5 +55,5 @@
     }
   },
   "panelTab": "control panel",
-  "_panelTab": "Label for the panel’s title tab. Omit it entirely on a performance rig — you do not need to be told it is a control panel."
+  "_panelTab": "Label for the panel\u2019s title tab. Omit it entirely on a performance rig \u2014 you do not need to be told it is a control panel."
 }

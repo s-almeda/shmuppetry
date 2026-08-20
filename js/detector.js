@@ -111,6 +111,7 @@ export class Detector {
       this.det.x += (this._raw.x - this.det.x) * TRACK_LERP;
       this.det.y += (this._raw.y - this.det.y) * TRACK_LERP;
       this.det.size += (this._raw.size - this.det.size) * TRACK_LERP;
+      this.det.score = this._raw.score;   // position is smoothed; confidence is not
     } else if (this._raw) {
       this.det = { ...this._raw };
     }

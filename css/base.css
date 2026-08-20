@@ -193,16 +193,21 @@ body {
    own line instead of overflowing the panel. */
 .panel-row { display: flex; align-items: center; gap: 4px; margin: 2px 0; min-width: 0; flex-wrap: wrap; }
 .panel-row label { flex: 0 0 46px; min-width: 0; color: #444; overflow: hidden; text-overflow: ellipsis; }
-.panel-row input[type="range"] { flex: 1 1 50px; min-width: 0; }
-.panel-row input[type="text"],
-.panel-row input[type="number"],
-.panel-row select { flex: 1 1 60px; min-width: 0; }
-/* Text areas always get their own full-width line. */
-.panel-row textarea { flex: 1 1 100%; min-width: 0; resize: vertical; min-height: 44px; line-height: 1.3; }
-.panel-row .val { flex: 0 0 30px; min-width: 0; text-align: right; color: #666; font-variant-numeric: tabular-nums; }
+/* Boolean fields are toggle buttons — see panel.js. `on` reads as pressed rather than
+   relying on the label text alone. */
+.panel-row .toggle { flex: 0 0 auto; min-width: 34px; padding: 1px 6px; }
+.panel-row .toggle.on { font-weight: bold; color: #005ca7; }
 
 .obj-row { display: flex; align-items: center; gap: 4px; line-height: 1.6; }
-.obj-row input[type="checkbox"] { margin: 0; }
+.obj-row .vis {
+  flex: 0 0 auto;
+  width: 17px;
+  min-width: 17px;
+  padding: 0;
+  line-height: 13px;
+  font-size: 10px;
+  color: #005ca7;
+}
 .obj-row .name { flex: 1; cursor: default; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .obj-row.selected .name { font-weight: bold; color: #005ca7; }
 .obj-row .type { color: #918d80; }

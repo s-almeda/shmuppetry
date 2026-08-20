@@ -90,3 +90,210 @@
    property, so one caption can fade while another stays put. */
 .textbox-hoverfade { opacity: calc(var(--o, 1) * 0.12); transition: opacity 0.4s ease; }
 .textbox-hoverfade:hover, .textbox-hoverfade:focus-within { opacity: var(--o, 1); }
+
+/* ── paper style ───────────────────────────────────────────────────────────
+   The BricolMage's dialogue. Two separate pieces of paper: a cardstock sheet, and a scrap
+   of lined paper laid ON TOP of its corner — not the xp.css tab, which tucks behind the
+   panel it belongs to.
+
+   Free, because TextBox is DOM. The texture is a background-image the compositor draws,
+   not a per-frame canvas pass like the one we measured and removed. */
+
+/* Variable font — the weight axis is declared as a RANGE, so `font-weight` picks a real
+   instance anywhere in it rather than the browser faking a bold. Playwrite CU carries
+   100–400; asking for 700 would get a synthesised smear. */
+@font-face {
+  font-family: 'PlaywriteCU';
+  src: url('../../assets/fonts/PlaywriteCU-VariableFont_wght.ttf') format('truetype-variations');
+  font-weight: 100 400;
+  font-display: swap;
+}
+
+.textbox-paper .textbox-text {
+  background: #efe7d6 url('../../assets/textures/cardstock.jpeg') center / cover;
+  border: 0;
+  border-radius: 2px;
+  color: #241c14;
+  font-family: 'PlaywriteCU', 'Comic Sans MS', cursive;
+  font-weight: 400;
+  /* A handwriting face sets lower than a UI face at the same size, so it needs a little
+     more room per line to stay legible on stage. */
+  line-height: 1.45;
+  /* Same fixed height as the xp.css box, so switching styles mid-show does not resize the
+     dialogue under the audience. */
+  min-height: calc(4 * 1.45em + 1.3em);
+  /* Extra room at the top so the scrap sits in margin, not on the first line. */
+  padding: 1.15em 0.7em 0.55em;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.13), 0 14px 30px rgba(0, 0, 0, 0.4);
+  /* Explicitly positioned and BELOW the scrap. Without a z-index of its own it competes
+     with the scrap on paint order alone, which is fragile. */
+  position: relative;
+  z-index: 1;
+  /* Each box is laid down by hand, so each sits at its own slight angle. --tilt is set
+     once per object from its id, so it is stable rather than jittering every frame. */
+  transform: rotate(var(--tilt, 0deg));
+}
+
+/* Lifted OUT of the flow and onto the sheet's corner. As a tab it sat behind the panel by
+   construction — a tab belongs to the thing under it. A scrap of paper sits on top. */
+.textbox-paper .textbox-tabs {
+  position: absolute;
+  top: 0;
+  left: 0.7em;
+  /* Lifted clear of the sheet's top edge so the whole scrap reads, not just its lower
+     half, and clear of the first line of dialogue. Above the sheet in z. */
+  transform: translateY(-96%);
+  z-index: 3;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+/* SPECIFICITY, not decoration. xp.css styles the selected tab with
+   `menu[role=tablist] button[aria-selected=true]` — specificity 0,2,1 — which beat the
+   0,2,0 selector this used to have and silently won every declaration that mattered:
+   its `background:#fcfcfe` (hence "still looks like a tab"), its borders, and its
+   `box-shadow: inset 0 2px #ffc73c`, which REPLACED the drop shadow rather than adding
+   to it. Naming the tabs container and the element gets to 0,3,1 and wins honestly,
+   without !important. */
+.textbox-paper .textbox-tabs button.textbox-name {
+  background: #f6f1e2 url('../../assets/textures/lined_paper.jpeg') center / cover;
+  border: 0;
+  border-radius: 1px;
+  /* xp.css sets these as LONGHANDS on the higher-specificity rule, so a `margin: 0`
+     shorthand here would not have cleared them even at equal specificity. */
+  margin: 0;
+  padding: 0.3em 1em 0.4em;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 8px 18px rgba(0, 0, 0, 0.45);
+  color: #241c14;
+  font-family: 'PlaywriteCU', 'Comic Sans MS', cursive;
+  font-weight: 400;
+  font-size: 0.7em;
+  /* Tilted the opposite way from the sheet, so the two read as two separate scraps
+     rather than one rotated object. */
+  transform: rotate(calc(var(--tilt, 0deg) * -2.2 - 1deg));
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+}
+
+/* xp.css draws a 2px border stub under the first tab to join it to the panel. A scrap of
+   paper is not joined to anything. */
+.textbox-paper .textbox-tabs button.textbox-name:before { display: none; }
+
+/* The tab's hover/focus chrome would also read as a widget. */
+.textbox-paper .textbox-tabs button.textbox-name:hover { box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 8px 18px rgba(0, 0, 0, 0.45); border: 0; }
+.textbox-paper .textbox-tabs button.textbox-name:focus { outline: none; }
+
+/* ── Scene 11: the offstage voice ──────────────────────────────────────────
+   A rounded speech bubble whose tail runs off the LEFT edge of the stage, so the
+   speaker reads as standing somewhere out of frame rather than as a UI element. */
+.textbox-bubble .textbox-text {
+  background: #fff;
+  border: 0;
+  border-radius: 1.6em;
+  color: #000;
+  font-family: 'Pixelated MS Sans Serif', system-ui, sans-serif;
+  min-height: calc(4 * 1.25em + 1.1em);
+  padding: 0.85em 1.2em 0.7em;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* The tail. Drawn as a bordered empty box rather than as a clip-path so it inherits
+   nothing and cannot be resized out of alignment by the bubble's own padding. */
+.textbox-bubble .textbox-text:before {
+  content: '';
+  position: absolute;
+  left: -1.6em;
+  bottom: 1.2em;
+  border-style: solid;
+  border-width: 0.55em 1.7em 0.55em 0;
+  border-color: transparent #fff transparent transparent;
+}
+
+/* "???" — an unattributed voice, so the name floats free above the bubble in white
+   instead of sitting on it as paper or as a tab. */
+.textbox-bubble .textbox-tabs {
+  position: absolute;
+  top: 0;
+  left: 1.6em;
+  transform: translateY(-118%);
+  z-index: 3;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.textbox-bubble .textbox-tabs button.textbox-name {
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  color: #fff;
+  font-family: 'Pixelated MS Sans Serif', system-ui, sans-serif;
+  font-size: 0.95em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  min-width: 0;
+}
+
+.textbox-bubble .textbox-tabs button.textbox-name:before { display: none; }
+.textbox-bubble .textbox-tabs button.textbox-name:hover { box-shadow: none; border: 0; }
+.textbox-bubble .textbox-tabs button.textbox-name:focus { outline: none; }
+
+/* Playfair Display SC — small caps, one weight. Only the marquee banner uses it, so only
+   the Black cut is bundled rather than the whole family. */
+@font-face {
+  font-family: 'PlayfairSC';
+  src: url('../../assets/fonts/PlayfairDisplaySC-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-display: swap;
+}
+
+/* ── Scene 12: the show's own chrome ───────────────────────────────────────
+   Set by the scene's `bodyClass`. Not a skin system and not a repaint — the window keeps
+   xp.css's exact gradients and bevel, desaturated, so it reads as the same window with
+   the colour drained out of it rather than as a different one.
+
+   The titlebar is a single gradient plus three borders, and everything inside it is
+   white, so filtering the whole element is exact and leaves the shape untouched. */
+body.chrome-marquee .title-bar {
+  filter: grayscale(1);
+}
+
+/* The window's blue FRAME is six inset box-shadows, not a border. `.window` cannot be
+   filtered the same way because the stage lives inside it and the whole show would go
+   grey — so the six colours are restated as their sRGB luma greys, which is exactly what
+   grayscale(1) would have produced. Blues carry little luma, hence the dark values. */
+body.chrome-marquee .window.main-window {
+  box-shadow: inset -1px -1px #181818,
+              inset 1px 1px #343434,
+              inset -2px -2px #212121,
+              inset 2px 2px #626262,
+              inset -3px -3px #3a3a3a,
+              inset 3px 3px #4e4e4e;
+}
+
+body.chrome-marquee .title-bar-text {
+  /* The real title span is hidden and replaced, because the titlebar text is markup in
+     index.html and a scene flag can only reach it through CSS. */
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  font-family: 'Arial', Georgia, serif;
+  /* Playfair is a display face and sets wide already, so it needs less tracking than the
+     bitmap face did and a little more size to read as a banner rather than a window title. */
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+body.chrome-marquee #titleMain { display: none; }
+
+body.chrome-marquee .title-bar-text:after {
+  content: 'THE AMAZING SHMIDPOINT PRESENTATION!';
+}
+
+body.chrome-marquee .title-bar-controls { display: none; }

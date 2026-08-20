@@ -14,13 +14,16 @@ const MOUNTS = ['hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom'];
 // Shared placement for DOM-rendered objects (text, buttons, progress). They live above the
 // canvas rather than in it (see the deviation note on TextBox), but they position by the
 // same rules as everything else: fastener, then locks and clamps, then normalized x/y.
+// A pin that contributes no offset, no rotation, and a neutral size — so an object with
+// `holdPin` behaves exactly as an unpinned one until its fastener first appears.
+const NEUTRAL_PIN = { x: 0, y: 0, size: 1, angle: 0 };
+
 function placeDom(el, obj, stage) {
   let x = obj.x, y = obj.y;
   if (obj.fasten) {
-    const pin = obj._resolvePin(stage);
-    if (!pin) { el.hidden = true; return false; }
-    x += pin.x;
-    y += pin.y;
+    if (!obj._pin(stage)) { el.hidden = true; return false; }
+    x += obj.pin.x;
+    y += obj.pin.y;
   }
   ({ x, y } = obj._constrain(x, y));
   el.style.left = `${x * 100}%`;
@@ -50,9 +53,16 @@ export class StageObject {
     { key: 'rotation', label: 'rotate', type: 'range', min: -180, max: 180, step: 1 },
     { key: 'opacity', label: 'opacity', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'flipX', label: 'flip', type: 'checkbox' },
+    { key: 'holdPin', label: 'hold pin', type: 'checkbox' },
   ];
 
   get fields() { return this.constructor.fields; }
+
+  // Default depth for the type. This has to be a STATIC the base class reads, not a
+  // `this.z ??= 200` in each subclass: super.apply() runs first and has already defaulted
+  // z to 0, so every one of those subclass lines was unreachable and every type has been
+  // sitting at z 0 since they were written.
+  static defaultZ = 0;
 
   // Does this object rotate with its fastener? Art mounted on a head does. Geometry built
   // FROM landmarks does not — a face cutout's outline already reflects the head's roll,
@@ -78,7 +88,7 @@ export class StageObject {
     // tracked point, and x/y become an OFFSET from it rather than an absolute position.
     this.x ??= this.fasten ? 0 : 0.5;
     this.y ??= this.fasten ? 0 : 0.5;
-    this.z ??= 0;
+    this.z ??= this.constructor.defaultZ;
     this.scale ??= 1; this.rotation ??= 0; this.opacity ??= 1;
     this.visible = spec.visible ?? this.visible ?? true;
     return this;
@@ -107,9 +117,20 @@ export class StageObject {
     og.setTransform(stage.dpr, 0, 0, stage.dpr, 0, 0);
     og.clearRect(0, 0, stage.w, stage.h);
 
+    let painted = 0;
     for (const id of this.maskedBy) {
       const m = this.deps.find?.(id);
-      if (m && m.visible !== false) m._paintSelf(og, stage, t);
+      if (m && m.visible !== false) { m._paintSelf(og, stage, t); painted++; }
+    }
+    // Every masking object has left the stage. `source-in` against an empty buffer erases
+    // this object completely — a backdrop that vanishes with no error and no clue why. An
+    // absent mask is treated as no mask, which fails toward being visible.
+    if (!painted) {
+      if (!this._warnedMask) {
+        this._warnedMask = true;
+        console.warn(`[${this.type}#${this.id}] maskedBy [${this.maskedBy}] — none on stage; drawing unmasked`);
+      }
+      return this._paintSelf(g, stage, t);
     }
     og.globalCompositeOperation = 'source-in';
     this._paintSelf(og, stage, t);
@@ -124,16 +145,29 @@ export class StageObject {
   _paintSelf(g, stage, t) {
     if (this.opacity <= 0) return;
 
-    // Pinned objects follow their fastener. If the hand isn't visible there is nothing
-    // to pin to, so the object simply isn't on stage this frame.
-    this.pin = null;
     let x = this.x, y = this.y;
     if (this.fasten) {
-      this.pin = this._resolvePin(stage);
-      if (!this.pin) return;
+      if (!this._pin(stage)) return;
       x += this.pin.x;
       y += this.pin.y;
     }
+    // `orbit` places this on a circle around its OWN x/y rather than at its fastener,
+    // while the fastener still decides WHAT is cut and where the pixels are sampled from.
+    // The radius is driven by a tracked point's x, so scene 27's ring of hands opens and
+    // closes as you move your hand across the frame.
+    if (this.orbit) {
+      const src = this.deps.tracking?.fastener(this.orbit.from ?? this.fasten);
+      // Centre of frame is 1x, left edge collapses it, right edge doubles it.
+      let r = (this.orbit.radius ?? 0.2) * (src ? src.x / 0.5 : 1);
+      if (this.orbit.min != null) r = Math.max(this.orbit.min, r);
+      if (this.orbit.max != null) r = Math.min(this.orbit.max, r);
+      const th = ((this.orbit.angle ?? 0) * Math.PI) / 180;
+      // x is normalised by WIDTH and y by HEIGHT, so the x leg is divided by the aspect
+      // or the ring comes out as a wide ellipse.
+      x = this.x + (Math.cos(th) * r) / stage.aspect;
+      y = this.y + Math.sin(th) * r;
+    }
+
     // Locks and clamps apply AFTER the fastener, so an object can follow one axis of a
     // hand while the other is pinned. The marquee is `lockX: 0.5, maxY: 0.5` — held to
     // centre horizontally, dragged down by the hand, and unable to pass halfway. A clamp,
@@ -151,6 +185,24 @@ export class StageObject {
     if (this.flipX) g.scale(-1, 1);
     if (this.scale !== 1) g.scale(this.scale, this.scale);
     try { this.render(g, stage, t); } finally { g.restore(); }
+  }
+
+  // Resolve the fastener for this frame, storing it on `this.pin`. Canvas and DOM objects
+  // both come through here so `holdPin` means the same thing to a marquee and a textbox.
+  //
+  // By default a pinned object is on stage only while its fastener is visible — no hand,
+  // nothing to pin to, nothing drawn. `holdPin` makes the fastener a NUDGE rather than a
+  // life support: scene 12's marquee is a prop hanging in the frame that your hand drags
+  // down, so taking your hand out of shot must not make the sign vanish.
+  //
+  // Before the fastener has EVER resolved there is no last position to hold, so it falls
+  // back to a neutral pin — the object sits at its own x/y, which is how the marquee can
+  // start at the top of the frame before you have reached up to it.
+  _pin(stage) {
+    this.pin = this._resolvePin(stage);
+    if (this.pin) this._lastPin = this.pin;
+    else if (this.holdPin) this.pin = this._lastPin ?? NEUTRAL_PIN;
+    return this.pin;
   }
 
   // `fasten: "hat"` pins to the live face. `fasten: "face.hat"` pins to the hat mount AS
@@ -199,18 +251,35 @@ export class StageObject {
   // list plus a hand-wired escape hatch, which is why most feature state could never
   // round-trip through the save button (§6).
   serialize() {
-    const out = { type: this.type, x: round(this.x), y: round(this.y) };
-    if (this.z !== 0) out.z = this.z;
-    if (this.scale !== 1) out.scale = round(this.scale);
-    if (this.rotation !== 0) out.rotation = round(this.rotation);
-    if (this.opacity !== 1) out.opacity = round(this.opacity);
-    if (!this.visible) out.visible = false;
-    if (this.fasten) out.fasten = this.fasten;
-    if (this.flipX) out.flipX = true;
-    if (this.maskedBy?.length) out.maskedBy = this.maskedBy;
-    if (this.isMask) out.isMask = true;
+    // EVERY channel the panel can edit is written UNCONDITIONALLY, including defaults.
+    //
+    // A saved scene is a PATCH in an inheriting script, so an omitted key does not mean
+    // "use the default" — it means "keep whatever the previous scene had". Writing these
+    // only when they differ from the default made a default UNSAVEABLE: turning a
+    // rotation back to 0 dropped the key, and the earlier scene's rotation returned on
+    // reload. `fasten` is written as null rather than omitted for the same reason, since
+    // null is what the resolver reads as "remove this".
+    const out = {
+      type: this.type,
+      x: round(this.x), y: round(this.y), z: this.z,
+      scale: round(this.scale),
+      rotation: round(this.rotation),
+      opacity: round(this.opacity),
+      visible: this.visible !== false,
+      fasten: this.fasten ?? null,
+      flipX: !!this.flipX,
+      holdPin: !!this.holdPin,
+    };
+    // Same rule as the transform above: these are written even when EMPTY, because an
+    // omitted key inherits. Writing `maskedBy` only when it had entries meant a mask
+    // could be turned on but never off — clearing it dropped the key, so the next reload
+    // brought the old mask back, and a mask whose objects have left the stage paints
+    // nothing at all.
+    out.orbit = this.orbit ?? null;
+    out.maskedBy = this.maskedBy?.length ? this.maskedBy : null;
+    out.isMask = !!this.isMask;
     for (const k of ['lockX', 'lockY', 'minX', 'maxX', 'minY', 'maxY']) {
-      if (this[k] != null) out[k] = round(this[k]);
+      out[k] = this[k] == null ? null : round(this[k]);
     }
     if (this._note) out._note = this._note;
     return out;
@@ -236,9 +305,12 @@ export class ImageObject extends StageObject {
   static fields = [
     ...StageObject.fields,
     { key: 'src', label: 'src', type: 'text' },
+    { key: 'pinScale', label: 'scale w/ pin', type: 'checkbox' },
     { key: 'size', label: 'size', type: 'range', min: 0.02, max: 2, step: 0.01 },
     { key: 'fit', label: 'fit', type: 'select', options: ['height', 'cover', 'contain'] },
-    { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom', 'face', 'leftEye', 'rightEye', 'mouth'] },
+    { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom', 'face', 'leftEye', 'rightEye', 'mouth',
+      'leftThumb', 'leftIndex', 'leftMiddle', 'leftRing', 'leftPinky',
+      'rightThumb', 'rightIndex', 'rightMiddle', 'rightRing', 'rightPinky'] },
     { key: 'anchor', label: 'anchor', type: 'select', options: ['', 'center', 'top', 'bottom'] },
   ];
 
@@ -315,7 +387,10 @@ export class ImageObject extends StageObject {
       // Unpinned: size is a fraction of stage height. Pinned: size multiplies the
       // fastener's own size, so a hand puppet scales with the hand — matching 2.5.0's
       // puppetSize, which multiplied the measured hand span.
-      const base = this.pin ? this.pin.size : 1;
+      // `pinScale: false` decouples SIZE from the fastener: the hand still moves the art,
+      // but `size` stays a fraction of stage height as it is for an unpinned object. A
+      // marquee is a fixed prop — it must not grow as the hand reaches toward the camera.
+      const base = this.pin && this.pinScale !== false ? this.pin.size : 1;
       if (this.pin?.fit === 'width') {
         // Head-worn art scales by WIDTH: a hat matches head width, a beard jaw width.
         w = base * this.size * stage.h;
@@ -348,6 +423,7 @@ export class ImageObject extends StageObject {
     const out = super.serialize();
     if (this.srcs?.length) { out.srcs = this.srcs; out.index = this.index ?? 0; }
     else if (this.src != null) out.src = this.src;
+    out.pinScale = this.pinScale !== false;   // a panel field, so never omitted
     if (this.cycleKey) out.cycleKey = this.cycleKey;
     if (this.fit !== 'height') out.fit = this.fit; else out.size = round(this.size);
     if (this.audio) out.audio = true;
@@ -362,6 +438,7 @@ export class ImageObject extends StageObject {
 // the video was the fixed bottom of a canvas stack and none of that was expressible.
 
 export class WebcamFeed extends StageObject {
+  static defaultZ = -100;
   static fields = [
     ...StageObject.fields,
     { key: 'fit', label: 'fit', type: 'select', options: ['cover', 'box'] },
@@ -372,7 +449,6 @@ export class WebcamFeed extends StageObject {
     super.apply(spec);
     this.fit ??= 'cover';
     this.size ??= 0.5;
-    this.z ??= -100;
     return this;
   }
 
@@ -422,13 +498,15 @@ export class WebcamFeed extends StageObject {
 const SPEEDS = { fast: [8, 6], normal: [12, 8], medium: [25, 10], slow: [45, 35] };
 
 export class TextBox extends StageObject {
+  static defaultZ = 200;
   static fields = [
     { key: 'x', label: 'x', type: 'range', min: 0, max: 1, step: 0.005 },
     { key: 'y', label: 'y', type: 'range', min: 0, max: 1, step: 0.005 },
     { key: 'z', label: 'z', type: 'number', min: -400, max: 400, step: 1 },
     { key: 'width', label: 'width', type: 'range', min: 0.1, max: 1, step: 0.01 },
-    { key: 'style', label: 'style', type: 'select', options: ['speech', 'thought', 'caption', 'plain'] },
+    { key: 'style', label: 'style', type: 'select', options: ['speech', 'thought', 'caption', 'plain', 'paper'] },
     { key: 'speed', label: 'speed', type: 'select', options: ['fast', 'normal', 'medium', 'slow'] },
+    { key: 'tilt', label: 'tilt°', type: 'range', min: -6, max: 6, step: 0.1 },
     { key: 'speaker', label: 'speaker', type: 'text' },
     { key: 'text', label: 'text', type: 'textarea' },
   ];
@@ -439,7 +517,6 @@ export class TextBox extends StageObject {
     this.style ??= 'speech';
     this.speed ??= 'normal';
     this.width ??= 0.92;
-    this.z ??= 200;
     return this;
   }
 
@@ -455,6 +532,12 @@ export class TextBox extends StageObject {
     this._tabs = el.querySelector('.textbox-tabs');
     this._name = el.querySelector('.textbox-name');
     this._body = el.querySelector('.textbox-text');
+    // A stable per-object tilt, hashed from the id — so every paper box sits at its own
+    // slight angle and keeps it, rather than picking a new one every frame.
+    let h = 0;
+    for (const ch of String(this.id ?? '')) h = (h * 31 + ch.charCodeAt(0)) & 0xffff;
+    el.style.setProperty('--tilt', `${(this.tilt ?? ((h % 200) / 100 - 1) * 1.4).toFixed(2)}deg`);
+
     this.deps.domLayer.appendChild(el);
     this._el = el;
 
@@ -507,14 +590,14 @@ export class TextBox extends StageObject {
 
     const el = this._el;
     el.className = `textbox textbox-${this.style}${this.hoverFade ? ' textbox-hoverfade' : ''}${this.typing ? ' typing' : ''}`;
-    el.style.left = `${this.x * 100}%`;
-    el.style.top = `${this.y * 100}%`;
+    // placeDom, not hand-rolled left/top. This used to set them directly, which meant a
+    // TextBox silently ignored `fasten` and the lockX/maxY constraints that every other
+    // DOM object gets for free — so a line of dialogue could not be puppeted by a hand.
+    // Opacity goes through --o inside placeDom, never an inline `opacity`: an inline
+    // value would beat the .textbox-hoverfade rule and the fade would do nothing.
+    placeDom(el, this, stage);
     el.style.width = `${this.width * 100}%`;
-    el.style.zIndex = Math.round(this.z);
-    // Opacity goes through a custom property, never an inline `opacity`. An inline value
-    // would beat the .textbox-hoverfade rule and the fade would silently do nothing.
-    el.style.setProperty('--o', this.opacity);
-    el.hidden = this.visible === false;
+    if (this.tilt != null) el.style.setProperty('--tilt', `${this.tilt}deg`);
     // Type scales with the stage, so a line occupies the same share of the frame at
     // every window size.
     el.style.fontSize = `${Math.max(12, stage.h * 0.036)}px`;
@@ -535,11 +618,15 @@ export class TextBox extends StageObject {
     const out = super.serialize();
     delete out.scale; delete out.rotation;
     out.text = this.text;
-    if (this.speaker) out.speaker = this.speaker;
-    if (this.style !== 'speech') out.style = this.style;
-    if (this.speed !== 'normal') out.speed = this.speed;
-    if (this.instant) out.instant = true;
-    if (this.hoverFade) out.hoverFade = true;
+    // Written even at their defaults — an omitted key inherits, so writing `style` only
+    // when it differed from 'speech' made it impossible to switch a paper box BACK to the
+    // xp.css one: the key vanished and the previous scene's 'paper' returned.
+    out.speaker = this.speaker ?? null;
+    out.style = this.style;
+    out.speed = this.speed;
+    out.instant = !!this.instant;
+    out.hoverFade = !!this.hoverFade;
+    out.tilt = this.tilt ?? null;
     out.width = round(this.width);
     return out;
   }
@@ -861,16 +948,17 @@ function offset(poly, d) {
 // moment to the audience, and the mic grant genuinely has to be user-initiated.
 
 export class ButtonObject extends StageObject {
+  static defaultZ = 250;
   static fields = [
     ...StageObject.fields,
     { key: 'text', label: 'label', type: 'text' },
     { key: 'action', label: 'action', type: 'select', options: ['', 'enableMic'] },
+    { key: 'doneText', label: 'done label', type: 'text' },
   ];
 
   apply(spec) {
     super.apply(spec);
     this.text ??= 'click me';
-    this.z ??= 250;
     return this;
   }
 
@@ -883,9 +971,13 @@ export class ButtonObject extends StageObject {
       this.deps.domLayer.appendChild(el);
       this._el = el;
     }
-    // Its job done, it takes itself off stage — the script replaces it with the bar.
-    if (this.action === 'enableMic' && this.deps.mic?.ready) { this._el.hidden = true; return; }
-    if (this._el.textContent !== this.text) this._el.textContent = this.text;
+    // Once the mic is live the button STAYS on stage, disabled, reporting that it worked.
+    // It used to hide itself, which left a blank frame with no confirmation that the click
+    // had landed — you advance the scene when you are ready, rather than it vanishing.
+    const done = this.action === 'enableMic' && !!this.deps.mic?.ready;
+    const label = done ? (this.doneText ?? 'mic enabled') : this.text;
+    this._el.disabled = done;
+    if (this._el.textContent !== label) this._el.textContent = label;
     placeDom(this._el, this, stage);
   }
 
@@ -899,30 +991,31 @@ export class ButtonObject extends StageObject {
     const out = super.serialize();
     out.text = this.text;
     if (this.action) out.action = this.action;
+    if (this.doneText) out.doneText = this.doneText;
     return out;
   }
 }
 
 // ── Progress ──────────────────────────────────────────────────────────────
-// An xp.css progress bar that fills only while the room is loud. Scene 11's drumroll: it
-// takes AT LEAST `seconds` of sustained noise, and stalls the moment the room goes quiet.
+// An xp.css progress bar the SCRIPT drives: each scene names a target fill and the bar
+// eases toward it. It used to read the mic and fill only while the room was loud, which
+// made the drumroll's pacing depend on the room rather than on you — one quiet audience
+// and the beat stalls with no way to move it along.
 
 export class ProgressObject extends StageObject {
+  static defaultZ = 250;
   static fields = [
     ...StageObject.fields,
-    { key: 'seconds', label: 'min secs', type: 'range', min: 2, max: 30, step: 1 },
-    { key: 'threshold', label: 'loud at', type: 'range', min: 0.02, max: 0.8, step: 0.02 },
+    { key: 'value', label: 'fill %', type: 'range', min: 0, max: 100, step: 1 },
+    { key: 'ease', label: 'ease secs', type: 'range', min: 0, max: 10, step: 0.1 },
     { key: 'width', label: 'width', type: 'range', min: 0.1, max: 1, step: 0.01 },
   ];
 
   apply(spec) {
     super.apply(spec);
-    this.seconds ??= 10;
-    this.threshold ??= 0.12;
-    this.width ??= 0.5;
     this.value ??= 0;
-    this.z ??= 250;
-    this.needsMic ??= true;   // hidden until the mic is granted
+    this.ease ??= 1.5;    // time constant in seconds — see update()
+    this.width ??= 0.5;
     return this;
   }
 
@@ -934,15 +1027,29 @@ export class ProgressObject extends StageObject {
       this.deps.domLayer.appendChild(el);
       this._el = el;
     }
-    const mic = this.deps.mic;
-    if (this.needsMic && !mic?.ready) { this._el.hidden = true; return; }
 
-    // Judged on the ~1s average, not the instant level — one clap should not advance it,
-    // and the script asks for sustained noise.
-    if (mic && mic.avg > this.threshold) {
-      this.value = Math.min(100, this.value + (dt / (this.seconds * 1000)) * 100);
+    // `value` is the scene's TARGET; `_shown` is where the bar actually is. Because
+    // _shown is runtime state rather than a spec key, apply() leaves it alone across a
+    // scene change — which is what makes the bar travel from the last scene's fill to
+    // this one's instead of snapping. On first appearance there is nothing to travel
+    // from, so it starts empty and fills to its target.
+    if (this._shown == null) this._shown = 0;
+    const gap = this.value - this._shown;
+    if (this.ease > 0 && gap) {
+      // Exponential approach, NOT a linear ramp. A bar sliding to its mark at constant
+      // speed reads as an animation playing; a real one lunges and then crawls as it
+      // closes. `ease` is the time constant in seconds — how long to cover ~63% of
+      // whatever gap is left — so the last few percent take the longest, which is the
+      // part that sells it.
+      this._shown += gap * (1 - Math.exp(-dt / 1000 / this.ease));
+      // An exponential never actually arrives, so it has to be told when it is close
+      // enough — otherwise the bar creeps forever instead of settling.
+      if (Math.abs(this.value - this._shown) < 0.4) this._shown = this.value;
+    } else {
+      this._shown = this.value;
     }
-    this._el.value = this.value;
+
+    this._el.value = this._shown;
     this._el.style.width = `${this.width * 100}%`;
     placeDom(this._el, this, stage);
   }
@@ -951,14 +1058,14 @@ export class ProgressObject extends StageObject {
 
   serialize() {
     const out = super.serialize();
-    out.seconds = this.seconds;
-    out.threshold = round(this.threshold);
+    out.value = Math.round(this.value);
+    out.ease = round(this.ease);
     out.width = round(this.width);
     return out;
   }
 }
 
-// ── FaceLabel ─────────────────────────────────────────────────────────────
+// ── LabelBox ──────────────────────────────────────────────────────────────
 // The bounding box and caption over a detected face. Three beats in the script differ
 // only in colour and text — `#b4dd1e` with a name, then white with a live description,
 // then "bored mf" — so it is one object, not three.
@@ -966,52 +1073,96 @@ export class ProgressObject extends StageObject {
 // `text` is a template: {emotion} {age} {gender} are filled from face-api, and anything
 // without a placeholder is a literal. Race is not inferred; the script writes the word.
 
-export class FaceLabelObject extends StageObject {
+// A labelled bounding box. It draws around whatever its `source` tracks — the face-api
+// result, or the potato detector — because the two beats in scene 5 want the identical
+// box-with-a-caption and differ only in where the rectangle comes from.
+export class LabelBoxObject extends StageObject {
+  static defaultZ = 60;
   static fields = [
+    { key: 'source', label: 'source', type: 'select', options: ['face', 'potato'] },
     { key: 'z', label: 'z', type: 'number', min: -400, max: 400, step: 1 },
     { key: 'opacity', label: 'opacity', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'text', label: 'text', type: 'text' },
     { key: 'color', label: 'box', type: 'text' },
     { key: 'textColor', label: 'text col', type: 'text' },
     { key: 'pad', label: 'pad', type: 'range', min: 0, max: 0.3, step: 0.01 },
+    { key: 'weight', label: 'border', type: 'range', min: 0.002, max: 0.03, step: 0.001 },
+    { key: 'textSize', label: 'text size', type: 'range', min: 0.02, max: 0.09, step: 0.002 },
   ];
 
   apply(spec) {
     super.apply(spec);
-    this.text ??= '{emotion} {age} year-old Asian {gender}';
+    this.source ??= 'face';
+    this.text ??= this.source === 'potato' ? 'potato {score}'
+      : '{emotion} {age} year-old Asian {gender}';
     this.color ??= '#b4dd1e';
     this.textColor ??= '#000000';
     this.pad ??= 0.06;
-    this.z ??= 60;
+    this.weight ??= 0.008;
+    this.textSize ??= 0.04;   // ~3pt up from the old 0.032
     return this;
   }
 
-  // Drawn in STAGE space, not at an object position — the box IS wherever the face is.
-  draw(g, stage) {
-    const face = this.deps.faces;
-    const r = face?.result;
-    if (!r || this.visible === false || this.opacity <= 0) return;
-
+  // Both sources resolve to one padded rect in stage pixels.
+  //
+  // The face gives a normalised box directly. The DETECTOR gives a centre plus a `size` in
+  // stage-HEIGHT units — the same units every fastener uses — so the rect is squared off
+  // by dividing the width by the aspect, which is what keeps it square in pixels rather
+  // than square in normalised space.
+  _box(stage) {
+    if (this.source === 'potato') {
+      const d = this.deps.tracking?.detector?.det;
+      if (!d) return null;
+      const pad = this.pad * d.size;
+      const h = (d.size + 2 * pad) * stage.h;
+      const w = h;
+      return { x: d.x * stage.w - w / 2, y: d.y * stage.h - h / 2, w, h };
+    }
+    const r = this.deps.faces?.result;
+    if (!r) return null;
     const pad = this.pad * r.box.h;
-    const x = (r.box.x - pad / stage.aspect) * stage.w;
-    const y = (r.box.y - pad) * stage.h;
-    const w = (r.box.w + (2 * pad) / stage.aspect) * stage.w;
-    const h = (r.box.h + 2 * pad) * stage.h;
+    return {
+      x: (r.box.x - pad / stage.aspect) * stage.w,
+      y: (r.box.y - pad) * stage.h,
+      w: (r.box.w + (2 * pad) / stage.aspect) * stage.w,
+      h: (r.box.h + 2 * pad) * stage.h,
+    };
+  }
+
+  _label() {
+    if (this.source !== 'potato') return this.deps.faces?.fill(this.text) ?? '';
+    const d = this.deps.tracking?.detector?.det;
+    // {score} is the only token a potato has to offer.
+    return String(this.text).replace('{score}',
+      d?.score != null ? d.score.toFixed(2) : '');
+  }
+
+  // Drawn in STAGE space, not at an object position — the box IS wherever the subject is.
+  draw(g, stage) {
+    if (this.visible === false || this.opacity <= 0) return;
+    const box = this._box(stage);
+    if (!box) return;
+    const { x, y, w, h } = box;
 
     g.save();
     g.globalAlpha = this.opacity;
-    g.lineWidth = Math.max(2, stage.h * 0.004);
+    g.lineWidth = Math.max(2, stage.h * this.weight);
     g.strokeStyle = this.color;
     g.strokeRect(x, y, w, h);
 
-    const label = face.fill(this.text);
+    const label = this._label();
     if (label) {
-      const size = Math.max(11, stage.h * 0.032);
-      g.font = `${size}px system-ui, sans-serif`;
+      // Relative to stage height so it holds its share of the frame at any window size,
+      // the same rule every other size in the rig follows.
+      const size = Math.max(14, stage.h * this.textSize);
+      // The xp.css bitmap face, so the caption matches the rig's chrome rather than
+      // looking like a browser default. Falls back if the webfont has not landed yet.
+      g.font = `${size}px "Pixelated MS Sans Serif", system-ui, sans-serif`;
       const tw = g.measureText(label).width;
       const th = size * 1.5;
-      // Caption sits under the box, flipping above it if that would leave the stage.
-      const ly = y + h + th > stage.h ? y - th : y + h;
+      // Sits ON the box's top-left corner, dropping below the top edge if the box is high
+      // enough in frame that the caption would leave the stage.
+      const ly = y - th < 0 ? y : y - th;
       g.fillStyle = this.color;
       g.fillRect(x, ly, tw + size * 0.8, th);
       g.fillStyle = this.textColor;
@@ -1027,8 +1178,145 @@ export class FaceLabelObject extends StageObject {
     out.color = this.color;
     out.textColor = this.textColor;
     out.pad = round(this.pad);
+    out.weight = round(this.weight);
+    out.textSize = round(this.textSize);
     return out;
   }
 }
 
-export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, faceLabel: FaceLabelObject };
+// ── Audio ─────────────────────────────────────────────────────────────────
+// Music as an ordinary stage object. It draws nothing, but it belongs on the stage list
+// for one reason: it has to SURVIVE SCENE CHANGES, and the pool already gives that — an
+// object whose id persists is updated in place rather than rebuilt, so the track keeps
+// playing across a cut.
+//
+// Web Audio rather than <audio>, because the show needs SEGMENTS of one file:
+//
+//   drumroll    from 11, loop 11 → 14
+//   main theme  from 15, loop 16 → 49
+//
+// An <audio> element can only loop the whole file, so looping a region means watching
+// currentTime and seeking — which lands whenever the frame happens to fire and clicks
+// audibly every time round. AudioBufferSourceNode loops sample-accurately in the browser.
+//
+// The cost is that a source node cannot be paused: stopping means discarding it and
+// starting a new one at the right offset. That bookkeeping is `_elapsed` below.
+
+let sharedCtx = null;
+const audioCtx = () => (sharedCtx ??= new (window.AudioContext || window.webkitAudioContext)());
+const buffers = new Map();   // url → decoded AudioBuffer, shared across objects
+
+export class AudioObject extends StageObject {
+  static fields = [
+    { key: 'playing', label: 'playing', type: 'checkbox' },
+    { key: 'volume', label: 'volume', type: 'range', min: 0, max: 1, step: 0.05 },
+    { key: 'from', label: 'start at', type: 'number', min: 0, max: 600, step: 0.1 },
+    { key: 'loopStart', label: 'loop in', type: 'number', min: 0, max: 600, step: 0.1 },
+    { key: 'loopEnd', label: 'loop out', type: 'number', min: 0, max: 600, step: 0.1 },
+    { key: 'src', label: 'src', type: 'text' },
+  ];
+
+  apply(spec) {
+    super.apply(spec);
+    this.volume ??= 1;
+    this.loop ??= true;
+    this.playing ??= false;
+    this.from ??= 0;
+    return this;
+  }
+
+  update() {
+    if (this.src == null) return;
+    const url = this.deps.assets?.src(this.src) ?? this.src;
+    if (url !== this._url) { this._stop(); this._url = url; this._buffer = null; this._load(url); }
+
+    if (this._gain) this._gain.gain.value = Math.max(0, Math.min(1, this.volume));
+
+    const want = !!this.playing && this.visible !== false;
+    // A changed `from` means a different cue — scene 12 moves from the drumroll to the
+    // theme in the same file — so it restarts rather than carrying on.
+    if (want && this._playing && this.from !== this._playingFrom) {
+      this._stop();
+      this._elapsed = null;   // a new cue starts AT `from`, not where the old one stopped
+      this._start();
+      return;
+    }
+    if (want === this._playing) {
+      if (want && this._src) {                      // loop points can change while playing
+        this._src.loopStart = this.loopStart ?? 0;
+        this._src.loopEnd = this.loopEnd ?? 0;
+      }
+      return;
+    }
+    if (want) this._start(); else this._stop();
+  }
+
+  async _load(url) {
+    try {
+      if (!buffers.has(url)) {
+        const bytes = await fetch(url).then((r) => r.arrayBuffer());
+        buffers.set(url, await audioCtx().decodeAudioData(bytes));
+      }
+      this._buffer = buffers.get(url);
+      if (this.playing && !this._playing) this._start();   // asked to play before it loaded
+    } catch (err) {
+      console.warn(`[audio] ${this.id} failed to load`, err);
+    }
+  }
+
+  _start() {
+    const buf = this._buffer;
+    if (!buf) { this._playing = !!this.playing; return; }   // starts when the decode lands
+    const ctx = audioCtx();
+    // Autoplay policy: the "it's showtime!" click is the gesture that unlocks this.
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+    this._gain ??= ctx.createGain();
+    this._gain.connect(ctx.destination);
+    this._gain.gain.value = Math.max(0, Math.min(1, this.volume));
+
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    if (this.loop) {
+      src.loop = true;
+      src.loopStart = this.loopStart ?? 0;
+      src.loopEnd = this.loopEnd ?? 0;   // 0 means "to the end of the buffer"
+    }
+    src.connect(this._gain);
+    // Resume where it stopped, unless this is a new cue.
+    const offset = this._elapsed ?? this.from ?? 0;
+    src.start(0, Math.min(offset, buf.duration));
+    this._src = src;
+    this._startedAt = ctx.currentTime - offset;
+    this._playing = true;
+    this._playingFrom = this.from;
+    this._elapsed = null;
+  }
+
+  _stop() {
+    if (this._src) {
+      // Remember where we were, so a later scene resumes rather than restarting.
+      this._elapsed = audioCtx().currentTime - this._startedAt;
+      try { this._src.stop(); } catch { /* already stopped */ }
+      this._src.disconnect();
+      this._src = null;
+    }
+    this._playing = false;
+  }
+
+  // Leaving the stage must silence it. Nothing else stops a running source node.
+  dispose() { this._stop(); this._gain?.disconnect(); this._gain = null; }
+
+  serialize() {
+    const out = { type: 'audio', src: this.src, playing: !!this.playing };
+    if (this.volume !== 1) out.volume = round(this.volume);
+    if (!this.loop) out.loop = false;
+    if (this.from) out.from = round(this.from);
+    if (this.loopStart) out.loopStart = round(this.loopStart);
+    if (this.loopEnd) out.loopEnd = round(this.loopEnd);
+    if (this._note) out._note = this._note;
+    return out;
+  }
+}
+
+export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, label: LabelBoxObject, audio: AudioObject };

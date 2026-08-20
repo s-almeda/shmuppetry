@@ -12,12 +12,20 @@ assets/*
 !assets/demo/
 !assets/manifest.json
 
+# ...except the big media. The demo set exists to show the rig off on GitHub Pages, and a
+# 2.6MB mp3 is not worth carrying in git for that. It stays on disk, so the show still has
+# sound locally; the baked manifest lists only what git actually tracks, so the public
+# page never asks for a file that is not there.
+assets/demo/005_circus_theme.mp3
+
 # The textures folder is source material and stays local, EXCEPT the one the show
 # actually uses — otherwise the public build 404s and silently has no paper. Re-include
 # the directory, re-exclude its contents, then name the exceptions.
 !assets/textures/
 assets/textures/*
 !assets/textures/cardstock.jpeg
+!assets/textures/lined_paper.jpeg
+!assets/fonts/
 !assets/textures/paper-tile.png
 
 # Potato training artefacts — best.pt, dataset/, runs/, train.log. ~97MB, kept on disk
@@ -31,3 +39,6 @@ manifests/
 node_modules/
 .DS_Store
 *.log
+
+# Rolling backups of script.json, written by the dev server before each save.
+shows/*/.backups/

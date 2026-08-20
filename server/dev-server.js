@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
-const ASSET_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)$/i;
+const ASSET_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov|mp3|wav|ogg|m4a)$/i;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -42,6 +42,10 @@ const MIME = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.mov': 'video/quicktime',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.m4a': 'audio/mp4',
 };
 
 // Trust nothing about the remote address beyond it being loopback. This is the same
@@ -133,6 +137,27 @@ const server = http.createServer(async (req, res) => {
         return send(res, 400, `not valid JSON: ${err.message}`);
       }
       if (!Array.isArray(parsed)) return send(res, 400, 'script must be an array of scenes');
+
+      // Back up what is already on disk BEFORE overwriting it. The panel PUTs its whole
+      // in-memory script, so a tab loaded before an outside edit silently reverts that
+      // edit on the next save. Nothing here can tell the two apart — but the previous
+      // version is always one file copy away afterwards.
+      const prev = await fs.readFile(file, 'utf8').catch(() => null);
+      if (prev) {
+        const dir = path.join(path.dirname(file), '.backups');
+        await fs.mkdir(dir, { recursive: true });
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+        await fs.writeFile(path.join(dir, `script-${stamp}.json`), prev, 'utf8');
+
+        // A shrinking script is the loudest clobber signal there is, so say so rather
+        // than letting it pass silently.
+        let before = 0;
+        try { before = JSON.parse(prev).length; } catch { /* unreadable: nothing to compare */ }
+        if (before > parsed.length) {
+          console.warn(`[dev] WARNING shows/${show}/script.json ${before} → ${parsed.length} scenes.` +
+            ' The saving tab may have been loaded before an outside edit; previous version is in .backups/');
+        }
+      }
 
       // Write to a temp file and rename — a crash mid-write must not leave you with
       // half a script and no backup, five minutes before a show.

@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ASSET_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)$/i;
+const ASSET_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|mov|mp3|wav|ogg|m4a)$/i;
 // Textures are referenced by PATH, not by number — and numbering them would be actively
 // harmful: `lined_paper2.jpeg` parses to asset 2 and would collide with real art.
 const UNNUMBERED = ['textures/'];

@@ -133,7 +133,6 @@ export class Panel {
             <span class="count" id="p-count">/ 0</span>
             <button id="p-next" type="button" title="next scene (→)">›</button>
           </div>
-          <div class="hint" id="p-note" hidden></div>
         </div>
         <div class="group">
           <b>on stage</b>
@@ -148,6 +147,7 @@ export class Panel {
               <option value="image">image</option>
               <option value="text">text</option>
               <option value="webcam">webcam</option>
+              <option value="audio">audio</option>
             </select>
           </div>
         </div>
@@ -161,7 +161,7 @@ export class Panel {
         </div>
         <div class="group" id="p-edit-section" hidden>
           <div class="panel-row">
-            <label style="flex:1"><input type="checkbox" id="p-editing" /> edit text in place</label>
+            <label style="flex:1">edit text in place</label><button class="toggle" id="p-editing" type="button">off</button>
           </div>
           <div class="panel-row"><button id="p-reset" type="button">reset stage</button></div>
           <div class="panel-row" style="gap:3px" id="p-save-row" hidden>
@@ -175,15 +175,24 @@ export class Panel {
     this.$ = (id) => this.el.querySelector(id);
 
     this.edit.onDirtyChange = (dirty) => { this.$('#p-save-row').hidden = !dirty; };
-    this.$('#p-editing').addEventListener('change', (e) => this.edit.setEditing(e.target.checked));
+    this.$('#p-editing').addEventListener('click', (e) => {
+      const on = !e.target.classList.contains('on');
+      e.target.classList.toggle('on', on);
+      e.target.textContent = on ? 'on' : 'off';
+      this.edit.setEditing(on);
+    });
     this.$('#p-reset').addEventListener('click', () => {
+      if (!confirm('Reset the stage?\n\nThis removes every object in this scene. It is not saved until you press "save scene", so you can still revert.')) return;
       this.player.resetScene();
       this.select(null);
       this.edit.markDirty();
       this.renderObjectList();
     });
     this.$('#p-save').addEventListener('click', () => this.edit.save());
-    this.$('#p-revert').addEventListener('click', () => this.edit.revert());
+    this.$('#p-revert').addEventListener('click', () => {
+      if (!confirm('Revert this scene?\n\nEvery unsaved change since the last save is discarded.')) return;
+      this.edit.revert();
+    });
     this.$('#p-copy').addEventListener('click', () => this.edit.copyToClipboard());
     this.$('#p-prev').addEventListener('click', () => this.player.prev());
     this.$('#p-next').addEventListener('click', () => this.player.next());
@@ -215,9 +224,6 @@ export class Panel {
 
     this.$('#p-num').value = String(this.player.index + 1);
     this.$('#p-count').textContent = `/ ${this.player.length}`;
-    const note = this.$('#p-note');
-    note.textContent = scene?._note ?? '';
-    note.hidden = !scene?._note;
 
     this.renderObjectList();
     // Keep the selection across a scene change if the object is still on stage —
@@ -242,12 +248,14 @@ export class Panel {
       const row = document.createElement('div');
       row.className = `obj-row${obj.id === this.selectedId ? ' selected' : ''}`;
       row.innerHTML = `
-        <input type="checkbox" ${obj.visible === false ? '' : 'checked'} title="visible" />
+        <button class="vis${obj.visible === false ? '' : ' on'}" type="button" title="show / hide">${obj.visible === false ? '' : '✓'}</button>
         <span class="name">${obj.id}</span>
         <span class="type">${obj.type}</span>
         <button class="remove" type="button" title="remove from this scene">−</button>`;
-      row.querySelector('input').addEventListener('change', (e) => {
-        obj.visible = e.target.checked;
+      row.querySelector('.vis').addEventListener('click', (e) => {
+        obj.visible = obj.visible === false;
+        e.target.classList.toggle('on', obj.visible);
+        e.target.textContent = obj.visible ? '✓' : '';
         this.edit.markDirty();
       });
       row.querySelector('.name').addEventListener('click', () => this.select(obj.id));
@@ -279,18 +287,24 @@ export class Panel {
     section.hidden = false;
     this.$('#p-inspector-title').textContent = `${obj.id} · ${obj.type}`;
 
-    // Rebuild only when the selection changes, so dragging a slider doesn't destroy
-    // the element being dragged.
-    if (this._inspectorFor === obj.id) return;
+    // Rebuild only when the SELECTION changes, so dragging a slider never destroys the
+    // element being dragged — but re-read the values every time, or stepping to another
+    // scene leaves the whole inspector showing the previous scene's numbers.
+    if (this._inspectorFor === obj.id) { this._syncInspector?.(); return; }
     this._inspectorFor = obj.id;
-    this.renderFields(host, obj, () => this.edit.markDirty());
+    this._syncInspector = this.renderFields(host, obj, () => this.edit.markDirty());
   }
 
   // The generic field renderer, driven by a `fields` array. Used for stage objects and for
   // instruments like the detector alike — writing a bespoke panel block per feature is
   // what 2.5.0 did, and it is why adding a capability there meant hand-writing HTML (§6).
+  // Returns a `sync()` that re-reads every control's value off the object WITHOUT
+  // rebuilding the DOM — needed because the same object stays selected across a scene
+  // change, and a control still showing the previous scene's value is worse than no
+  // control: a toggle reading "off" for something that is on inverts your next click.
   renderFields(host, obj, onChange = () => {}) {
     host.innerHTML = '';
+    const syncs = [];
     for (const field of obj.fields ?? []) {
       const row = document.createElement('div');
       row.className = 'panel-row';
@@ -298,8 +312,32 @@ export class Panel {
       label.textContent = field.label ?? field.key;
       row.appendChild(label);
 
+      // Booleans are a BUTTON, not a checkbox. xp.css paints a checkbox entirely through
+      // pseudo-elements on a sibling label, positioned with hardcoded pixel offsets that
+      // assume the label is laid out exactly as its demo does — any flex, font-size or
+      // overflow in the surrounding row pulls the tick off the box. A button carries its
+      // own state inside its own border, needs no sibling, and already matches every
+      // other control in this panel.
+      const isCheck = field.type === 'checkbox';
       let input;
-      if (field.type === 'select') {
+      if (isCheck) {
+        input = document.createElement('button');
+        input.type = 'button';
+        input.className = 'toggle';
+        const paint = () => {
+          const on = !!obj[field.key];
+          input.textContent = on ? 'on' : 'off';
+          input.classList.toggle('on', on);
+          input.setAttribute('aria-pressed', String(on));
+        };
+        paint();
+        syncs.push(paint);
+        input.addEventListener('click', () => {
+          obj[field.key] = !obj[field.key];
+          paint();
+          onChange();
+        });
+      } else if (field.type === 'select') {
         input = document.createElement('select');
         for (const opt of field.options) {
           const o = document.createElement('option');
@@ -307,13 +345,11 @@ export class Panel {
           input.appendChild(o);
         }
         input.value = obj[field.key] ?? field.options[0];
-      } else if (field.type === 'checkbox') {
-        input = document.createElement('input');
-        input.type = 'checkbox';
-        input.checked = !!obj[field.key];
+        syncs.push(() => { input.value = obj[field.key] ?? field.options[0]; });
       } else if (field.type === 'textarea') {
         input = document.createElement('textarea');
         input.value = obj[field.key] ?? '';
+        syncs.push(() => { input.value = obj[field.key] ?? ''; });
       } else {
         input = document.createElement('input');
         input.type = field.type === 'number' ? 'number' : field.type === 'text' ? 'text' : 'range';
@@ -323,6 +359,7 @@ export class Panel {
           input.step = field.step;
         }
         input.value = obj[field.key] ?? '';
+        syncs.push(() => { input.value = obj[field.key] ?? ''; });
       }
       row.appendChild(input);
 
@@ -332,19 +369,22 @@ export class Panel {
         readout.className = 'val';
         readout.textContent = fmt(obj[field.key]);
         row.appendChild(readout);
+        syncs.push(() => { readout.textContent = fmt(obj[field.key]); });
       }
 
-      const commit = () => {
-        const numeric = field.type === 'range' || field.type === 'number';
-        obj[field.key] = field.type === 'checkbox' ? input.checked
-          : numeric ? parseFloat(input.value) : input.value;
-        if (readout) readout.textContent = fmt(obj[field.key]);
-        onChange();
-      };
-      input.addEventListener('input', commit);
-      input.addEventListener('change', commit);
+      if (!isCheck) {
+        const commit = () => {
+          const numeric = field.type === 'range' || field.type === 'number';
+          obj[field.key] = numeric ? parseFloat(input.value) : input.value;
+          if (readout) readout.textContent = fmt(obj[field.key]);
+          onChange();
+        };
+        input.addEventListener('input', commit);
+        input.addEventListener('change', commit);
+      }
       host.appendChild(row);
     }
+    return () => { for (const f of syncs) f(); };
   }
 
 }

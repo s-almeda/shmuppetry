@@ -1,0 +1,4056 @@
+[
+  {
+    "id": 1,
+    "_note": "Opening. reset:true so nothing leaks in from a previous run-through.",
+    "reset": true,
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "speaker": "shm",
+        "y": 0.8,
+        "width": 0.92,
+        "text": "hi everyone! it's me, your favorite little green guy from this planet, shm!"
+      }
+    }
+  },
+  {
+    "id": 2,
+    "objects": {
+      "dialogue": {
+        "text": "as you may know, this is the digital puppetry rig i made to explore performing with the webcam, and i have been building on and using this rig for performances, lectures, and presentations, including my intro presentation."
+      }
+    }
+  },
+  {
+    "id": 3,
+    "_note": "']' cycles the left-hand puppet while you talk. shift+']' steps back.",
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "size": 1.1,
+        "z": 30,
+        "cycleKey": "]",
+        "srcs": [
+          201,
+          4,
+          202
+        ]
+      },
+      "dialogue": {
+        "text": "it tracks your hands with mediapipe, so you, or your digital form, can have puppets"
+      }
+    }
+  },
+  {
+    "id": 4,
+    "_note": "Face box only. No ONNX yet.",
+    "objects": {
+      "facebox": {
+        "type": "label",
+        "text": "shm garanganao almeda",
+        "color": "#b4dd1e",
+        "textColor": "#000000",
+        "z": 60
+      },
+      "hat": {
+        "type": "image",
+        "fasten": "hat",
+        "src": 203,
+        "z": 40
+      },
+      "dialogue": {
+        "text": "it also tracks my face,"
+      }
+    }
+  },
+  {
+    "id": 5,
+    "_note": "THE ONLY SCENE RUNNING POTATO INFERENCE. Face box off, potato box on \u2014 the box follows the detector instead of the face. If the detector misbehaves live, press 'p' for the manual fallback or step straight past this one scene.",
+    "potato": true,
+    "potatoManual": true,
+    "objects": {
+      "dialogue": {
+        "text": "recognizes potatoes,"
+      },
+      "facebox": null,
+      "potatobox": {
+        "type": "label",
+        "source": "potato",
+        "text": "potato {score}",
+        "color": "#b4dd1e",
+        "textColor": "#000000",
+        "z": 60
+      }
+    }
+  },
+  {
+    "id": 6,
+    "_note": "Potato off again \u2014 frame cost back to normal before the typewriter has real work to do.",
+    "potato": false,
+    "potatoManual": false,
+    "objects": {
+      "dialogue": {
+        "text": "and can, y'know,"
+      },
+      "potatobox": null,
+      "facebox": {
+        "type": "label",
+        "text": "shm garanganao almeda",
+        "color": "#b4dd1e",
+        "textColor": "#000000",
+        "z": 60
+      }
+    }
+  },
+  {
+    "id": 7,
+    "_note": "Live age/gender/expression. Race is the hardcoded string, not a model.",
+    "objects": {
+      "facebox": {
+        "text": "{emotion} {age} year-old Asian {gender}",
+        "color": "#ffffff",
+        "textColor": "#000000"
+      },
+      "dialogue": {
+        "text": "be problematic. so yeah, pretty basic stuff"
+      }
+    }
+  },
+  {
+    "id": 8,
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "i dunno guys, i've gotta be honest.........\n.........i've kinda gotten like.... bored of this thing.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "facebox": {
+        "type": "label",
+        "x": 0.5,
+        "y": 0.5,
+        "z": 60,
+        "text": "bored mf",
+        "color": "#aaaaaa",
+        "textColor": "#000000",
+        "pad": 0.06,
+        "weight": 0.008,
+        "textSize": 0.04
+      },
+      "lh": null,
+      "hat": null
+    }
+  },
+  {
+    "id": 9,
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "i know i entered the residency with this gusto about really pushing and engaging with the new media possibilities of this new medium in this new age we find ourselves in, but i just...",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "facebox": {
+        "type": "label",
+        "x": 0.5,
+        "y": 0.5,
+        "z": 60,
+        "text": "bored mf",
+        "color": "#aaaaaa",
+        "textColor": "#000000",
+        "pad": 0.06,
+        "weight": 0.008,
+        "textSize": 0.04
+      }
+    }
+  },
+  {
+    "id": 10,
+    "_note": "The line is cut off ON PURPOSE. Say the rest aloud; do not restore it.",
+    "objects": {
+      "dialogue": {
+        "text": "like what else is there to do from here? what is this stupid thing even for? what am i even doing and why am i putting so much effort into it? i feel like i'm"
+      }
+    }
+  },
+  {
+    "id": 11,
+    "_note": "SCREEN GOES BLACK. #stage is already black, so removing the webcam IS the blackout. The sign is hand-lettered art on a transparent PNG, puppeted by your left hand like any other prop.",
+    "objects": {
+      "cam": null,
+      "facebox": null,
+      "hat": null,
+      "lh": null,
+      "dialogue": null,
+      "sign": {
+        "type": "image",
+        "src": 209,
+        "fasten": "leftHand",
+        "size": 1.4,
+        "z": 200
+      }
+    }
+  },
+  {
+    "id": 12,
+    "_note": "SILENT. Black stage, the demand now centred rather than in your hand, and one real button. Click it, grant the mic \u2014 the button stays put and reads 'mic enabled' so you can see the click landed.",
+    "objects": {
+      "micbtn": {
+        "type": "button",
+        "x": 0.5,
+        "y": 0.52,
+        "z": 250,
+        "text": "enable mic",
+        "action": "enableMic",
+        "doneText": "mic enabled"
+      },
+      "sign": null
+    }
+  },
+  {
+    "id": 13,
+    "_note": "The bar appears and the drumroll starts. It needs ~10s AND sustained noise, and stalls the instant the room goes quiet. No lights yet.",
+    "objects": {
+      "micbtn": null,
+      "meter": {
+        "type": "progress",
+        "x": 0.5,
+        "y": 0.52,
+        "width": 0.5,
+        "z": 250,
+        "ease": 1.5,
+        "value": 25
+      },
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 11,
+        "loopStart": 12,
+        "loopEnd": 14
+      }
+    }
+  },
+  {
+    "id": 14,
+    "_note": "The lights come up while the bar fills. Spotlights are your two hands: white circles with isMask, so the curtain shows ONLY through them.",
+    "objects": {
+      "curtain": {
+        "type": "image",
+        "src": 204,
+        "fit": "cover",
+        "z": -90,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ]
+      },
+      "spotL": {
+        "type": "image",
+        "src": 100,
+        "fasten": "leftHand",
+        "size": 2.2,
+        "isMask": true
+      },
+      "spotR": {
+        "type": "image",
+        "src": 100,
+        "fasten": "rightHand",
+        "size": 2.2,
+        "isMask": true
+      },
+      "meter": {
+        "value": 50
+      }
+    }
+  },
+  {
+    "id": 15,
+    "_note": "The voice arrives. The bar keeps filling underneath \u2014 `meter` holds its id across all of these, so the pool updates it in place and its progress carries rather than resetting.",
+    "objects": {
+      "voice": {
+        "type": "text",
+        "style": "bubble",
+        "speaker": "???",
+        "y": 0.8,
+        "width": 0.86,
+        "text": "...Gaydies and Lentilmen......"
+      },
+      "meter": {
+        "value": 75
+      }
+    }
+  },
+  {
+    "id": 16,
+    "_note": "Bar still filling.",
+    "objects": {
+      "voice": {
+        "text": "...Animes and Furries......"
+      },
+      "meter": {
+        "value": 90
+      }
+    }
+  },
+  {
+    "id": 17,
+    "_note": "Bar nearly full. Land this line as it tops out.",
+    "objects": {
+      "meter": {
+        "type": "progress",
+        "x": 0.5,
+        "y": 0.52,
+        "z": 250,
+        "value": 100,
+        "ease": 1.5,
+        "width": 0.5
+      },
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 11,
+        "loopStart": 12,
+        "loopEnd": 14
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "src": 204,
+        "fit": "cover"
+      },
+      "spotL": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "fasten": "leftHand",
+        "isMask": true,
+        "src": 100,
+        "size": 2.2
+      },
+      "spotR": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "fasten": "rightHand",
+        "isMask": true,
+        "src": 100,
+        "size": 2.2
+      },
+      "voice": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "Stomp your feet, and hold onto your seat, cos it's time for......",
+        "speaker": "???",
+        "style": "bubble",
+        "width": 0.86
+      }
+    }
+  },
+  {
+    "id": 18,
+    "_note": "Music switches to the main theme. Marquee is pulled down by your RIGHT hand: x is nailed to centre, y follows the hand but cannot pass 0.5 going down \u2014 and follows it back up freely.",
+    "bodyClass": "chrome-marquee",
+    "objects": {
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "src": 204,
+        "fit": "cover"
+      },
+      "voice": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "text": "The Amazing Shmidpoint Presentation!",
+        "speaker": "???",
+        "style": "bubble",
+        "width": 0.86
+      },
+      "marquee": {
+        "type": "image",
+        "x": 0,
+        "y": -0.34,
+        "z": 100,
+        "fasten": "rightHand",
+        "holdPin": true,
+        "lockX": 0.5,
+        "maxY": 0.5,
+        "src": 205,
+        "size": 0.4
+      },
+      "meter": null,
+      "spotL": null,
+      "spotR": null
+    }
+  },
+  {
+    "id": 19,
+    "_note": "Marquee holds where you left it.",
+    "objects": {
+      "voice": {
+        "text": "I'm your host, the one, the only...."
+      }
+    }
+  },
+  {
+    "id": 20,
+    "_note": "BM assembled. Three hand cutouts run three colour segmentations \u2014 watch frame time here. Place-only: set each part's scale/rotation yourself in the panel, then save.",
+    "objects": {
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "src": 204,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
+        "type": "bodyPart",
+        "x": -0.01,
+        "y": -0.005,
+        "z": 26,
+        "scale": 1.97,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.165,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeL2": {
+        "type": "bodyPart",
+        "x": 0.01,
+        "y": -0.1,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -152,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.22,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.2,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR1": {
+        "type": "bodyPart",
+        "x": 0.02,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.26,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.085,
+        "y": 0.05,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.23,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0.025,
+        "y": 0,
+        "z": 24,
+        "scale": 0.59,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "src": 207,
+        "pinScale": true,
+        "size": 1.4
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handL2": {
+        "type": "bodyPart",
+        "x": 0.415,
+        "y": -0.02,
+        "z": 30,
+        "scale": 0.81,
+        "rotation": 29,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.015,
+          "clean": 0.01,
+          "range": 0.9,
+          "grow": 0.065,
+          "smooth": 0.8,
+          "points": 37,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": -0.18,
+        "y": 0,
+        "z": 31,
+        "scale": 0.63,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "src": 206,
+        "pinScale": true,
+        "size": 1,
+        "anchor": "bottom"
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "text": "...BricolMage!!",
+        "speaker": "The BricolMage",
+        "style": "paper",
+        "width": 0.92
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.125,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": -22,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handR": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 0.51,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "voice": null,
+      "marquee": null
+    }
+  },
+  {
+    "id": 21,
+    "_note": "Hat moves off the hand and onto the top of the mouth; the hat-holding hand goes.",
+    "objects": {
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 204,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
+        "type": "bodyPart",
+        "x": -0.01,
+        "y": -0.005,
+        "z": 26,
+        "scale": 1.97,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.165,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeL2": {
+        "type": "bodyPart",
+        "x": 0.01,
+        "y": -0.1,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -152,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.22,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.2,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR1": {
+        "type": "bodyPart",
+        "x": 0.02,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.26,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.085,
+        "y": 0.05,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.23,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0.015,
+        "y": 0,
+        "z": 24,
+        "scale": 0.77,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 207,
+        "pinScale": true,
+        "size": 1.4
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handL2": {
+        "type": "bodyPart",
+        "x": 0.415,
+        "y": -0.02,
+        "z": 30,
+        "scale": 0.81,
+        "rotation": 29,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.015,
+          "clean": 0.01,
+          "range": 0.9,
+          "grow": 0.065,
+          "smooth": 0.8,
+          "points": 37,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": 0,
+        "y": -0.15,
+        "z": 31,
+        "scale": 0.5,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthTop",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 206,
+        "pinScale": true,
+        "size": 1.6,
+        "anchor": "top"
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "Boy have we got a show in store for YOU!",
+        "speaker": "The BricolMage",
+        "style": "paper",
+        "width": 0.92
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.125,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": -22,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handR": null
+    }
+  },
+  {
+    "id": 22,
+    "_note": "Emotion beats \u2014 retune part rotations/positions live and save each scene.",
+    "objects": {
+      "dialogue": {
+        "text": "You'll laugh! MWAHAHAHAH!"
+      }
+    }
+  },
+  {
+    "id": 23,
+    "objects": {
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 204,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
+        "type": "bodyPart",
+        "x": -0.01,
+        "y": -0.005,
+        "z": 26,
+        "scale": 1.97,
+        "rotation": 162,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.165,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeL2": {
+        "type": "bodyPart",
+        "x": 0.01,
+        "y": -0.075,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -26,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.22,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.2,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR1": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": 180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.26,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.21,
+        "y": 0.11,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.13,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0,
+        "y": 0.345,
+        "z": 1,
+        "scale": 0.53,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 207,
+        "pinScale": true,
+        "size": 1.4,
+        "anchor": "bottom"
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handL2": {
+        "type": "bodyPart",
+        "x": 0.415,
+        "y": -0.02,
+        "z": 30,
+        "scale": 0.81,
+        "rotation": 29,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": true,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.015,
+          "clean": 0.01,
+          "range": 0.9,
+          "grow": 0.065,
+          "smooth": 0.8,
+          "points": 37,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": 0,
+        "y": -0.39,
+        "z": 31,
+        "scale": 0.56,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthTop",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 206,
+        "pinScale": true,
+        "size": 1.6,
+        "anchor": "top"
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "You'll cry.... uhhuuhuuhuu...",
+        "speaker": "The BricolMage",
+        "style": "paper",
+        "width": 0.92
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.075,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": 24,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 24,
+    "_note": "Point at your own body on this line.",
+    "objects": {
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "src": 204,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
+        "type": "bodyPart",
+        "x": -0.01,
+        "y": -0.005,
+        "z": 26,
+        "scale": 1.97,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.165,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeL2": {
+        "type": "bodyPart",
+        "x": 0.01,
+        "y": -0.1,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -152,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.22,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.2,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR1": {
+        "type": "bodyPart",
+        "x": 0.02,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.26,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.085,
+        "y": 0.05,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.23,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 3,
+        "scale": 1.06,
+        "rotation": 5,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "src": 207,
+        "pinScale": true,
+        "size": 1.4,
+        "anchor": "bottom"
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "crown": 0.31,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handL2": {
+        "type": "bodyPart",
+        "x": 0.28,
+        "y": 0.02,
+        "z": 18,
+        "scale": 0.81,
+        "rotation": -26,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.015,
+          "clean": 0.01,
+          "range": 0.9,
+          "grow": 0.065,
+          "smooth": 0.8,
+          "points": 37,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": -0.06,
+        "y": -0.175,
+        "z": 31,
+        "scale": 0.29,
+        "rotation": -23,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthTop",
+        "flipX": false,
+        "holdPin": false,
+        "src": 206,
+        "pinScale": true,
+        "size": 1.6,
+        "anchor": "top"
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.125,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": -22,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "text": ".....Well, you might not.\n\nbut this guy will.  because they're a CRYBABY!",
+        "speaker": "The BricolMage",
+        "style": "paper",
+        "tilt": -0.3,
+        "width": 0.92
+      },
+      "bm_handR": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 0.51,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 25,
+    "_note": "FROZEN. Tracking stops and the camera snaps, so the cutouts hold their pose AND their pixels while you move and talk.",
+    "freeze": true,
+    "objects": {
+      "dialogue": null
+    }
+  },
+  {
+    "id": 26,
+    "_note": "Live again.",
+    "freeze": false,
+    "objects": {
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "src": 204,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
+        "type": "bodyPart",
+        "x": -0.01,
+        "y": -0.005,
+        "z": 26,
+        "scale": 1.97,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.165,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeL2": {
+        "type": "bodyPart",
+        "x": 0.01,
+        "y": -0.1,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -152,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.22,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.2,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR1": {
+        "type": "bodyPart",
+        "x": 0.02,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.26,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.085,
+        "y": 0.05,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.23,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 3,
+        "scale": 1.06,
+        "rotation": 5,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "src": 207,
+        "pinScale": true,
+        "size": 1.4,
+        "anchor": "bottom"
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": -0.23,
+        "z": 3,
+        "scale": 0.81,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "crown": 0.31,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handL2": {
+        "type": "bodyPart",
+        "x": 0.295,
+        "y": -0.095,
+        "z": 5,
+        "scale": 0.57,
+        "rotation": 155,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.09,
+          "skeleton": 0.045,
+          "clean": 0.02,
+          "range": 1.15,
+          "grow": 0.065,
+          "smooth": 0.85,
+          "points": 37,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.065,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": -0.06,
+        "y": -0.175,
+        "z": 31,
+        "scale": 0.29,
+        "rotation": -23,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthTop",
+        "flipX": false,
+        "holdPin": false,
+        "src": 206,
+        "pinScale": true,
+        "size": 1.6,
+        "anchor": "top"
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.125,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": -22,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handR": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 13,
+        "scale": 0.51,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "text": "we've prepared a performance about life and loss, about theater and community, about love and heartbreak!",
+        "speaker": "The BricolMage",
+        "style": "paper",
+        "width": 0.92
+      },
+      "rightHand": {
+        "type": "bodyPart",
+        "x": -0.33,
+        "y": 0.105,
+        "z": 5,
+        "scale": 0.48,
+        "rotation": -84,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.08,
+          "skeleton": 0.07,
+          "clean": 0.005,
+          "range": 2.1,
+          "grow": 0.095,
+          "smooth": 0.7,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 27,
+    "_note": "Eight left hands rotated around the body. EACH ONE IS ITS OWN colour segmentation pass \u2014 this is the heaviest scene in the show. Run it with ?perf before trusting it.",
+    "objects": {
+      "bm_handR": null,
+      "bm_handL2": null,
+      "dialogue": {
+        "text": "get ready for the puppet show of a LIFETIME!"
+      },
+      "bm_ring1": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring2": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 45,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring3": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 90,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring4": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 135,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring5": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 180,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring6": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 225,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring7": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 270,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring8": {
+        "type": "bodyPart",
+        "fasten": "leftHand",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 315,
+        "opacity": 1,
+        "visible": true,
+        "flipX": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter",
+          "crown": 0.31
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 28,
+    "_note": "shm answers. Dialogue snaps back to the xp.css box \u2014 that contrast is the joke.",
+    "freeze": true,
+    "objects": {
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": true,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "src": 204,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
+        "type": "bodyPart",
+        "x": -0.01,
+        "y": -0.005,
+        "z": 26,
+        "scale": 1.97,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.165,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeL2": {
+        "type": "bodyPart",
+        "x": 0.01,
+        "y": -0.1,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -152,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.22,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.2,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR1": {
+        "type": "bodyPart",
+        "x": 0.02,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.26,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.085,
+        "y": 0.05,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.23,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 3,
+        "scale": 1.06,
+        "rotation": 5,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "src": 207,
+        "pinScale": true,
+        "size": 1.4,
+        "anchor": "bottom"
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": -0.23,
+        "z": 3,
+        "scale": 0.81,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "crown": 0.31,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": -0.06,
+        "y": -0.175,
+        "z": 31,
+        "scale": 0.29,
+        "rotation": -23,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthTop",
+        "flipX": false,
+        "holdPin": false,
+        "src": 206,
+        "pinScale": true,
+        "size": 1.6,
+        "anchor": "top"
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.125,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": -22,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "text": "oh, no, sorry we don't have time for that.",
+        "speaker": "shm",
+        "width": 0.92,
+        "style": "speech"
+      },
+      "rightHand": {
+        "type": "bodyPart",
+        "x": -0.33,
+        "y": 0.105,
+        "z": 5,
+        "scale": 0.48,
+        "rotation": -84,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": true,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.08,
+          "skeleton": 0.07,
+          "clean": 0.005,
+          "range": 2.1,
+          "grow": 0.095,
+          "smooth": 0.7,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring1": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring2": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 45,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring3": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 90,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring4": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 135,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring5": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring6": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 225,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring7": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 270,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_ring8": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "scale": 0.7,
+        "rotation": 315,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 29,
+    "_note": "Still frozen, music out. Take a beat and switch poses.",
+    "objects": {
+      "dialogue": null,
+      "music": {
+        "playing": false
+      }
+    }
+  },
+  {
+    "id": 30,
+    "_note": "Live. Get up close to camera; pose BM angry.",
+    "freeze": false,
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "style": "paper",
+        "speaker": "The BricolMage",
+        "y": 0.8,
+        "width": 0.92,
+        "text": "...WHAT."
+      }
+    }
+  },
+  {
+    "id": 31,
+    "_note": "Read the actual runtime off the status bar and say it.",
+    "freeze": true,
+    "objects": {
+      "dialogue": {
+        "style": "speech",
+        "speaker": "shm",
+        "text": "uh, yeah, we only have time for a 5-minute presentation, and it's already been [@future shm, read runtime]."
+      }
+    }
+  },
+  {
+    "id": 32,
+    "freeze": false,
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "oh. aw man.",
+        "speaker": "The BricolMage",
+        "style": "paper",
+        "speed": "normal",
+        "instant": false,
+        "hoverFade": false,
+        "tilt": null,
+        "width": 0.92
+      },
+      "music": {
+        "type": "audio",
+        "src": 5,
+        "playing": false,
+        "from": 15,
+        "loopStart": 16,
+        "loopEnd": 82
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 204,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
+        "type": "bodyPart",
+        "x": -0.01,
+        "y": -0.005,
+        "z": 26,
+        "scale": 1.97,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.165,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeL2": {
+        "type": "bodyPart",
+        "x": 0.01,
+        "y": -0.1,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -152,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.22,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.2,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR1": {
+        "type": "bodyPart",
+        "x": 0.02,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.26,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.085,
+        "y": 0.05,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.23,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 3,
+        "scale": 1.68,
+        "rotation": 5,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 207,
+        "pinScale": true,
+        "size": 1.4,
+        "anchor": "bottom"
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": -0.23,
+        "z": 3,
+        "scale": 0.81,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "crown": 0.31,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": -0.06,
+        "y": -0.175,
+        "z": 31,
+        "scale": 0.72,
+        "rotation": -23,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthTop",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 206,
+        "pinScale": true,
+        "size": 1.6,
+        "anchor": "top"
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.125,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": -22,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "rightHand": {
+        "type": "bodyPart",
+        "x": -0.33,
+        "y": 0.105,
+        "z": 5,
+        "scale": 0.48,
+        "rotation": -84,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.08,
+          "skeleton": 0.07,
+          "clean": 0.005,
+          "range": 2.1,
+          "grow": 0.095,
+          "smooth": 0.7,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handL2": {
+        "type": "bodyPart",
+        "x": 0.18,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.08,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      }
+    }
+  },
+  {
+    "id": 33,
+    "_note": "Music back in.",
+    "objects": {
+      "music": {
+        "playing": true
+      },
+      "dialogue": {
+        "text": "Then we'll just have to organize a night of theater and performance at the end of this residency period!!"
+      }
+    }
+  },
+  {
+    "id": 34,
+    "_note": "Wave with the left hand; the right pulls the curtain down over EVERYTHING, dialogue included (z 300 > textbox z 200).",
+    "objects": {
+      "dropcurtain": {
+        "type": "image",
+        "src": 204,
+        "fasten": "rightHand",
+        "lockX": 0.5,
+        "maxY": 0.5,
+        "fit": "cover",
+        "z": 300
+      },
+      "dialogue": {
+        "text": "Stay tuned!!"
+      }
+    }
+  },
+  {
+    "id": 35,
+    "_note": "Back to the rig as it started.",
+    "reset": true,
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "speaker": "shm",
+        "y": 0.8,
+        "width": 0.92,
+        "text": "so yeah i accomplished refactoring this entire thing so that that weirdness would be possible and i'm writing a performance lecture thing and i hope i get to perform it before the residency ends."
+      }
+    }
+  },
+  {
+    "id": 36,
+    "_note": "One puppet per fingertip, left hand.",
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "also i made a bunch of finger puppets of you guys.",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null
+      },
+      "fp_thumb": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 1.48,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftThumb",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 211,
+        "pinScale": true,
+        "size": 0.7
+      },
+      "fp_index": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftIndex",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 212,
+        "pinScale": true,
+        "size": 0.7
+      },
+      "fp_middle": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftMiddle",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 213,
+        "pinScale": true,
+        "size": 0.7
+      },
+      "fp_ring": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftRing",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 214,
+        "pinScale": true,
+        "size": 0.7
+      },
+      "fp_pinky": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 1.37,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftPinky",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 215,
+        "pinScale": true,
+        "size": 0.7
+      }
+    }
+  },
+  {
+    "id": 37,
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "well, that's my show! see you later! whoaaaa",
+        "speaker": "shm",
+        "width": 0.92
+      },
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null
+      },
+      "cane": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 0.5,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 216,
+        "pinScale": true,
+        "size": 1.4
+      },
+      "fp_thumb": null,
+      "fp_index": null,
+      "fp_middle": null,
+      "fp_ring": null,
+      "fp_pinky": null
+    }
+  }
+]
