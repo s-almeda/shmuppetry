@@ -197,6 +197,45 @@ body {
    relying on the label text alone. */
 .panel-row .toggle { flex: 0 0 auto; min-width: 34px; padding: 1px 6px; }
 .panel-row .toggle.on { font-weight: bold; color: #005ca7; }
+/* A model is downloading. The objects are already on stage — this says the TRACKING
+   behind them has not landed, so nothing looks broken while a 12MB file arrives. */
+.panel-row .toggle.loading { color: #777; font-style: italic; }
+.panel-row .toggle[disabled] { color: #918d80; font-style: normal; }
+
+/* Showcase rows put the name first and let it take the width, unlike inspector rows
+   where a fixed 46px label column keeps the sliders aligned. */
+.panel-row label.wide { flex: 1 1 auto; }
+
+/* Sub-row under an enabled toggle, with 2.5.0's vertical nesting rail. */
+.panel-row.sub {
+  margin-left: 4px;
+  padding-left: 6px;
+  border-left: 2px solid #c4bfad;
+  gap: 3px;
+}
+.panel-row.sub label { flex: 0 0 auto; font-size: 10px; color: #555; }
+.panel-row.sub select { flex: 1 1 60px; min-width: 0; }
+
+/* Plain-language gloss under a toggle whose real controls are hand poses. */
+.panel-hint {
+  margin: 0 0 3px 4px;
+  padding-left: 6px;
+  border-left: 2px solid #c4bfad;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #5a5a4a;
+  white-space: normal;
+}
+
+/* The upload button in the inspector, beside an image object's src. */
+/* A field that RUNS something rather than holding a value — "scan face", "save metadata".
+   It drops the label column entirely and takes the row, so it reads as an action among the
+   sliders it feeds rather than as one more setting. */
+.panel-row .action { flex: 1 1 auto; min-width: 0; }
+.panel-row .action[disabled] { color: #918d80; font-style: italic; }
+
+.panel-row .upload { flex: 0 0 auto; padding: 0 6px; font-size: 10px; }
+.panel-row .upload.has { font-weight: bold; color: #005ca7; }
 
 .obj-row { display: flex; align-items: center; gap: 4px; line-height: 1.6; }
 .obj-row .vis {
@@ -208,7 +247,20 @@ body {
   font-size: 10px;
   color: #005ca7;
 }
-.obj-row .name { flex: 1; cursor: default; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The name is the click target that opens the inspector, and nothing on screen said so —
+   it read as a label. Pointer plus a hover fill in the same blue the selected row uses,
+   so the hover previews what selecting will look like. */
+.obj-row .name {
+  flex: 1;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 3px;
+  margin: 0 -3px;   /* the padding is for the highlight; it must not shift the text */
+  border-radius: 2px;
+}
+.obj-row .name:hover { background: rgba(0, 92, 167, 0.13); color: #005ca7; }
 .obj-row.selected .name { font-weight: bold; color: #005ca7; }
 .obj-row .type { color: #918d80; }
 

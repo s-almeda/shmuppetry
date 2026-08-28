@@ -1,9 +1,14 @@
 {
   "shows": [
     {
+      "name": "CNMAT_openlab",
+      "title": "CNMAT open lab",
+      "scenes": 5
+    },
+    {
       "name": "demo",
       "title": "shmuppetry rig 3.0",
-      "scenes": 38
+      "scenes": 4
     },
     {
       "name": "shmidpoint",

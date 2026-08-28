@@ -12,12 +12,23 @@ import { Silhouette } from './silhouette.js';
 import { Detector } from './detector.js';
 import { Mic } from './mic.js';
 import { FaceAnalysis } from './facelabel.js';
+import { Showcase } from './showcase.js';
 
 const params = new URLSearchParams(location.search);
 const showName = params.get('show') || 'demo';
 // ?scene=4 opens straight on a scene. Safe to jump anywhere: the script resolves from
 // scene 0 up front, so scene 4 is identical however you arrived at it.
 const startScene = Math.max(0, (parseInt(params.get('scene'), 10) || 1) - 1);
+
+// US-layout shifted punctuation, folded back to the unshifted key. Only needed because
+// shift is the reverse-step modifier for `cycleKey`, so ']' and '}' have to mean the same
+// binding. Letters fall through to toLowerCase() and need no table.
+const UNSHIFTED = {
+  '}': ']', '{': '[', ':': ';', '"': "'", '<': ',', '>': '.', '?': '/',
+  '~': '`', '|': '\\', '_': '-', '+': '=',
+  '!': '1', '@': '2', '#': '3', '$': '4', '%': '5',
+  '^': '6', '&': '7', '*': '8', '(': '9', ')': '0',
+};
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -101,6 +112,10 @@ const loadJSON = (url, fallback = null) =>
 
 let tracking = null;
 let player = null;
+// Module-level for the same reason `player` is: the keydown handler below is bound during
+// boot and closes over this, and a top-level `const` declared further down would be in its
+// temporal dead zone until then — a ReferenceError that takes the whole rig with it (§9.7).
+let panel = null;
 let mic = { ready: false, denied: false };
 
 function startStatusBar() {
@@ -129,7 +144,9 @@ async function main() {
   const config = await loadJSON(`./shows/${showName}/config.json`, {});
   if (config.skin) el.skin.href = `./css/skins/${config.skin}.css`;
   if (config.title) {
-    document.title = `shmuppetry — ${config.title}`;
+    // Don't prefix a title that already says it — the demo's own title is "shmuppetry rig
+    // 3.0", which would otherwise stutter in the browser tab.
+    document.title = /shmuppetry/i.test(config.title) ? config.title : `shmuppetry — ${config.title}`;
     // The titlebar itself. This used to write to #titleSub, which is commented out in
     // index.html — so a show's title was set and then never shown. Scene 12's
     // `chrome-marquee` body class replaces this text with the circus banner.
@@ -140,7 +157,13 @@ async function main() {
   stage.sync();
 
   boot(35, 'indexing assets…');
-  const assets = new AssetLibrary(await loadJSON('./assets/manifest.json'));
+  // meta.json is optional — a show with no provenance and no face-aligned art boots
+  // identically without it, so a missing file is a fallback, never an error.
+  const [manifest, meta] = await Promise.all([
+    loadJSON('./assets/manifest.json'),
+    loadJSON('./assets/meta.json', {}),
+  ]);
+  const assets = new AssetLibrary(manifest, meta);
 
   const renderer = new Renderer(stage);
   if (params.has('perf')) {
@@ -181,9 +204,22 @@ async function main() {
     // Any object declaring `cycleKey` steps its source list. The script drives the hand
     // puppets with ']' while talking, so the binding is per-object rather than global —
     // two puppets can cycle on different keys.
+    //
+    // Shift steps BACKWARD, which means the shifted key has to be folded back to the one
+    // the scene actually names: holding shift on ']' reports `e.key` as '}', and on 'q' as
+    // 'Q', so a literal comparison could never match while stepping back. The reverse step
+    // documented in shmidpoint scene 3 had never once worked.
+    const key = e.shiftKey && e.key.length === 1
+      ? (UNSHIFTED[e.key] ?? e.key.toLowerCase())
+      : e.key;
+    let cycled = false;
     for (const o of player?.pool.objects ?? []) {
-      if (o.cycleKey === e.key) o.cycle?.(e.shiftKey ? -1 : 1);
+      if (o.cycleKey === key) { o.cycle?.(e.shiftKey ? -1 : 1); cycled = true; }
     }
+    // Cycling changes which asset is on stage, so the inspector — and the metadata editor
+    // keyed on that asset — are now showing the previous one. Authoring a series is the
+    // main reason to cycle at all, so this has to follow.
+    if (cycled) panel?.renderInspector();
   });
 
   // Dependencies passed explicitly — NOT a grab-bag that modules mutate to hand
@@ -209,9 +245,22 @@ async function main() {
   player = new Player({
     make, renderer, tracking, camera,
     bodyBase: document.body.className,
-    onSceneChange: (s) => { panel.onSceneChange(s); edit.onSceneChange(); },
+    // showcase.afterScene runs FIRST: it re-asserts the detector flags and the .editing
+    // class that goto() has just overwritten, before the panel paints from that state.
+    onSceneChange: (s) => { showcase.afterScene(s); panel.onSceneChange(s); edit.onSceneChange(); },
   });
-  const panel = new Panel({ el: el.panel, player, edit, detector, tabLabel: config.panelTab ?? null });
+  const showcase = new Showcase({
+    player, edit, tracking, detector, faces, showName, toggles: config.showcase,
+  });
+  // The two hooks: contribute objects to every resolved scene, and keep the visitor's
+  // objects out of anything an author saves back to disk.
+  player.decorate = (scene) => showcase.decorate(scene);
+  player.ephemeral = (id) => showcase.owns(id);
+  edit.onEdit = () => showcase.captureText();
+  panel = new Panel({
+    el: el.panel, player, edit, detector, showcase, assets, tracking,
+    tabLabel: config.panelTab ?? null,
+  });
   edit.player = player;
   // Lets one object pin to another (`fasten: "face.hat"`), and lets the panel offer those
   // combinations. Wired after the player exists, since the pool lives there.
@@ -237,7 +286,19 @@ async function main() {
     el.startBtn.disabled = true;
     el.bootStage.hidden = false;
     const ok = await camera.start();
-    if (!ok && camera.state === 'denied') el.bootMsg.textContent = 'camera blocked — the show still runs without it.';
+    const blocked = [];
+    if (!ok && camera.state === 'denied') blocked.push('camera');
+
+    // Camera and mic are SEPARATE getUserMedia grants (§9.4) — in 2.5.0 people turned on a
+    // mic-driven puppet and wondered why nothing moved, because the second prompt was a
+    // thing they never saw. A show that declares `micOnStart` asks for both here, off the
+    // one click, so there is nothing left to discover mid-performance.
+    if (config.micOnStart) {
+      if (!(await mic.enable())) blocked.push('mic');
+    }
+    if (blocked.length) {
+      el.bootMsg.textContent = `${blocked.join(' and ')} blocked — the show still runs without ${blocked.length > 1 ? 'them' : 'it'}.`;
+    }
     el.boot.classList.add('hidden');
     setTimeout(() => { el.boot.hidden = true; }, 400);
     markStarted();
@@ -246,7 +307,7 @@ async function main() {
 
   if (params.has('nocam')) { el.boot.classList.add('hidden'); el.boot.hidden = true; }
 
-  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, tracking, silhouette, detector, mic, faces };
+  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, showcase, tracking, silhouette, detector, mic, faces };
 }
 
 main().catch((err) => {

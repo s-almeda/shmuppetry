@@ -1,0 +1,109 @@
+[
+  {
+    "id": 1,
+    "_note": "Placeholder opening. reset:true so nothing leaks in from a previous run-through.",
+    "reset": true,
+    "objects": {
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "dialogue": {
+        "type": "text",
+        "speaker": "shm",
+        "y": 0.8,
+        "width": 0.92,
+        "text": "hi CNMAT!"
+      }
+    }
+  },
+  {
+    "id": 2,
+    "_note": "SCRATCH — image series + provenance card. ']' cycles the painting, shift+']' steps back, and the card follows because it reads `from: painting` rather than its own text. Provenance for these lives in assets/meta.json. Delete this scene once the real script lands.",
+    "objects": {
+      "painting": {
+        "type": "image",
+        "x": 0.32,
+        "y": 0.45,
+        "size": 0.5,
+        "z": 10,
+        "cycleKey": "]",
+        "srcs": [16, 15, 6]
+      },
+      "card": {
+        "type": "text",
+        "x": 0.76,
+        "y": 0.45,
+        "width": 0.4,
+        "style": "caption",
+        "instant": true,
+        "metaFrom": "painting",
+        "template": "{title}\n{artist}, {year}\n{medium}\n{source}"
+      },
+      "dialogue": {
+        "text": "press ] to cycle the painting — the card follows it."
+      }
+    }
+  },
+  {
+    "id": 3,
+    "_note": "SCRATCH — ventriloquy on a hand. `talkSrc` swaps the frame while you speak and `bounce` hops it, both driven by mic level, and `fasten` still pins the whole thing to your hand. Needs the mic grant from \"it's showtime!\".",
+    "objects": {
+      "painting": null,
+      "card": null,
+      "sock": {
+        "type": "image",
+        "fasten": "leftHand",
+        "src": 16,
+        "talkSrc": 15,
+        "bounce": 0.07,
+        "size": 1.1,
+        "z": 30
+      },
+      "dialogue": {
+        "text": "talk — the puppet on your left hand should bounce and change frame."
+      }
+    }
+  },
+  {
+    "id": 4,
+    "_note": "SCRATCH — the past-show readouts. potato:true runs the ONNX detector; the label box reads live from face-api. Both were already ported; this is just proof they still run.",
+    "objects": {
+      "sock": null,
+      "faceBox": {
+        "type": "label",
+        "source": "face",
+        "z": 60,
+        "text": "{emotion} {age} year-old {gender}",
+        "color": "#b4dd1e",
+        "textColor": "#000000"
+      },
+      "dialogue": {
+        "text": "face box + potato. hold up a potato; press p if the model loses it."
+      }
+    },
+    "potato": true
+  },
+  {
+    "id": 5,
+    "_note": "SCRATCH — break-to-cycle masks. `cycleOn: \"reacquire\"` steps the series every time the face tracker loses you and gets you back, so swiping a hand past your face changes the mask. `breakMs` is how long the face must be gone to count — raise it if ordinary head-turns trigger it. These srcs are demo art, not real masks, and have no face box yet, so they will centre and warn until you scan them.",
+    "objects": {
+      "faceBox": null,
+      "mask": {
+        "type": "image",
+        "fasten": "face",
+        "align": "face",
+        "cycleOn": "reacquire",
+        "breakMs": 120,
+        "size": 1.1,
+        "z": 40,
+        "srcs": [16, 15, 6]
+      },
+      "dialogue": {
+        "text": "swipe a hand past your face — the mask should change when it comes back."
+      }
+    },
+    "potato": false
+  }
+]

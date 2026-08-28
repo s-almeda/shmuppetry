@@ -58,6 +58,10 @@ export function resolveScript(scenes) {
       id: scene.id ?? i + 1,
       index: i,
       _note: scene._note,
+      // Which public toggles this scene STARTS with. Per-scene and non-inheriting, like
+      // _note — a scene that already puts cutouts on both hands wants to start with the
+      // hand puppets off, and that must not then carry forward to every later scene.
+      toggles: scene.toggles,
       objects,
       ...flags,
     });
@@ -221,7 +225,13 @@ export class Player {
     // Scene chrome is a body class; the CSS does the rest. Not a skin system.
     document.body.className = `${this.bodyBase ?? ''} ${scene.bodyClass ?? ''}`.trim();
 
-    const objects = this.pool.sync(scene.objects);
+    // `decorate` lets something outside the script contribute to the resolved stage —
+    // the public showcase panel puts a visitor's chosen puppets in here. It runs BEFORE
+    // sync on purpose: sync already knows how to add, update in place and dispose, so a
+    // toggle turning on is a key appearing and turning off is a key missing. Re-adding
+    // objects after sync would have to reimplement all three, and would rebuild objects
+    // that should have persisted across the cut.
+    const objects = this.pool.sync(this.decorate ? this.decorate(scene) : scene.objects);
     // Freeze holds the SOUND as well as the picture and the tracking. Applied AFTER sync
     // so it overrides the resolved spec for the length of the freeze without editing it —
     // step to a scene that is not frozen and the scene's own `playing` value comes back,
@@ -285,6 +295,12 @@ export class Player {
   captureCurrentScene() {
     if (this.index < 0) return null;
     const objects = this.pool.serialize();
+
+    // Anything `decorate` put on stage belongs to the visitor, not to the script. Without
+    // this, an author on localhost with the showcase toggles on would bake `hat`,
+    // `leftPuppet` and friends into shows/demo/script.json the first time they pressed
+    // "save scene".
+    if (this.ephemeral) for (const id of Object.keys(objects)) if (this.ephemeral(id)) delete objects[id];
 
     // A scene inherits the previous scene's stage, so an object that is simply ABSENT
     // here would come back on reload. Removal has to be written as an explicit null.

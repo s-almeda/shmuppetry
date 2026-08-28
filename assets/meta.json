@@ -1,0 +1,33 @@
+{
+  "_note": "Asset metadata, keyed by the number in the filename — the same addressing as manifest.json, so renaming a file keeps its record. Hand-edit freely, or use the panel: select an image, and the `asset N · metadata` group edits the record for whatever art it is currently showing. The panel's `save metadata` button writes this file (loopback only).",
+  "_provenance": "title / artist / year / medium / source / note are free-form. A textbox with `metaFrom` and `template` fills {title}, {artist}, … from here — and because it reads whatever the image's CURRENT src is, the card follows a `srcs` series as you cycle it with ']'.",
+  "_face": "The `face` box is written by the panel's `scan face` button and read by `align: \"face\"` art. x/y/w/h are the face-oval bounding box as fractions of the IMAGE's own width and height; roll is degrees. Image space, never stage space — the record travels with the art.",
+  "_scratch": "16 / 15 / 6 below are demo assets, filled in only so scene 2 of CNMAT_openlab has something to show. Overwrite or delete them with that scratch scene.",
+  "6": {
+    "title": "Top Hat",
+    "artist": "shm",
+    "medium": "cut paper, digital"
+  },
+  "15": {
+    "title": "loss.jpg",
+    "artist": "unknown",
+    "year": 2008,
+    "medium": "webcomic panel",
+    "source": "Ctrl+Alt+Del",
+    "note": "provenance is important to me after all"
+  },
+  "16": {
+    "title": "dog bubble",
+    "artist": "shm",
+    "medium": "digital"
+  },
+  "_example": {
+    "title": "Self-Portrait in a Straw Hat",
+    "artist": "Élisabeth Vigée Le Brun",
+    "year": 1782,
+    "medium": "oil on canvas",
+    "source": "National Gallery, London",
+    "note": "after Rubens' Chapeau de Paille",
+    "face": { "x": 0.35, "y": 0.18, "w": 0.28, "h": 0.3, "roll": -2.4 }
+  }
+}

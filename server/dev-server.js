@@ -168,6 +168,51 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, scenes: parsed.length });
     }
 
+    // ── Asset metadata ────────────────────────────────────────────────────
+    // Provenance, plus the `face` boxes align:"face" art is registered by. Same three
+    // guarantees as the script route above, and for the same reason: loopback-only,
+    // backed up before it is touched, and written through a temp file so a crash cannot
+    // leave a half-file where the metadata used to be.
+    if (pathname === '/api/assets/meta') {
+      if (req.method !== 'PUT') return send(res, 405, 'method not allowed');
+      if (!isLoopback(req)) return send(res, 403, 'authoring is loopback-only');
+
+      const file = path.join(ROOT, 'assets', 'meta.json');
+      const body = await readBody(req);
+      let parsed;
+      try {
+        parsed = JSON.parse(body);
+      } catch (err) {
+        return send(res, 400, `not valid JSON: ${err.message}`);
+      }
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return send(res, 400, 'meta must be an object keyed by asset number');
+      }
+
+      const prev = await fs.readFile(file, 'utf8').catch(() => null);
+      if (prev) {
+        const dir = path.join(ROOT, 'assets', '.backups');
+        await fs.mkdir(dir, { recursive: true });
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+        await fs.writeFile(path.join(dir, `meta-${stamp}.json`), prev, 'utf8');
+
+        // Losing provenance is quiet — the card just goes blank — so say it out loud.
+        let before = 0;
+        try { before = Object.keys(JSON.parse(prev)).length; } catch { /* unreadable */ }
+        const after = Object.keys(parsed).length;
+        if (before > after) {
+          console.warn(`[dev] WARNING assets/meta.json ${before} → ${after} entries.` +
+            ' The saving tab may have been loaded before an outside edit; previous version is in assets/.backups/');
+        }
+      }
+
+      const tmp = `${file}.tmp`;
+      await fs.writeFile(tmp, JSON.stringify(parsed, null, 2) + '\n', 'utf8');
+      await fs.rename(tmp, file);
+      console.log(`[dev] saved assets/meta.json (${Object.keys(parsed).length} entries)`);
+      return json(res, 200, { ok: true, entries: Object.keys(parsed).length });
+    }
+
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'method not allowed');
 
     // ── Live manifest, overriding the committed static one ────────────────

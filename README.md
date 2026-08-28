@@ -20,7 +20,13 @@ Steps 2 (bindings) and 3 (body parts + paper cutouts) are not built yet.
 
 ```
 node server/dev-server.js        # → http://localhost:8000
+node scripts/check.mjs           # smoke check — run this before a show
 ```
+
+`check.mjs` loads every module, resolves every scene of every show, constructs every object
+and asserts `serialize()` is a fixed point. It is not a test suite; it is the five-second
+answer to "did I just break the rig?". Anything needing a canvas, a camera or a model is out
+of scope and still needs eyes on a browser.
 
 No build step, no `npm install`. Plain ES modules and Node's standard library. The only
 external thing the page loads is **xp.css** from unpkg, which is the default skin.
@@ -45,6 +51,10 @@ node scripts/build-manifests.js  # bake the asset listing for static hosting
 `Space` finishes the current line if it is still typing, otherwise advances.
 `→` / `←` step scenes. The panel (top right) and scene pill (top left) appear on hover.
 
+Any object with a `cycleKey` steps its own `srcs` list on that key — the scripts use `]` —
+and `Shift` steps it backward. The binding is per-object, so two puppets can cycle on
+different keys. `p` toggles the potato detector's manual fallback.
+
 ## how a scene works
 
 A script is an array of sparse scenes. **A scene resolves to the complete stage**: it inherits
@@ -65,6 +75,17 @@ There are exactly two rules, and the runtime enforces them uniformly:
 - **omitting anything changes nothing.**
 
 Plus `"reset": true` to start from an empty stage instead of inheriting.
+
+An image can also be a **ventriloquy puppet** — `talkSrc` swaps the frame while you speak and
+`bounce` hops it, both driven by mic level. They are two ordinary fields rather than a
+separate puppet system, so the thing still takes `fasten` and can ride your hand:
+
+```json
+{ "type": "image", "fasten": "leftHand", "src": 330, "talkSrc": 331, "bounce": 0.07 }
+```
+
+Camera and mic are separate permission grants, so a show that needs both sets
+`"micOnStart": true` in its config and *"it's showtime!"* asks for them together.
 
 That is the whole persistence model. 2.5.0 had five different ones — toggles sticky, `stage`
 sticky-but-absolute, `potato` reset every scene, `drawingClear` one-shot, `leftPuppet` reset
@@ -96,6 +117,42 @@ feature state could never survive it.
 Assets are addressed by the **number in the filename** — `0001_backdrop.svg` is asset `1`.
 Never by position in a listing: 2.5.0 indexed by array position, so inserting or renaming one
 file silently renumbered every scene that referenced it.
+
+### metadata
+
+`assets/meta.json` holds what a file cannot say about itself, keyed by the same number:
+
+```json
+"301": { "title": "Self-Portrait in a Straw Hat", "artist": "Élisabeth Vigée Le Brun",
+         "year": 1782, "medium": "oil on canvas", "source": "National Gallery, London",
+         "face": { "x": 0.35, "y": 0.18, "w": 0.28, "h": 0.3, "roll": -2.4 } }
+```
+
+Keyed by number rather than path, so renaming the file keeps its record. Two things read it:
+
+- **A textbox with `metaFrom` and `template`** fills `{title}`, `{artist}`, … from whatever art
+  the named image object is *currently* showing — so a provenance card follows a `srcs`
+  series as you cycle it, instead of being retyped into every scene. An empty field
+  collapses rather than leaving a stray comma behind.
+- **`align: "face"` art** uses the `face` box. Plain `fasten: "face"` centres the whole
+  picture, which is right for a hat and wrong for a portrait whose face sits in the upper
+  third; `align` puts the art's own face on the tracked one, at its scale and roll. A mask
+  *series* is therefore just an ordinary `srcs` list — each entry finds its own box.
+
+A series can also be stepped by **breaking the tracking** rather than by a key —
+`cycleOn: "reacquire"` advances every time the fastener drops and comes back, so swiping a
+hand past your face changes the mask, and the cut hides inside the moment your face is
+occluded anyway. `breakMs` (default 120) is how long it must be gone to count; a single
+dropped detection is normal and never fires it.
+
+Select an image in the panel and the **asset N · metadata** group edits its record, with
+**scan face** to find the box and sliders to nudge it. Scanning runs MediaPipe in `IMAGE`
+mode — deliberately not the face-api nets `facelabel.js` already has loaded, because the two
+report different crops and the live fastener measures the face oval. Nothing extra loads at
+showtime: the scan happens while authoring and the result is what ships.
+
+The metadata file **is** committed, even though the art is not. Provenance is the part worth
+keeping.
 
 Show assets are **not in git** — shows are performed locally, so they never need hosting.
 Only `assets/demo/` is committed, for the public page. The dev server generates

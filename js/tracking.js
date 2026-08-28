@@ -59,7 +59,7 @@ const MESH = {
 // Derived from the lips CONTOUR rather than fixed landmarks, so they track the mouth as it
 // opens instead of sitting at a guessed offset. Usable nested — `fasten: "mouth.mouthTop"`
 // resolves in the mouth cutout's own space, so the hat follows it as you move and rotate it.
-const CONTOUR_MOUNTS = {
+export const CONTOUR_MOUNTS = {
   mouthTop: { part: 'mouth', edge: 'top', anchor: 'bottom' },
   mouthBottom: { part: 'mouth', edge: 'bottom', anchor: 'top' },
 };
@@ -166,6 +166,79 @@ export class Tracking {
         this.state[kind] = 'failed';
         console.warn(`[tracking] ${kind} failed to load`, err);
       });
+  }
+
+  // ── Scanning a still image ──────────────────────────────────────────────
+  // Find the face in a piece of ART, so `align: "face"` can put that face on the live one.
+  // Authoring-time only: the result is written into assets/meta.json and a performance
+  // never runs this, so nothing extra loads on stage.
+  //
+  // This deliberately uses MEDIAPIPE rather than the face-api nets facelabel.js already
+  // has loaded. The two report different crops — face-api's detector box is tighter than
+  // the face oval — and the live fastener measures the oval. Mixing them would mis-scale
+  // every mask by a consistent, baffling amount, so the scan has to compute the box the
+  // same way `_faceFastener` does.
+  //
+  // A second FaceLandmarker is genuinely required: runningMode is fixed at construction
+  // and one instance cannot serve both VIDEO and IMAGE.
+  async _imageModel() {
+    if (this._models.faceImage) return this._models.faceImage;
+    const mp = await import(/* @vite-ignore */ `${CDN}/vision_bundle.mjs`);
+    const fileset = await mp.FilesetResolver.forVisionTasks(`${CDN}/wasm`);
+    this._models.faceImage = await mp.FaceLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: MODELS.face, delegate: 'GPU' },
+      runningMode: 'IMAGE',
+      numFaces: 1,
+    });
+    // The rings come off the same class, so a scan works even if the VIDEO model was
+    // never loaded — which is the case on a show that has no `face` capability.
+    if (!this.rings.face) {
+      const F = mp.FaceLandmarker;
+      this.rings = {
+        face: rings(F.FACE_LANDMARKS_FACE_OVAL),
+        leftEye: rings(F.FACE_LANDMARKS_LEFT_EYE),
+        rightEye: rings(F.FACE_LANDMARKS_RIGHT_EYE),
+        mouth: rings(F.FACE_LANDMARKS_LIPS),
+      };
+    }
+    return this._models.faceImage;
+  }
+
+  // → { x, y, w, h, roll } normalised 0..1 of the image, or null if no face was found.
+  // Coordinates are the image's OWN, never the stage's: the record travels with the art
+  // and must not depend on the window it happened to be scanned in.
+  async scanImage(el) {
+    let model;
+    try {
+      model = await this._imageModel();
+    } catch (err) {
+      console.warn('[tracking] image model failed to load', err);
+      return null;
+    }
+    const pts = model.detect(el)?.faceLandmarks?.[0];
+    if (!pts) return null;
+
+    // The face-oval AABB, the same reduction _faceFastener performs — but in image space,
+    // so no aspect correction: x and y are both fractions of the image's own dimensions.
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const ring of this.rings.face ?? []) {
+      for (const i of ring) {
+        const p = pts[i];
+        x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y);
+        x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y);
+      }
+    }
+    if (!Number.isFinite(x0)) return null;
+
+    // Roll from the outer eye corners, as _roll does. The art is not mirrored, so unlike
+    // the stage path there is no left/right reordering to undo — but the image's pixel
+    // aspect still has to be folded in or a wide canvas reads as a tilted face.
+    const a = pts[MESH.eyeL], b = pts[MESH.eyeR];
+    const nat = { w: el.naturalWidth || el.width, h: el.naturalHeight || el.height };
+    const roll = (Math.atan2((b.y - a.y) * nat.h, (b.x - a.x) * nat.w) * 180) / Math.PI;
+
+    const r = (n) => Math.round(n * 1e4) / 1e4;
+    return { x: r(x0), y: r(y0), w: r(x1 - x0), h: r(y1 - y0), roll: r(roll) };
   }
 
   // Called once per frame, before objects draw.

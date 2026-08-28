@@ -3,10 +3,11 @@
 // box, and later the cut-out pieces of the puppeteer's own body. Not features with
 // toggles — objects with positions (§1).
 
+import { DrawingObject } from './drawing.js';
 import { resolvePlacement } from './stage.js';
 import { resample } from './silhouette.js';
 import { FACE_PARTS } from './tracking.js';
-import { isReady, naturalSize } from './assets.js';
+import { isReady, naturalSize, fillMeta } from './assets.js';
 
 const round = (n) => (typeof n === 'number' ? +n.toFixed(4) : n);
 const MOUNTS = ['hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom'];
@@ -168,10 +169,19 @@ export class StageObject {
       y = this.y + Math.sin(th) * r;
     }
 
+    // A transient vertical nudge, owned by whatever is animating this object — the mic
+    // bounce sets it (see ImageObject.update). It is deliberately NOT `this.y`: that is
+    // authored state and would be written out by serialize(), baking one frame of a hop
+    // into the scene file.
+    y += this._bob ?? 0;
+
     // Locks and clamps apply AFTER the fastener, so an object can follow one axis of a
     // hand while the other is pinned. The marquee is `lockX: 0.5, maxY: 0.5` — held to
     // centre horizontally, dragged down by the hand, and unable to pass halfway. A clamp,
     // not a latch: it follows the hand back up freely.
+    //
+    // The bounce is added BEFORE this, so clamps stay the final authority on where an
+    // object may be — a bouncing puppet cannot hop out through a maxY it was given.
     ({ x, y } = this._constrain(x, y));
 
     // A fastener may carry an angle — the head's roll — so a hat tilts with the head.
@@ -200,6 +210,10 @@ export class StageObject {
   // start at the top of the frame before you have reached up to it.
   _pin(stage) {
     this.pin = this._resolvePin(stage);
+    // Whether the fastener ACTUALLY resolved this frame, recorded before holdPin papers
+    // over the gap. Anything watching for the tracker losing its subject has to read this
+    // rather than `pin` — with holdPin on, `pin` never goes away and the loss is invisible.
+    this._pinLive = !!this.pin;
     if (this.pin) this._lastPin = this.pin;
     else if (this.holdPin) this.pin = this._lastPin ?? NEUTRAL_PIN;
     return this.pin;
@@ -304,10 +318,17 @@ export class ImageObject extends StageObject {
 
   static fields = [
     ...StageObject.fields,
-    { key: 'src', label: 'src', type: 'text' },
+    // `image` is `text` plus a file picker — a number or path still works, but the
+    // panel also offers to swap in the viewer's own art.
+    { key: 'src', label: 'src', type: 'image' },
+    { key: 'talkSrc', label: 'talk frame', type: 'image' },
+    { key: 'bounce', label: 'bounce', type: 'range', min: 0, max: 0.3, step: 0.005 },
     { key: 'pinScale', label: 'scale w/ pin', type: 'checkbox' },
     { key: 'size', label: 'size', type: 'range', min: 0.02, max: 2, step: 0.01 },
     { key: 'fit', label: 'fit', type: 'select', options: ['height', 'cover', 'contain'] },
+    { key: 'align', label: 'align', type: 'select', options: ['', 'face'] },
+    { key: 'cycleOn', label: 'cycle on', type: 'select', options: ['', 'reacquire'] },
+    { key: 'breakMs', label: 'break ms', type: 'range', min: 40, max: 800, step: 10 },
     { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom', 'face', 'leftEye', 'rightEye', 'mouth',
       'leftThumb', 'leftIndex', 'leftMiddle', 'leftRing', 'leftPinky',
       'rightThumb', 'rightIndex', 'rightMiddle', 'rightRing', 'rightPinky'] },
@@ -369,15 +390,99 @@ export class ImageObject extends StageObject {
         }
       }
     }
+    // The talking frame, if this puppet has one. Resolved alongside `src` rather than
+    // swapped in on demand, so the mouth opens on the frame the mic crosses the floor —
+    // a decode stall on the first syllable of every line is exactly what you would notice.
+    if (this.talkSrc !== this._loadedTalk) {
+      this.talkEl = this.talkSrc != null ? this.deps.assets?.get(this.talkSrc) : null;
+      this._loadedTalk = this.talkSrc;
+    }
     if (this.el?.tagName === 'VIDEO') {
       this.el.muted = !this.audio;   // videos are muted unless a scene opts in
       this.el.play?.().catch(() => {});
     }
   }
 
+  // ── Ventriloquy ─────────────────────────────────────────────────────────
+  // The pngtuber behaviour from 2.5.0's stagePuppets.js, but as two ordinary fields on
+  // an image rather than a separate puppet system — so it composes with `fasten` and a
+  // sock puppet can ride your hand, which is the whole point (§7 "stage puppets").
+  //
+  //   { "type": "image", "fasten": "leftHand", "src": 330, "talkSrc": 331, "bounce": 0.07 }
+  //
+  // `mic.level` is already normalised across the speech window (FLOOR 0.04 → CEIL 0.22) by
+  // js/mic.js, so it IS 2.5.0's `over` and needs no rescaling here. Normalising across the
+  // full 0..1 range instead is what made the bounce invisible for months (§8.4).
+  // ── Break to cycle ──────────────────────────────────────────────────────
+  // `cycleOn: "reacquire"` steps the series every time the fastener comes BACK. Swipe a
+  // hand past your face, the tracker loses it, and a different mask is on when it
+  // recovers — so changing masks is a gesture rather than a keypress, and the cut is
+  // hidden inside the moment the face is occluded anyway.
+  //
+  // Debounced on TIME, not frames: a single dropped detection is common and must not
+  // count, but the break has to fire on a fast swipe. `breakMs` is how long the face has
+  // to be gone to arm it — raise it if ordinary head-turns are triggering cycles.
+  _reacquire(dt) {
+    if (this.cycleOn !== 'reacquire' || !this.srcs?.length) return;
+    // Undefined until the object has been drawn once. Starting the show mid-cycle because
+    // the first frame had no face yet is not what anyone means by "reacquire".
+    if (this._pinLive === undefined) return;
+    if (!this._pinLive) { this._lostMs = (this._lostMs ?? 0) + dt; return; }
+    if ((this._lostMs ?? 0) >= (this.breakMs ?? 120)) this.cycle(1);
+    this._lostMs = 0;
+  }
+
+  update(dt, now, stage) {
+    this._reacquire(dt);
+    if (!this.bounce && this.talkSrc == null) { this._bob = 0; return; }
+    const mic = this.deps.mic;
+    const level = mic?.ready ? mic.level : 0;
+
+    // Mouth swap keys off the FLOOR, not the bounce amount — turning the bounce down to
+    // zero must not also freeze the puppet's mouth shut.
+    this.talking = level > 0;
+
+    // Bounce is upward, hence negative. 0.45 is a deliberately snappy attack: it has to
+    // read as a hop rather than a drift, and anything gentler just looks like lag.
+    const target = this.bounce ? -level * this.bounce : 0;
+    const bob = this._bob ?? 0;
+    this._bob = bob + (target - bob) * 0.45;
+  }
+
   render(g, stage) {
-    if (!isReady(this.el)) return;
-    const nat = naturalSize(this.el);
+    // The talking frame only wins once it has actually decoded — a puppet that blinks to
+    // nothing on the first loud syllable is worse than one whose mouth opens a beat late.
+    const el = this.talking && isReady(this.talkEl) ? this.talkEl : this.el;
+    if (!isReady(el)) return;
+    const nat = naturalSize(el);
+
+    // ── Face alignment ────────────────────────────────────────────────────
+    // `align: "face"` puts the art's OWN face onto the tracked one, using the box recorded
+    // in assets/meta.json. Without it, `fasten: "face"` centres the whole picture — which
+    // is right for a hat and wrong for a portrait whose face sits in the upper third.
+    if (this.align === 'face' && this.pin) {
+      const f = this.deps.assets?.meta(this.src)?.face;
+      if (f?.h > 0) {
+        // pin.size is the tracked face's box in fractions of stage height, so scale the
+        // art until ITS face box matches. `size` stays a multiplier you can taste by eye.
+        const H = (this.pin.size * stage.h * this.size) / f.h;
+        const W = H * (nat.w / nat.h);
+        // Undo the roll the art was painted at, so a portrait on a tilted canvas still
+        // sits level on a level head. The pin's own angle is already applied upstream.
+        const roll = ((f.roll ?? 0) * Math.PI) / 180;
+        if (roll) g.rotate(-roll);
+        // Put the art's face CENTRE at the origin — which is the tracked face's centre.
+        g.drawImage(el, -(f.x + f.w / 2) * W, -(f.y + f.h / 2) * H, W, H);
+        return;
+      }
+      // No scan yet: fall through and centre the whole image. Mis-placed art is something
+      // you can nudge mid-show; art that refuses to draw is not.
+      if (!this._warnedAlign) {
+        this._warnedAlign = true;
+        console.warn(`[image#${this.id}] align:"face" but asset ${this.src} has no face box in assets/meta.json — scan it in the panel. Centring the whole image for now.`);
+      }
+    }
+
     let w, h;
     if (this.fit === 'cover' || this.fit === 'contain') {
       const pick = this.fit === 'cover' ? Math.max : Math.min;
@@ -406,7 +511,7 @@ export class ImageObject extends StageObject {
     const anchor = this.anchor ?? this.pin?.anchor ?? 'center';
     const dy = anchor === 'bottom' ? -h : anchor === 'top' ? 0 : -h / 2;
     // No clip needed: the canvas is exactly the stage, so it clips its own bounds.
-    g.drawImage(this.el, -w / 2, dy, w, h);
+    g.drawImage(el, -w / 2, dy, w, h);
   }
 
   // Step to the next source. The video element is swapped by apply(), so a .webm puppet
@@ -427,6 +532,15 @@ export class ImageObject extends StageObject {
     if (this.cycleKey) out.cycleKey = this.cycleKey;
     if (this.fit !== 'height') out.fit = this.fit; else out.size = round(this.size);
     if (this.audio) out.audio = true;
+    // Written even when unset, like `style` on a TextBox and for the same reason: these are
+    // panel fields, and an omitted key INHERITS. Writing `align` only when it was truthy
+    // would make it impossible to turn a mask back into an ordinary image — the key would
+    // vanish from the scene and the previous scene's "face" would come straight back.
+    out.talkSrc = this.talkSrc ?? null;
+    out.bounce = this.bounce ? round(this.bounce) : null;
+    out.align = this.align || null;
+    out.cycleOn = this.cycleOn || null;
+    out.breakMs = this.cycleOn ? (this.breakMs ?? 120) : null;
     if (this.anchor) out.anchor = this.anchor;
     return out;
   }
@@ -508,6 +622,8 @@ export class TextBox extends StageObject {
     { key: 'speed', label: 'speed', type: 'select', options: ['fast', 'normal', 'medium', 'slow'] },
     { key: 'tilt', label: 'tilt°', type: 'range', min: -6, max: 6, step: 0.1 },
     { key: 'speaker', label: 'speaker', type: 'text' },
+    { key: 'metaFrom', label: 'meta from', type: 'text' },
+    { key: 'template', label: 'template', type: 'textarea' },
     { key: 'text', label: 'text', type: 'textarea' },
   ];
 
@@ -518,6 +634,34 @@ export class TextBox extends StageObject {
     this.speed ??= 'normal';
     this.width ??= 0.92;
     return this;
+  }
+
+  // ── Provenance ──────────────────────────────────────────────────────────
+  // `from` names an image object on stage; `template` is filled from that image's current
+  // asset metadata. The point is that it follows a SERIES: cycling `painting` with ']'
+  // changes its src, and the card re-reads on the next frame rather than being retyped
+  // into every scene.
+  //
+  //   "painting": { "type": "image", "srcs": [301, 302, 303], "cycleKey": "]" },
+  //   "card": { "type": "text", "metaFrom": "painting", "instant": true,
+  //             "template": "{title}\n{artist}, {year}\n{medium}" }
+  //
+  // `template` OWNS the text while it is set — there is no precedence rule to remember. To
+  // write a literal line for one scene, clear it the way a scene clears anything else:
+  // `"template": null`. Set `instant: true` unless you really want the typewriter to run
+  // again on every ']' press.
+  _fromMeta() {
+    if (!this.template || !this.metaFrom) return;
+    const host = this.deps.find?.(this.metaFrom);
+    if (!host) {
+      if (this._warnedFrom !== this.metaFrom) {
+        this._warnedFrom = this.metaFrom;
+        console.warn(`[text#${this.id}] metaFrom:"${this.metaFrom}" — no such object on stage`);
+      }
+      return;
+    }
+    const filled = fillMeta(this.template, this.deps.assets?.meta(host.src));
+    if (filled !== this.text) this.text = filled;
   }
 
   get typing() { return this._typed < this.text.length; }
@@ -560,6 +704,9 @@ export class TextBox extends StageObject {
     // While editing, the DOM is the source of truth — the typewriter must not overwrite
     // what is being typed.
     const editing = !!this.deps.edit?.editing;
+    // Pull metadata BEFORE the editing guard reads this.text, but never while editing:
+    // typing into a bound card would be overwritten on the next frame.
+    if (!editing) this._fromMeta();
     if (this._editable !== editing) {
       this._editable = editing;
       this._body.contentEditable = editing ? 'plaintext-only' : 'inherit';
@@ -628,6 +775,10 @@ export class TextBox extends StageObject {
     out.hoverFade = !!this.hoverFade;
     out.tilt = this.tilt ?? null;
     out.width = round(this.width);
+    // Written even when unset, for the same reason `style` is: an omitted key inherits, so
+    // a card that dropped `template` could never be switched back to literal text.
+    out.metaFrom = this.metaFrom ?? null;
+    out.template = this.template ?? null;
     return out;
   }
 }
@@ -1319,4 +1470,4 @@ export class AudioObject extends StageObject {
   }
 }
 
-export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, label: LabelBoxObject, audio: AudioObject };
+export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, label: LabelBoxObject, audio: AudioObject, drawing: DrawingObject };

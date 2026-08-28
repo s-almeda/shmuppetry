@@ -12,6 +12,12 @@ assets/*
 !assets/demo/
 !assets/manifest.json
 
+# ...and the metadata sidecar. The art itself is not in git, but the PROVENANCE is the
+# point — who made a thing, when, and where it came from is the part worth keeping. It
+# also carries the `face` boxes that align:"face" art is registered by, which are slow to
+# re-derive by hand and would otherwise be lost with a checkout.
+!assets/meta.json
+
 # ...except the big media. The demo set exists to show the rig off on GitHub Pages, and a
 # 2.6MB mp3 is not worth carrying in git for that. It stays on disk, so the show still has
 # sound locally; the baked manifest lists only what git actually tracks, so the public
@@ -49,3 +55,5 @@ node_modules/
 
 # Rolling backups of script.json, written by the dev server before each save.
 shows/*/.backups/
+# ...and of assets/meta.json, written before each save by the same route.
+assets/.backups/

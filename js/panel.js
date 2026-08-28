@@ -19,8 +19,12 @@ export class EditMode {
     this.editing = false;   // in-place text editing, off until asked for
   }
 
+  // Editing text is NOT gated on `available`. A visitor on the public site retypes the
+  // dialogue and it is kept in their browser; only WRITING TO DISK is privileged, and
+  // that is guarded three separate times below — _setDirty, save(), and the hidden
+  // #p-edit-section — plus the dev server's own loopback check.
   setEditing(on) {
-    this.editing = !!on && this.available;
+    this.editing = !!on;
     document.body.classList.toggle('editing', this.editing);
   }
 
@@ -40,7 +44,10 @@ export class EditMode {
     return this.available;
   }
 
-  markDirty() { this._setDirty(true); }
+  // onEdit fires BEFORE _setDirty, which is gated on `available` — so the showcase can
+  // capture a visitor's text edit on the public site where the dirty/save machinery
+  // deliberately does nothing.
+  markDirty() { this.onEdit?.(); this._setDirty(true); }
 
   onSceneChange() {
     // Moving to another scene discards nothing, but the banner tracked the scene you
@@ -105,15 +112,100 @@ export class EditMode {
   }
 }
 
+// ── Asset metadata editor ───────────────────────────────────────────────────
+// Provenance and the face box live in assets/meta.json, keyed by asset number, so they
+// belong to the ART rather than to the scene — which is the whole point: the same painting
+// carries its credit line into every scene and every show that uses it.
+//
+// A metadata record is a plain object, not a StageObject, but renderFields only ever needs
+// a `fields` array and property access. So this is an ADAPTER: the nested `face` box is
+// flattened onto it as face x/y/w/h/roll, and the generic renderer works unchanged.
+const META_TEXT = ['title', 'artist', 'year', 'medium', 'source'];
+const FACE_KEYS = { faceX: 'x', faceY: 'y', faceW: 'w', faceH: 'h', faceRoll: 'roll' };
+
+function metaAdapter(rec, { src, assets, tracking, onSave }) {
+  const a = {
+    fields: [
+      ...META_TEXT.map((key) => ({ key, label: key, type: 'text' })),
+      { key: 'note', label: 'note', type: 'textarea' },
+      { key: 'scan', label: 'scan', type: 'button', text: 'scan face',
+        title: 'find the face in this image, so align:"face" can put it on yours' },
+      { key: 'faceX', label: 'face x', type: 'range', min: 0, max: 1, step: 0.002 },
+      { key: 'faceY', label: 'face y', type: 'range', min: 0, max: 1, step: 0.002 },
+      { key: 'faceW', label: 'face w', type: 'range', min: 0.02, max: 1, step: 0.002 },
+      { key: 'faceH', label: 'face h', type: 'range', min: 0.02, max: 1, step: 0.002 },
+      { key: 'faceRoll', label: 'face roll°', type: 'range', min: -45, max: 45, step: 0.5 },
+      { key: 'save', label: 'save', type: 'button', text: 'save metadata',
+        title: 'write assets/meta.json' },
+    ],
+
+    async scan() {
+      const el = assets.get(src);
+      if (!el) return 'no image';
+      // A freshly-picked asset may not have decoded yet, and detect() on a zero-sized
+      // image fails in a way that reads as "no face here" rather than "not loaded yet".
+      if (!(el.complete || el.readyState >= 2)) {
+        await new Promise((r) => { el.onload = el.onloadeddata = r; setTimeout(r, 4000); });
+      }
+      const face = await tracking.scanImage(el);
+      if (!face) {
+        console.warn(`[meta] no face found in asset ${src} — set the box by hand with the sliders below`);
+        rec.face ??= { x: 0.3, y: 0.2, w: 0.4, h: 0.45, roll: 0 };
+        return 'not found';
+      }
+      rec.face = face;
+      console.log(`[meta] asset ${src} face`, face);
+      return 'scanned ✓';
+    },
+
+    async save() {
+      try {
+        const res = await fetch('./api/assets/meta', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(assets.serializeMeta(), null, 2),
+        });
+        if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+        onSave?.();
+        return 'saved ✓';
+      } catch (err) {
+        console.error('[meta] save failed', err);
+        return 'failed';
+      }
+    },
+  };
+
+  // An emptied text field DELETES its key rather than storing '' — otherwise every asset
+  // you so much as look at accumulates six empty strings in meta.json.
+  for (const k of [...META_TEXT, 'note']) {
+    Object.defineProperty(a, k, {
+      get: () => rec[k] ?? '',
+      set: (v) => { if (v === '' || v == null) delete rec[k]; else rec[k] = v; },
+    });
+  }
+  for (const [k, f] of Object.entries(FACE_KEYS)) {
+    Object.defineProperty(a, k, {
+      get: () => rec.face?.[f] ?? 0,
+      set: (v) => { if (Number.isFinite(v)) (rec.face ??= { x: 0, y: 0, w: 0.4, h: 0.45, roll: 0 })[f] = v; },
+    });
+  }
+  return a;
+}
+
 export class Panel {
-  constructor({ el, player, edit, detector = null, tabLabel = null }) {
+  constructor({ el, player, edit, detector = null, tabLabel = null, showcase = null,
+                assets = null, tracking = null }) {
     this.el = el;
     this.player = player;
     this.edit = edit;
     this.detector = detector;
+    this.showcase = showcase;   // the public toggle group; null on a performance rig
+    this.assets = assets;
+    this.tracking = tracking;
     this.tabLabel = tabLabel;   // omit → no tab at all (performance rigs)
     this.selectedId = null;
     this._inspectorFor = null;
+    this._metaFor = null;
   }
 
   mount() {
@@ -133,6 +225,11 @@ export class Panel {
             <span class="count" id="p-count">/ 0</span>
             <button id="p-next" type="button" title="next scene (→)">›</button>
           </div>
+        </div>
+        <div class="group" id="p-showcase-section" hidden>
+          <div id="p-toggles"></div>
+          <div class="panel-row"><button id="p-showcase-reset" type="button">reset this scene</button></div>
+          <input type="file" id="p-upload" accept="image/*" hidden />
         </div>
         <div class="group">
           <b>on stage</b>
@@ -155,6 +252,10 @@ export class Panel {
           <b id="p-inspector-title">object</b>
           <div id="p-inspector"></div>
         </div>
+        <div class="group" id="p-meta-section" hidden>
+          <b id="p-meta-title">asset</b>
+          <div id="p-meta"></div>
+        </div>
         <div class="group" id="p-potato-section" hidden>
           <b>🥔 potato</b>
           <div id="p-potato"></div>
@@ -175,17 +276,30 @@ export class Panel {
     this.$ = (id) => this.el.querySelector(id);
 
     this.edit.onDirtyChange = (dirty) => { this.$('#p-save-row').hidden = !dirty; };
-    this.$('#p-editing').addEventListener('click', (e) => {
-      const on = !e.target.classList.contains('on');
-      e.target.classList.toggle('on', on);
-      e.target.textContent = on ? 'on' : 'off';
-      this.edit.setEditing(on);
-    });
+
+    // The public group. Gated on the show CONFIG rather than on !edit.available, so it
+    // can be worked on from localhost instead of only where authoring is switched off.
+    if (this.showcase?.ids.length) {
+      this.$('#p-showcase-section').hidden = false;
+      this.showcase.mount(this.$('#p-toggles'), this.$('#p-upload'));
+      this.$('#p-showcase-reset').addEventListener('click', () => {
+        if (!confirm('Reset this scene?\n\nThe puppets you switched on and any text you retyped here go back to their defaults. Your uploaded images are kept.')) return;
+        this.showcase.resetScene();
+      });
+      // Always on, with no switch: scene 1's opening line tells the visitor to click the
+      // text and type, so a control that could turn that off only invites them to break
+      // the invitation. The authoring panel still has its own toggle on localhost.
+      this.setEditing(true);
+    }
+    this.$('#p-editing').addEventListener('click', () => this.setEditing(!this.edit.editing));
     this.$('#p-reset').addEventListener('click', () => {
       if (!confirm('Reset the stage?\n\nThis removes every object in this scene. It is not saved until you press "save scene", so you can still revert.')) return;
       this.player.resetScene();
       this.select(null);
       this.edit.markDirty();
+      // resetScene() rebuilds the pool directly, bypassing decorate — so anything the
+      // showcase contributed is gone until the next goto. Put it back now.
+      this.showcase?.refresh();
       this.renderObjectList();
     });
     this.$('#p-save').addEventListener('click', () => this.edit.save());
@@ -211,6 +325,17 @@ export class Panel {
     });
   }
 
+  // Painted from the flag rather than from the button's own class, so the authoring
+  // toggle still reads correctly when something else set the state — the showcase turns
+  // editing on at mount without touching the button.
+  setEditing(on) {
+    this.edit.setEditing(on);
+    const b = this.$('#p-editing');
+    if (!b) return;
+    b.classList.toggle('on', this.edit.editing);
+    b.textContent = this.edit.editing ? 'on' : 'off';
+  }
+
   onSceneChange(scene) {
     // Detector controls appear only when the capability is loaded AND the scene uses it —
     // a slider for something that is not running reads as broken (§9.5).
@@ -224,6 +349,10 @@ export class Panel {
 
     this.$('#p-num').value = String(this.player.index + 1);
     this.$('#p-count').textContent = `/ ${this.player.length}`;
+    // Toggles are per-scene, so the buttons have to be repainted from the new scene's
+    // record — otherwise they show the previous scene's state, which is the same staleness
+    // trap the inspector had.
+    this.showcase?.paint();
 
     this.renderObjectList();
     // Keep the selection across a scene change if the object is still on stage —
@@ -290,9 +419,35 @@ export class Panel {
     // Rebuild only when the SELECTION changes, so dragging a slider never destroys the
     // element being dragged — but re-read the values every time, or stepping to another
     // scene leaves the whole inspector showing the previous scene's numbers.
-    if (this._inspectorFor === obj.id) { this._syncInspector?.(); return; }
+    if (this._inspectorFor === obj.id) { this._syncInspector?.(); this.renderMeta(obj); return; }
     this._inspectorFor = obj.id;
     this._syncInspector = this.renderFields(host, obj, () => this.edit.markDirty());
+    this.renderMeta(obj);
+  }
+
+  // The metadata editor for whatever art the selected image is currently showing. Keyed on
+  // the SRC, not the object — cycling a series with ']' moves you to the next painting's
+  // record without reselecting anything, which is the only way authoring a series is
+  // bearable. Authoring-only: it writes to disk, so it is gated the same way saving is.
+  renderMeta(obj) {
+    const section = this.$('#p-meta-section');
+    const src = obj?.type === 'image' ? obj.src : null;
+    const n = this.edit.available && this.assets ? this.assets.numberFor(src) : null;
+    if (n == null) {
+      section.hidden = true;
+      this._metaFor = null;
+      return;
+    }
+    section.hidden = false;
+    if (this._metaFor === n) { this._syncMeta?.(); return; }
+    this._metaFor = n;
+    this.$('#p-meta-title').textContent = `asset ${n} · metadata`;
+    const adapter = metaAdapter(this.assets.ensureMeta(src), {
+      src, assets: this.assets, tracking: this.tracking,
+    });
+    // Deliberately NOT edit.markDirty(): metadata is not scene state and the "save scene"
+    // button would not write it. Its own save button is the only thing that persists it.
+    this._syncMeta = this.renderFields(this.$('#p-meta'), adapter, () => {});
   }
 
   // The generic field renderer, driven by a `fields` array. Used for stage objects and for
@@ -346,6 +501,54 @@ export class Panel {
         }
         input.value = obj[field.key] ?? field.options[0];
         syncs.push(() => { input.value = obj[field.key] ?? field.options[0]; });
+      } else if (field.type === 'image') {
+        // A text box for a number or path, plus an upload button when a showcase is
+        // present to hold the art. This is why the toggle rows carry no upload buttons of
+        // their own: click any image in the on-stage list and replace it here, whether it
+        // is a toggle's puppet or something the script put there.
+        input = document.createElement('input');
+        input.type = 'text';
+        input.value = obj[field.key] ?? '';
+        syncs.push(() => { input.value = obj[field.key] ?? ''; });
+        if (this.showcase) {
+          const pick = document.createElement('button');
+          pick.type = 'button';
+          pick.className = 'upload';
+          pick.textContent = 'upload';
+          pick.title = 'replace this with an image from your computer';
+          pick.addEventListener('click', () => this.showcase.pickFor(obj.id));
+          row.appendChild(input);
+          row.appendChild(pick);
+          input.addEventListener('input', () => { obj[field.key] = input.value; onChange(); });
+          host.appendChild(row);
+          continue;
+        }
+      } else if (field.type === 'button') {
+        // An ACTION rather than a value: it calls a method on the object instead of
+        // writing a property, so a field list can offer "scan this" alongside the things
+        // a scan produces. The label column is dropped rather than left empty — a button
+        // that already says what it does does not also need naming, and the fixed 46px
+        // label column would only push it off-centre.
+        label.remove();
+        input = document.createElement('button');
+        input.type = 'button';
+        input.className = 'action';
+        input.textContent = field.text ?? field.label ?? field.key;
+        if (field.title) input.title = field.title;
+        input.addEventListener('click', async () => {
+          input.disabled = true;
+          const was = input.textContent;
+          try {
+            const msg = await obj[field.action ?? field.key]?.();
+            if (msg) { input.textContent = msg; setTimeout(() => { input.textContent = was; }, 1600); }
+          } finally {
+            input.disabled = false;
+          }
+          onChange();
+        });
+        row.appendChild(input);
+        host.appendChild(row);
+        continue;
       } else if (field.type === 'textarea') {
         input = document.createElement('textarea');
         input.value = obj[field.key] ?? '';

@@ -5,12 +5,7 @@
   "skin": "default",
   "aspect": null,
   "mirror": true,
-  "capabilities": [
-    "hands",
-    "face",
-    "potato",
-    "faceLabels"
-  ],
+  "capabilities": [],
   "_paper": "Show-wide paper defaults (\u00a72.3). paper.cut drives HANDS (colour segmentation), paper.face drives FACE PARTS (landmark contour), with paper.eye / paper.mouth overriding per part. No live texturing \u2014 it was measured as the dominant per-frame cost.",
   "paper": {
     "cut": {
@@ -55,5 +50,15 @@
     }
   },
   "panelTab": "control panel",
-  "_panelTab": "Label for the panel\u2019s title tab. Omit it entirely on a performance rig \u2014 you do not need to be told it is a control panel."
+  "_panelTab": "Label for the panel\u2019s title tab. Omit it entirely on a performance rig \u2014 you do not need to be told it is a control panel.",
+  "_capabilities": "Empty on purpose. Nothing loads at boot; the showcase toggles load a model the first time one is switched on, and a scene loads whatever its own objects are pinned to. Scene 1 needs neither, so the page paints before a single byte of MediaPipe is fetched.",
+  "_showcase": "Which public toggles this show offers. Gating the panel on this rather than on \"authoring is unavailable\" means it can be worked on from localhost.",
+  "showcase": [
+    "hands",
+    "heads",
+    "fingers",
+    "drawing",
+    "facebox",
+    "potato"
+  ]
 }

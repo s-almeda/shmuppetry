@@ -1,856 +1,855 @@
 [
   {
     "id": 1,
-    "reset": true,
-    "_note": "Opening. reset:true so it inherits nothing — a bare stage with the webcam and one line, which is also what the panel's 'reset stage' button returns you to.",
+    "_note": "The rig. Needs no models at all, so the page paints immediately \u2014 everything here comes from the toggles.",
     "objects": {
       "cam": {
         "type": "webcam",
-        "fit": "cover",
-        "z": -100
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null
       },
       "dialogue": {
         "type": "text",
-        "speaker": "shm",
-        "text": "shmuppetry 3.0. press space.",
+        "x": 0.5,
         "y": 0.8,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "Welcome to the shmuppetry rig! click here to edit the text for this scene. \nUse the LEFT and RIGHT arrow keys to cycle through scenes.",
+        "speaker": "speaker_name_here",
+        "style": "speech",
+        "speed": "normal",
+        "instant": false,
+        "hoverFade": false,
+        "tilt": null,
         "width": 0.92
       }
     }
   },
   {
     "id": 2,
-    "_note": "Whole face. The landmark contour is the silhouette — no colour segmentation.",
+    "_note": "Paper cutouts on black. The webcam is REMOVED rather than hidden \u2014 #stage is already black, so taking the feed away is the blackout.",
     "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100
-      },
       "dialogue": {
         "type": "text",
         "x": 0.5,
         "y": 0.8,
-        "text": "test 1. face contour.",
-        "speaker": "shm",
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "cutout test! (you can still edit this text. you can also edit the cutout properties... and the properties of anything on the stage...with the control panel on the right side of the screen! (eg., you can upload your own puppets))\n(Use the LEFT and RIGHT arrow keys to cycle through scenes.)",
+        "speaker": "speaker_name_here",
+        "style": "speech",
+        "speed": "normal",
+        "instant": false,
+        "hoverFade": false,
+        "tilt": null,
         "width": 0.92
       },
-      "face": {
+      "cutEyeL": {
         "type": "bodyPart",
         "x": 0,
-        "y": 0,
-        "z": 25,
-        "fasten": "face",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.02,
-          "smooth": 0.55,
-          "crown": 0.22,
-          "points": 13,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.045,
-          "color": "#ffffff"
-        }
-      }
-    }
-  },
-  {
-    "id": 3,
-    "_note": "Face parts. Eyes and mouth are their own contours, each an ordinary object with its own z.",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100,
-        "opacity": 0,
-        "fit": "box",
-        "size": 0.35
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "test 2. eyes and mouth.",
-        "speaker": "shm",
-        "width": 0.92
-      },
-      "leye": {
-        "type": "bodyPart",
-        "x": 0.025,
-        "y": 0.1,
-        "z": 26,
-        "scale": 1.4,
-        "rotation": 10,
+        "y": -0.03,
+        "z": 0,
+        "scale": 1.55,
+        "rotation": 18,
+        "opacity": 1,
+        "visible": true,
         "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "cut": {
           "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.31,
-          "smooth": 0.6,
+          "skeleton": 0.1,
+          "clean": 0.025,
+          "range": 1.25,
+          "grow": 0.545,
+          "smooth": 0.55,
           "crown": 0.22,
           "points": 8,
           "join": "miter"
         },
         "outline": {
-          "width": 0.215,
+          "width": 0.255,
           "color": "#ffffff"
         }
       },
-      "reye": {
+      "cutEyeR": {
         "type": "bodyPart",
-        "x": -0.025,
-        "y": 0.12,
-        "z": 26,
-        "scale": 1.57,
-        "rotation": -18,
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "scale": 1.3,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
         "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "cut": {
           "bound": 0.11,
           "skeleton": 0.01,
-          "clean": 0,
-          "range": 0.5,
-          "grow": 0.21,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
           "smooth": 0.55,
           "crown": 0.22,
           "points": 7,
           "join": "miter"
         },
         "outline": {
-          "width": 0.195,
+          "width": 0.3,
           "color": "#ffffff"
         }
       },
-      "mouth": {
+      "cutMouth": {
         "type": "bodyPart",
         "x": 0,
-        "y": -0.2,
-        "z": 17,
-        "scale": 2.24,
+        "y": -0.145,
+        "z": 0,
+        "scale": 1.31,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
         "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1.45,
+          "grow": 0.015,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 10,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.145,
+          "color": "#ffffff"
+        }
+      },
+      "cutHandL": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.1,
+          "skeleton": 0.03,
+          "clean": 0,
+          "range": 0.5,
+          "grow": 0.06,
+          "smooth": 0.55,
+          "points": 45,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.04,
+          "color": "#ffffff"
+        }
+      },
+      "cutHandR": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "cut": {
           "bound": 0.11,
           "skeleton": 0.01,
           "clean": 0.015,
           "range": 1,
-          "grow": 0.02,
+          "grow": 0.08,
           "smooth": 0.55,
-          "crown": 0.22,
-          "points": 11,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.095,
-          "color": "#ffffff"
-        }
-      },
-      "bodyPart": {
-        "type": "bodyPart",
-        "x": 0.055,
-        "y": 0,
-        "z": 37,
-        "scale": 0.72,
-        "rotation": -86,
-        "fasten": "leftHand",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.095,
-          "clean": 0.015,
-          "range": 0.5,
-          "grow": 0.04,
-          "smooth": 0.4,
-          "crown": 0.22,
           "points": 45,
           "join": "miter"
         },
         "outline": {
-          "width": 0.035,
+          "width": 0.045,
           "color": "#ffffff"
         }
       },
-      "face": null
+      "cam": null
+    }
+  },
+  {
+    "id": 3,
+    "_note": "Spotlights. Two white circles on your hands are isMask objects: the curtain is visible ONLY where they are.",
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "...introducing... the one... the only...\n\n (spotlight test! press RIGHT\u2192 or SPACE to proceed...)",
+        "speaker": "???",
+        "style": "bubble",
+        "speed": "normal",
+        "instant": false,
+        "hoverFade": false,
+        "tilt": null,
+        "width": 0.86
+      },
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ],
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 8,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "spotL": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": true,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 100,
+        "pinScale": true,
+        "size": 2.2
+      },
+      "spotR": {
+        "type": "image",
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": true,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 100,
+        "pinScale": true,
+        "size": 2.2
+      },
+      "cutEyeL": null,
+      "cutEyeR": null,
+      "cutMouth": null,
+      "cutHandL": null,
+      "cutHandR": null
     }
   },
   {
     "id": 4,
-    "_note": "Hands. Cut by colour segmentation bounded by the landmark skeleton (js/silhouette.js).",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "test 3. hand segmentation + traced hull.",
-        "speaker": "shm",
-        "width": 0.92
-      },
-      "lhand": {
-        "type": "bodyPart",
-        "x": 0,
-        "y": 0,
-        "z": 30,
-        "fasten": "leftHand",
-        "cut": {
-          "bound": 0.14,
-          "skeleton": 0.035,
-          "clean": 0.015,
-          "range": 0.7,
-          "grow": 0.085,
-          "smooth": 0.7,
-          "points": 31,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.05,
-          "color": "#ffffff"
-        }
-      },
-      "rhand": {
-        "type": "bodyPart",
-        "x": 0,
-        "y": 0,
-        "z": 30,
-        "fasten": "rightHand",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.08,
-          "smooth": 0.55,
-          "points": 45,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.045,
-          "color": "#ffffff"
-        }
-      }
-    }
-  },
-  {
-    "id": 5,
-    "_note": "POTATO TEST. `p` toggles the manual fallback (armed by potatoManual). Verify the fallback BEFORE trusting the detector.",
-    "potato": true,
-    "potatoManual": true,
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100,
-        "opacity": 0
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "potato test. hold one up, or press p.",
-        "speaker": "shm",
-        "width": 0.92
-      },
-      "spud": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 40,
-        "fasten": "potato",
-        "src": 900,
-        "size": 1.4
-      },
-      "webcam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5
-      },
-      "leye": null,
-      "reye": null,
-      "mouth": null,
-      "bodyPart": null,
-      "lhand": null,
-      "rhand": null
-    }
-  },
-  {
-    "id": 6,
-    "_note": "TEST axis lock + clamp. The marquee is lockX 0.5 / maxY 0.5: held to centre, dragged DOWN by your right hand, unable to pass halfway. Raise your hand and it follows back up — a clamp, not a latch.",
-    "potato": false,
-    "potatoManual": false,
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100,
-        "opacity": 0
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "TEST: pull the sign down with your right hand.",
-        "speaker": "shm",
-        "width": 0.92
-      },
-      "webcam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5
-      },
-      "marquee": {
-        "type": "image",
-        "x": 0,
-        "y": -0.34,
-        "z": 40,
-        "fasten": "rightHand",
-        "lockX": 0.5,
-        "maxY": 0.5,
-        "src": 901,
-        "size": 0.5
-      },
-      "spud": null
-    }
-  },
-  {
-    "id": 7,
-    "_note": "TEST masking. Circles on both hands reveal the curtain; everything else is black. The circles themselves are isMask, so they are never drawn.",
+    "_note": "The BricolMage, as performed in the shmidpoint show \u2014 but in the rig's own chrome. The greyscale marquee titlebar belongs to that show, not to the demo.",
     "objects": {
       "dialogue": {
         "type": "text",
         "x": 0.5,
         "y": 0.8,
-        "text": "TEST: spotlights. move both hands.",
-        "speaker": "???",
-        "width": 0.92
-      },
-      "spotL": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 5,
-        "fasten": "leftHand",
-        "isMask": true,
-        "src": 100,
-        "size": 1.8
-      },
-      "spotR": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 5,
-        "fasten": "rightHand",
-        "isMask": true,
-        "src": 100,
-        "size": 1.8
-      },
-      "curtain": {
-        "type": "image",
-        "x": 0.5,
-        "y": 0.5,
-        "z": 10,
-        "maskedBy": [
-          "spotL",
-          "spotR"
-        ],
-        "src": 101,
-        "fit": "cover"
-      },
-      "cam": null,
-      "webcam": null,
-      "marquee": null
-    }
-  },
-  {
-    "id": 8,
-    "_note": "TEST drumroll. Click the button to grant the mic; it removes itself and the bar appears. The bar fills ONLY on sustained noise and takes at least 10s.",
-    "objects": {
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "TEST: drumroll please.",
-        "speaker": "???",
-        "width": 0.92
-      },
-      "spotL": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 5,
-        "scale": 0.47,
-        "fasten": "leftHand",
-        "isMask": true,
-        "src": 100,
-        "size": 1.8
-      },
-      "spotR": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 5,
-        "scale": 0.54,
-        "fasten": "rightHand",
-        "isMask": true,
-        "src": 100,
-        "size": 1.8
-      },
-      "curtain": {
-        "type": "image",
-        "x": 0.5,
-        "y": 0.5,
-        "z": 10,
-        "maskedBy": [
-          "spotL",
-          "spotR"
-        ],
-        "src": 101,
-        "fit": "cover"
-      },
-      "go": {
-        "type": "button",
-        "x": 0.5,
-        "y": 0.55,
-        "z": 250,
-        "text": "enable mic",
-        "action": "enableMic"
-      },
-      "bar": {
-        "type": "progress",
-        "x": 0.5,
-        "y": 0.55,
-        "z": 250,
-        "seconds": 10,
-        "threshold": 0.06,
-        "width": 0.4
-      }
-    }
-  },
-  {
-    "id": 9,
-    "_note": "TEST freeze + flip. Cutouts hold their pose while you keep moving; rhand is flipped.",
-    "freeze": false,
-    "objects": {
-      "go": null,
-      "bar": null,
-      "spotL": null,
-      "spotR": null,
-      "curtain": null,
-      "cam": {
-        "type": "webcam",
-        "fit": "cover",
-        "z": -100
-      },
-      "lhand": {
-        "type": "bodyPart",
-        "fasten": "leftHand",
-        "z": 30
-      },
-      "rhand": {
-        "type": "bodyPart",
-        "fasten": "rightHand",
-        "z": 30,
-        "flipX": true
-      },
-      "dialogue": {
-        "text": "TEST: live. right hand is flipped. next scene freezes."
-      }
-    }
-  },
-  {
-    "id": 10,
-    "_note": "TEST freeze, engaged. Everything holds; keep moving and talking.",
-    "freeze": true,
-    "objects": {
-      "dialogue": {
-        "text": "TEST: frozen. the cutouts should not move at all."
-      }
-    }
-  },
-  {
-    "id": 11,
-    "_note": "Freeze released.",
-    "freeze": false,
-    "objects": {
-      "dialogue": {
-        "text": "TEST: live again."
-      }
-    }
-  },
-  {
-    "id": 12,
-    "_note": "TEST face label — green box with a literal name, exactly scene 5a.",
-    "objects": {
-      "lhand": null,
-      "rhand": null,
-      "cam": {
-        "type": "webcam",
-        "fit": "cover",
-        "z": -100
-      },
-      "flabel": {
-        "type": "label",
-        "text": "shm garanganao almeda",
-        "color": "#b4dd1e",
-        "textColor": "#000000"
-      },
-      "dialogue": {
-        "type": "text",
-        "speaker": "shm",
-        "text": "TEST: face box, literal label.",
-        "y": 0.8,
-        "width": 0.92
-      }
-    }
-  },
-  {
-    "id": 13,
-    "_note": "TEST live label — white box, templated text. Change expression and watch it move. Race is hardcoded, not inferred.",
-    "objects": {
-      "flabel": {
-        "text": "{emotion} {age} year-old Asian {gender}",
-        "color": "#ffffff",
-        "textColor": "#000000"
-      },
-      "dialogue": {
-        "text": "TEST: live age / gender / expression."
-      }
-    }
-  },
-  {
-    "id": 14,
-    "_note": "TEST label override — same object, literal text again.",
-    "objects": {
-      "flabel": {
-        "text": "bored mf",
-        "color": "#ffffff",
-        "textColor": "#000000"
-      },
-      "dialogue": {
-        "text": "TEST: bored mf."
-      }
-    }
-  },
-  {
-    "id": 15,
-    "_note": "TEST puppet cycling — press ] to step, shift+] to go back. Entries may carry their own size.",
-    "objects": {
-      "flabel": null,
-      "puppets": {
-        "type": "image",
-        "fasten": "leftHand",
-        "size": 1.2,
-        "cycleKey": "]",
-        "z": 40,
-        "srcs": [
-          900,
-          {
-            "src": 4,
-            "size": 1.8
-          },
-          {
-            "src": 13,
-            "size": 1.0
-          },
-          901
-        ]
-      },
-      "dialogue": {
-        "text": "TEST: hold up your left hand, press ]."
-      }
-    }
-  },
-  {
-    "id": 16,
-    "_note": "TEST audio — scene 12 equivalent. Music starts and must keep playing across the next cut.",
-    "objects": {
-      "puppets": null,
-      "music": {
-        "type": "audio",
-        "src": 5,
-        "playing": true,
-        "volume": 0.6
-      },
-      "dialogue": {
-        "type": "text",
-        "speaker": "???",
-        "text": "TEST: music on. it should survive the next scene.",
-        "y": 0.8,
-        "width": 0.92
-      }
-    }
-  },
-  {
-    "id": 17,
-    "_note": "Music untouched by this scene — it must NOT restart or stutter at the cut.",
-    "objects": {
-      "dialogue": {
-        "text": "TEST: still playing, uninterrupted?"
-      }
-    }
-  },
-  {
-    "id": 18,
-    "_note": "Scene 23 equivalent — music stops.",
-    "objects": {
-      "music": {
-        "playing": false
-      },
-      "dialogue": {
-        "text": "TEST: music stopped."
-      }
-    }
-  },
-  {
-    "id": 19,
-    "_note": "Scene 27 equivalent — music resumes where it left off, not from the top.",
-    "objects": {
-      "music": {
-        "playing": true
-      },
-      "dialogue": {
-        "text": "TEST: resumed mid-track."
-      }
-    }
-  },
-  {
-    "id": 20,
-    "_note": "Music removed from the stage entirely — must go silent.",
-    "objects": {
-      "music": null,
-      "dialogue": {
-        "text": "TEST: silent."
-      }
-    }
-  },
-  {
-    "id": 21,
-    "_note": "TEST finger puppets — one per fingertip on the left hand, each carrying the finger's angle.",
-    "objects": {
-      "music": null,
-      "cam": {
-        "type": "webcam",
-        "fit": "cover",
-        "z": -100
-      },
-      "f1": {
-        "type": "image",
-        "src": 900,
-        "fasten": "leftThumb",
-        "size": 1.1,
-        "z": 40
-      },
-      "f2": {
-        "type": "image",
-        "src": 900,
-        "fasten": "leftIndex",
-        "size": 1.1,
-        "z": 40
-      },
-      "f3": {
-        "type": "image",
-        "src": 900,
-        "fasten": "leftMiddle",
-        "size": 1.1,
-        "z": 40
-      },
-      "f4": {
-        "type": "image",
-        "src": 900,
-        "fasten": "leftRing",
-        "size": 1.1,
-        "z": 40
-      },
-      "f5": {
-        "type": "image",
-        "src": 900,
-        "fasten": "leftPinky",
-        "size": 1.1,
-        "z": 40
-      },
-      "dialogue": {
-        "type": "text",
-        "speaker": "shm",
-        "text": "TEST: five finger puppets. splay your left hand.",
-        "y": 0.8,
-        "width": 0.92
-      }
-    }
-  },
-  {
-    "id": 22,
-    "_note": "TEST paper textbox — the BricolMage style. Cardstock sheet, lined-paper speaker scrap overlapping it.",
-    "objects": {
-      "f1": null,
-      "f2": null,
-      "f3": null,
-      "f4": null,
-      "f5": null,
-      "dialogue": {
-        "style": "paper",
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "...BricolMage!!\n\n(your left hand = both  hands; right hand = hat)",
         "speaker": "The BricolMage",
-        "text": "TEST: paper dialogue. Boy have we got a show in store for YOU!"
-      }
-    }
-  },
-  {
-    "id": 23,
-    "_note": "TEST: everything at once, webcam removed — face, eyes, mouth and hands as separate cutouts on a black stage.",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100,
-        "opacity": 0,
-        "fit": "box",
-        "size": 0.35
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "HELLO THERE!",
-        "speaker": "SOME GUY",
+        "style": "paper",
+        "speed": "normal",
+        "instant": false,
+        "hoverFade": false,
+        "tilt": null,
         "width": 0.92
       },
-      "leye": {
+      "curtain": {
+        "type": "image",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 8,
+        "pinScale": true,
+        "fit": "cover"
+      },
+      "bm_eyeL1": {
         "type": "bodyPart",
-        "x": 0,
-        "y": 0,
+        "x": -0.01,
+        "y": -0.005,
         "z": 26,
-        "scale": 2.55,
-        "rotation": 10,
+        "scale": 1.97,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
         "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "cut": {
           "bound": 0.11,
           "skeleton": 0.01,
           "clean": 0.015,
           "range": 1,
-          "grow": 0.25,
-          "smooth": 0.55,
-          "crown": 0.22,
-          "points": 6,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.215,
-          "color": "#ffffff"
-        }
-      },
-      "reye": {
-        "type": "bodyPart",
-        "x": 0.04,
-        "y": 0,
-        "z": 41,
-        "scale": 2.44,
-        "rotation": 3,
-        "fasten": "rightEye",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 3.05,
-          "grow": 0.1,
-          "smooth": 0.3,
-          "crown": 0.16,
-          "points": 6,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.195,
-          "color": "#ffffff"
-        }
-      },
-      "mouth": {
-        "type": "bodyPart",
-        "x": 0,
-        "y": -0.165,
-        "z": 21,
-        "scale": 3,
-        "fasten": "mouth",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.02,
-          "smooth": 0.55,
-          "crown": 0.22,
+          "grow": 0.14,
+          "smooth": 0.7,
+          "crown": 0.15,
           "points": 8,
           "join": "miter"
         },
         "outline": {
-          "width": 0.095,
+          "width": 0.165,
           "color": "#ffffff"
         }
       },
-      "bodyPart": {
+      "bm_eyeL2": {
         "type": "bodyPart",
-        "x": 0.055,
-        "y": 0,
-        "z": 37,
-        "scale": 0.72,
-        "rotation": -86,
-        "fasten": "leftHand",
+        "x": 0.01,
+        "y": -0.1,
+        "z": 26,
+        "scale": 0.84,
+        "rotation": -152,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "cut": {
-          "bound": 0.11,
-          "skeleton": 0.095,
+          "bound": 0.22,
+          "skeleton": 0.01,
           "clean": 0.015,
-          "range": 0.5,
-          "grow": 0.04,
-          "smooth": 0.4,
-          "crown": 0.22,
-          "points": 45,
+          "range": 1,
+          "grow": 0.355,
+          "smooth": 0.55,
+          "crown": 0.37,
+          "points": 8,
           "join": "miter"
         },
         "outline": {
-          "width": 0.035,
+          "width": 0.2,
           "color": "#ffffff"
         }
       },
-      "lhand": {
+      "bm_eyeR1": {
         "type": "bodyPart",
-        "x": -0.155,
-        "y": 0,
-        "z": 30,
-        "scale": 1.67,
-        "rotation": -82,
-        "fasten": "leftHand",
+        "x": 0.02,
+        "y": -0.02,
+        "z": 26,
+        "scale": 1.45,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "cut": {
           "bound": 0.11,
           "skeleton": 0.01,
-          "clean": 0,
-          "range": 0.7,
-          "grow": 0.056,
-          "smooth": 0.65,
-          "points": 44,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.425,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
           "join": "miter"
         },
         "outline": {
-          "width": 0.05,
+          "width": 0.26,
           "color": "#ffffff"
         }
       },
-      "rhand": {
+      "bm_eyeR2": {
+        "type": "bodyPart",
+        "x": -0.05,
+        "y": -0.07,
+        "z": 26,
+        "scale": 0.75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_eyeR3": {
+        "type": "bodyPart",
+        "x": -0.085,
+        "y": 0.05,
+        "z": 26,
+        "scale": 0.79,
+        "rotation": -180,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.585,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.22,
+          "color": "#ffffff"
+        }
+      },
+      "bm_mouth": {
+        "type": "bodyPart",
+        "x": 0,
+        "y": -0.23,
+        "z": 6,
+        "scale": 2.53,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "mouth",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.08,
+          "color": "#ffffff"
+        }
+      },
+      "bm_body": {
+        "type": "image",
+        "x": 0.025,
+        "y": 0,
+        "z": 24,
+        "scale": 0.59,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "bm_mouth.mouthBottom",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 7,
+        "pinScale": true,
+        "size": 1.4
+      },
+      "bm_handL": {
+        "type": "bodyPart",
+        "x": 0.005,
+        "y": 0,
+        "z": 30,
+        "scale": 1,
+        "rotation": -32,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.07,
+          "skeleton": 0.055,
+          "clean": 0.01,
+          "range": 0.85,
+          "grow": 0.05,
+          "smooth": 0.55,
+          "points": 47,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.025,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handL2": {
+        "type": "bodyPart",
+        "x": 0.415,
+        "y": -0.02,
+        "z": 30,
+        "scale": 0.81,
+        "rotation": 29,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.015,
+          "clean": 0.01,
+          "range": 0.9,
+          "grow": 0.065,
+          "smooth": 0.8,
+          "points": 37,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        }
+      },
+      "bm_tophat": {
+        "type": "image",
+        "x": -0.18,
+        "y": 0,
+        "z": 31,
+        "scale": 0.63,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 6,
+        "pinScale": true,
+        "size": 1,
+        "anchor": "bottom"
+      },
+      "bm_eyeL3": {
+        "type": "bodyPart",
+        "x": 0.115,
+        "y": -0.125,
+        "z": 26,
+        "scale": 1.04,
+        "rotation": -22,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 16,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        }
+      },
+      "bm_handR": {
         "type": "bodyPart",
         "x": 0,
         "y": 0,
         "z": 30,
-        "rotation": 60,
+        "scale": 0.51,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
         "fasten": "rightHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
         "cut": {
           "bound": 0.11,
           "skeleton": 0.01,
@@ -866,482 +865,9 @@
           "color": "#ffffff"
         }
       },
-      "face": {
-        "type": "bodyPart",
-        "x": -0.015,
-        "y": 0.09,
-        "z": 25,
-        "scale": 3,
-        "fasten": "rightEye",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.02,
-          "smooth": 0.55,
-          "crown": 0.22,
-          "points": 13,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.045,
-          "color": "#ffffff"
-        }
-      }
+      "spotL": null,
+      "spotR": null
     },
-    "potato": false,
-    "potatoManual": false
-  },
-  {
-    "id": 24,
-    "_note": "Face mounts. The hat and glasses name no fastener — `_hat` and `_glasses` in their filenames place them (§7). A hat rests its BOTTOM edge on the crown, so it sits on the head rather than through it.",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "fit": "cover",
-        "z": -100
-      },
-      "face": null,
-      "leye": null,
-      "reye": null,
-      "mouth": null,
-      "lhand": null,
-      "rhand": null,
-      "hat": {
-        "type": "image",
-        "src": 1,
-        "z": 40
-      },
-      "specs": {
-        "type": "image",
-        "src": 2,
-        "z": 41
-      },
-      "dialogue": {
-        "type": "text",
-        "speaker": "shm",
-        "text": "hat and glasses, mounted by filename.",
-        "y": 0.8,
-        "width": 0.92
-      }
-    }
-  },
-  {
-    "id": 25,
-    "_note": "Miku has no suffix, so she is mounted explicitly — on the nose, with the cutout off. §2.2's case: a BodyPart that is a bare mount rather than a cut-out.",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "miku pinned to the nose. goggles swapped in.",
-        "speaker": "shm",
-        "width": 0.92
-      },
-      "bodyPart": {
-        "type": "bodyPart",
-        "x": 0.055,
-        "y": 0,
-        "z": 37,
-        "scale": 0.72,
-        "rotation": -86,
-        "fasten": "leftHand",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.095,
-          "clean": 0.015,
-          "range": 0.5,
-          "grow": 0.04,
-          "smooth": 0.4,
-          "crown": 0.22,
-          "points": 45,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.035,
-          "color": "#ffffff"
-        }
-      },
-      "hat": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 40,
-        "scale": 1.89,
-        "fasten": "hat",
-        "src": 1,
-        "size": 0.5
-      },
-      "specs": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 41,
-        "scale": 2.69,
-        "fasten": "glasses",
-        "src": 3,
-        "size": 0.5
-      },
-      "miku": {
-        "type": "image",
-        "x": 0,
-        "y": 0,
-        "z": 42,
-        "fasten": "nose",
-        "src": 13,
-        "size": 1.6
-      }
-    }
-  },
-  {
-    "id": 26,
-    "_note": "Mounts follow head roll. Tilt your head and everything tilts with it.",
-    "objects": {
-      "miku": null,
-      "beard": {
-        "type": "image",
-        "src": 13,
-        "fasten": "beard",
-        "size": 0.8,
-        "z": 39
-      },
-      "dialogue": {
-        "text": "tilt your head — mounts carry the roll."
-      }
-    }
-  },
-  {
-    "id": 27,
-    "_note": "Hat on a CUT-OUT face, not on the webcam. `fasten: \"facecut.hat\"` resolves the hat mount in that object's space, so the hat follows the cutout (§2.2).",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "x": 0.5,
-        "y": 0.5,
-        "z": -100
-      },
-      "dialogue": {
-        "type": "text",
-        "x": 0.5,
-        "y": 0.8,
-        "text": "hat pinned to the face cutout.",
-        "speaker": "shm",
-        "width": 0.92
-      },
-      "bodyPart": {
-        "type": "bodyPart",
-        "x": 0.055,
-        "y": 0,
-        "z": 37,
-        "scale": 0.72,
-        "rotation": -86,
-        "fasten": "leftHand",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.095,
-          "clean": 0.015,
-          "range": 0.5,
-          "grow": 0.04,
-          "smooth": 0.4,
-          "crown": 0.22,
-          "points": 45,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.035,
-          "color": "#ffffff"
-        }
-      },
-      "facecut": {
-        "type": "bodyPart",
-        "x": 0.29,
-        "y": 0,
-        "z": 25,
-        "rotation": -18,
-        "fasten": "face",
-        "cut": {
-          "bound": 0.11,
-          "skeleton": 0.01,
-          "clean": 0.015,
-          "range": 1,
-          "grow": 0.02,
-          "smooth": 0.55,
-          "crown": 0.22,
-          "points": 13,
-          "join": "miter"
-        },
-        "outline": {
-          "width": 0.045,
-          "color": "#ffffff"
-        }
-      },
-      "cuthat": {
-        "type": "image",
-        "x": 0.035,
-        "y": 0.085,
-        "z": 40,
-        "rotation": 16,
-        "fasten": "facecut.hat",
-        "src": 1,
-        "size": 1.1
-      },
-      "image": {
-        "type": "image",
-        "x": 0.5,
-        "y": 0.5,
-        "size": 0.4
-      },
-      "hat": null,
-      "specs": null,
-      "beard": null
-    }
-  },
-  {
-    "id": 28,
-    "_note": "The cutout is moved, scaled and rotated — the hat goes with it, because it is pinned to the object rather than to the webcam.",
-    "objects": {
-      "cam": null,
-      "facecut": {
-        "x": -0.18,
-        "scale": 1.3,
-        "rotation": -14
-      },
-      "dialogue": {
-        "text": "move the cutout — the hat follows."
-      }
-    }
-  },
-  {
-    "id": 29,
-    "_note": "Face mounts cleared. Test scenes end here; cutouts cleared. Patches one field of an existing object. `cam` becomes a box; it is not redeclared.",
-    "objects": {
-      "cam": {
-        "type": "webcam",
-        "fit": "box",
-        "size": 0.55,
-        "x": 0.32,
-        "y": 0.42,
-        "radius": 0.03,
-        "rotation": -3
-      },
-      "star": {
-        "type": "image",
-        "src": 900,
-        "at": {
-          "at": "RIGHT",
-          "dx": 0.02
-        },
-        "y": 0.4,
-        "size": 0.3,
-        "z": 10
-      },
-      "dialogue": {
-        "text": "scene 3. cam patched to a box. star added at RIGHT + 0.02."
-      },
-      "face": null,
-      "leye": null,
-      "reye": null,
-      "mouth": null,
-      "lhand": null,
-      "rhand": null,
-      "hat": null,
-      "specs": null,
-      "beard": null,
-      "facecut": null,
-      "cuthat": null
-    }
-  },
-  {
-    "id": 30,
-    "_note": "z ordering: sign 20 over star 10 over cam -100. One sorted pass.",
-    "objects": {
-      "sign": {
-        "type": "image",
-        "src": 901,
-        "x": 0.66,
-        "y": 0.58,
-        "size": 0.34,
-        "z": 20,
-        "rotation": 6
-      },
-      "dialogue": {
-        "text": "scene 4. sign z=20, star z=10, cam z=-100."
-      }
-    }
-  },
-  {
-    "id": 31,
-    "_note": "Removal. `star: null` takes it off stage; everything else persists.",
-    "objects": {
-      "star": null,
-      "dialogue": {
-        "text": "scene 5. star removed with null."
-      }
-    }
-  },
-  {
-    "id": 32,
-    "_note": "Two TextBoxes at once, different styles. `aside` has no speaker, so no tab.",
-    "objects": {
-      "dialogue": {
-        "text": "scene 6. two text boxes.",
-        "x": 0.33,
-        "y": 0.8,
-        "width": 0.92
-      },
-      "aside": {
-        "type": "text",
-        "style": "thought",
-        "text": "thought style, slow speed.",
-        "x": 0.76,
-        "y": 0.22,
-        "width": 0.34,
-        "speed": "slow"
-      }
-    }
-  },
-  {
-    "id": 33,
-    "_note": "Fasteners. x/y are offsets from the pin; size multiplies hand span.",
-    "objects": {
-      "aside": null,
-      "cam": {
-        "type": "webcam",
-        "fit": "cover",
-        "x": 0.5,
-        "y": 0.5,
-        "rotation": 0,
-        "radius": 0
-      },
-      "star": {
-        "type": "image",
-        "src": 900,
-        "fasten": "rightHand",
-        "x": 0,
-        "y": 0,
-        "size": 1.2,
-        "z": 10
-      },
-      "sign": {
-        "fasten": "leftHand",
-        "x": 0,
-        "y": -0.04,
-        "size": 1.4,
-        "z": 10,
-        "rotation": 0
-      },
-      "dialogue": {
-        "text": "scene 7. star pinned to right hand, sign to left. hold both up.",
-        "x": 0.5,
-        "y": 0.8,
-        "width": 0.92
-      }
-    }
-  },
-  {
-    "id": 34,
-    "_note": "BodyParts. Hands cut from the feed by stroking the landmark skeleton, dilated, white border, drop shadow.",
-    "objects": {
-      "star": null,
-      "sign": null,
-      "lhand": {
-        "type": "bodyPart",
-        "fasten": "leftHand",
-        "z": 30
-      },
-      "rhand": {
-        "type": "bodyPart",
-        "fasten": "rightHand",
-        "z": 30
-      },
-      "dialogue": {
-        "text": "scene 8. hands cut out, drawn over the feed."
-      }
-    }
-  },
-  {
-    "id": 35,
-    "_note": "Same cutouts with the webcam removed. Only the hands and pinned art remain.",
-    "objects": {
-      "cam": null,
-      "star": {
-        "type": "image",
-        "src": 900,
-        "fasten": "rightHand",
-        "x": 0,
-        "y": -0.12,
-        "size": 0.9,
-        "z": 40
-      },
-      "dialogue": {
-        "text": "scene 9. same hands, no webcam. black stage."
-      }
-    }
-  },
-  {
-    "id": 36,
-    "_note": "Scale and rotation on a BodyPart; cutouts are ordinary objects.",
-    "objects": {
-      "star": null,
-      "lhand": {
-        "scale": 1.6,
-        "rotation": -12
-      },
-      "rhand": {
-        "scale": 1.6,
-        "rotation": 12
-      },
-      "dialogue": {
-        "text": "scene 10. cutouts scaled 1.6x and rotated."
-      }
-    }
-  },
-  {
-    "id": 37,
-    "_note": "hoverFade on a caption over the full-bleed webcam.",
-    "objects": {
-      "lhand": null,
-      "rhand": null,
-      "cam": {
-        "type": "webcam",
-        "fit": "cover",
-        "x": 0.5,
-        "y": 0.5,
-        "rotation": 0,
-        "z": -100
-      },
-      "dialogue": {
-        "style": "caption",
-        "speaker": null,
-        "text": "scene 11. caption with hoverFade. move the mouse off it.",
-        "x": 0.5,
-        "y": 0.88,
-        "width": 0.66,
-        "hoverFade": true
-      }
-    }
-  },
-  {
-    "id": 38,
-    "reset": true,
-    "_note": "reset: true. Starts from an empty stage instead of inheriting.",
-    "objects": {
-      "end": {
-        "type": "text",
-        "style": "plain",
-        "text": "scene 12. reset — nothing inherited.",
-        "x": 0.5,
-        "y": 0.5,
-        "width": 0.6,
-        "speed": "medium"
-      }
-    }
+    "toggles": []
   }
 ]
