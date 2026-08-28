@@ -213,6 +213,64 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, entries: Object.keys(parsed).length });
     }
 
+    // ── One scene, spliced into whatever is on disk NOW ───────────────────
+    // The whole-script route above is a footgun whenever anything else is also editing the
+    // file: the panel PUTs its entire in-memory copy, so a tab loaded ten minutes ago
+    // silently rewinds every change made since — including to scenes it never touched.
+    //
+    // This route writes ONE scene into the CURRENT on-disk script. A stale tab can then
+    // only clobber the scene it was actually editing; everything else survives untouched.
+    const sceneRoute = pathname.match(/^\/api\/shows\/([\w.-]+)\/scene\/(\d+)$/);
+    if (sceneRoute) {
+      if (req.method !== 'PUT') return send(res, 405, 'method not allowed');
+      if (!isLoopback(req)) return send(res, 403, 'authoring is loopback-only');
+
+      const show = sceneRoute[1];
+      const index = parseInt(sceneRoute[2], 10);
+      const file = path.join(ROOT, 'shows', show, 'script.json');
+      if (!file.startsWith(path.join(ROOT, 'shows'))) return send(res, 400, 'bad show name');
+
+      let scene;
+      try {
+        scene = JSON.parse(await readBody(req));
+      } catch (err) {
+        return send(res, 400, `not valid JSON: ${err.message}`);
+      }
+      if (!scene || typeof scene !== 'object' || Array.isArray(scene)) {
+        return send(res, 400, 'scene must be an object');
+      }
+
+      // Re-read on EVERY write. That is the whole point — the base is the file as it stands
+      // this instant, not whatever the saving tab last saw.
+      let script;
+      try {
+        script = JSON.parse(await fs.readFile(file, 'utf8'));
+      } catch (err) {
+        return send(res, 500, `cannot read script.json: ${err.message}`);
+      }
+      if (!Array.isArray(script)) return send(res, 500, 'script.json is not an array');
+      // A tab holding a script from before a scene was inserted or deleted is pointing at
+      // the wrong slot. Out of range is the case we can actually detect; refuse it rather
+      // than appending a stray scene to the end of the show.
+      if (!(index >= 0 && index < script.length)) {
+        return send(res, 409, `scene ${index + 1} is out of range — the script now has ` +
+          `${script.length} scenes. Reload the page.`);
+      }
+
+      const dir = path.join(path.dirname(file), '.backups');
+      await fs.mkdir(dir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await fs.writeFile(path.join(dir, `script-${stamp}.json`),
+        JSON.stringify(script, null, 2) + '\n', 'utf8');
+
+      script[index] = scene;
+      const tmp = `${file}.tmp`;
+      await fs.writeFile(tmp, JSON.stringify(script, null, 2) + '\n', 'utf8');
+      await fs.rename(tmp, file);
+      console.log(`[dev] saved shows/${show}/script.json — scene ${index + 1} of ${script.length}`);
+      return json(res, 200, { ok: true, index, scenes: script.length });
+    }
+
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'method not allowed');
 
     // ── Live manifest, overriding the committed static one ────────────────

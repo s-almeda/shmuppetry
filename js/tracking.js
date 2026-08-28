@@ -126,6 +126,7 @@ export class Tracking {
     this.hands = {};        // 'leftHand' | 'rightHand' → 21 raw landmarks
     this.face = null;       // 478 raw landmarks
     this.rings = {};        // region name → ordered landmark indices
+    this.mesh = [];         // face tesselation as [a, b] edge pairs; filled when face loads
     this._models = {};
     this._lastAt = -1;
     // When frozen, detection stops and the last landmarks stand. Everything downstream —
@@ -154,6 +155,11 @@ export class Tracking {
             rightEye: rings(F.FACE_LANDMARKS_RIGHT_EYE),
             mouth: rings(F.FACE_LANDMARKS_LIPS),
           };
+          // The full mesh wireframe, kept as RAW EDGE PAIRS rather than run through
+          // rings(): the tesselation is a triangle soup with ~2600 edges and no cycles to
+          // find, so the ring walk would churn through it and return nothing useful.
+          // Only the `landmarks` object reads this, and only to stroke each edge once.
+          this.mesh = (F.FACE_LANDMARKS_TESSELATION ?? []).map((c) => [c.start, c.end]);
           // A broken cycle is silent otherwise — it just draws a wrong shape. Log the
           // sizes so a partial ring is obvious.
           console.log('[tracking] face contours:', Object.fromEntries(

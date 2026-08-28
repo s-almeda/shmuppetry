@@ -33,7 +33,9 @@ export const FINGERS = [
   [1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20],
 ];
 // Bones drawn for M1, including the palm so the skeleton samples palm colour too.
-const BONES = [
+// Exported because js/landmarks.js strokes the same skeleton for the audience — one
+// definition of what connects to what, rather than the same graph written twice.
+export const BONES = [
   ...FINGERS.flatMap((c) => c.slice(0, -1).map((a, i) => [a, c[i + 1]])),
   [0, 1], [0, 5], [0, 17], [5, 9], [9, 13], [13, 17],
 ];

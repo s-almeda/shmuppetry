@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(venv_pls)",
+      "Bash(grep -rn \"venv_pls\" ~/.zshrc ~/.zprofile ~/.zshenv ~/.bashrc ~/.profile 2>/dev/null | head)",
+      "Read(//Users/loaner1-main/**)",
+      "Read(//Users/loaner1-main/myenv/bin/**)",
+      "Read(//Users/loaner1-main/myenv/**)",
+      "Bash(grep -v \"\\\\.py$\")",
+      "Bash(~/myenv/lib/python3.9/site-packages/imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1 -y -i assets/CNMAT_openlab/340_aitl.mp4 -c:v libvpx-vp9 -crf 34 -b:v 0 -vf \"scale=1280:-2\" -row-mt 1 -threads 8 -deadline good -cpu-used 2 -an /tmp/340_aitl.webm)",
+      "Bash(awk '/export class LabelBoxObject/,/^export class AudioObject/' js/objects.js)",
+      "Bash(awk '/^export class LabelBoxObject/,/^\\\\/\\\\/ ── Audio/' js/objects.js)",
+      "Read(//private/tmp/**)",
+      "Bash(awk '{printf \"  %-12s %s\\\\n\", $5, $9}')",
+      "Bash(xargs -I{} echo \"serialize\\(\\) methods in LabelBox now: {}\")"
+    ]
+  }
+}

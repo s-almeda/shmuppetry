@@ -258,7 +258,7 @@ async function main() {
   player.ephemeral = (id) => showcase.owns(id);
   edit.onEdit = () => showcase.captureText();
   panel = new Panel({
-    el: el.panel, player, edit, detector, showcase, assets, tracking,
+    el: el.panel, player, edit, detector, showcase, assets, tracking, mic,
     tabLabel: config.panelTab ?? null,
   });
   edit.player = player;

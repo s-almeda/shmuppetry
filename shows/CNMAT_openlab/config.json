@@ -1,6 +1,6 @@
 {
   "_note": "Performance rig for the CNMAT open lab. panelTab is deliberately absent — you do not need to be told it is a control panel while on stage. Copied from shows/shmidpoint/config.json; only the title differs.",
-  "title": "CNMAT open lab",
+  "title": "shmuppetry rig 3.1 @ CNMAT OpenLab 2026",
   "skin": "default",
   "aspect": null,
   "mirror": true,

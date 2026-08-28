@@ -130,6 +130,41 @@ console.log('\nassets');
   dupes.length ? dupes.forEach((d) => bad(`duplicate asset number ${d}`))
                : ok(`${seen.size} assets, no duplicate numbers`);
 
+  // An asset number a scene references but the manifest does not have renders NOTHING and
+  // logs one line at load. Catching it here is the difference between finding out now and
+  // finding out on stage. Uses the on-disk walk, not the committed manifest, because show
+  // art is gitignored — the committed one legitimately lists almost none of it.
+  const onDisk = new Set();
+  const walk = (dir, base = '') => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const rel = base ? `${base}/${e.name}` : e.name;
+      if (e.isDirectory()) { if (e.name !== '.backups') walk(path.join(dir, e.name), rel); continue; }
+      if (!/\.(png|jpe?g|gif|webp|svg|mp4|webm|mov|mp3|wav|ogg|m4a)$/i.test(e.name)) continue;
+      if (rel.startsWith('textures/')) continue;         // referenced by path, never numbered
+      const n = parseInt(e.name.match(/(\d+)/)?.[1], 10);
+      if (!Number.isNaN(n)) onDisk.add(n);
+    }
+  };
+  walk(`${ROOT}/assets`);
+
+  for (const show of shows) {
+    const script = readJSON(`${ROOT}/shows/${show}/script.json`, []);
+    const missing = new Map();
+    for (const scene of script) {
+      for (const [id, o] of Object.entries(scene.objects ?? {})) {
+        if (!o) continue;
+        const refs = [o.src, o.talkSrc, ...(o.srcs ?? []).map((e) => (e && typeof e === 'object' ? e.src : e))];
+        for (const r of refs) {
+          if (typeof r !== 'number' || onDisk.has(r)) continue;
+          if (!missing.has(r)) missing.set(r, []);
+          missing.get(r).push(`${scene.id}·${id}`);
+        }
+      }
+    }
+    for (const [n, where] of missing) bad(`${show} — asset ${n} not on disk (${where.join(', ')})`);
+    if (!missing.size) ok(`${show} — every asset reference resolves`);
+  }
+
   const meta = readJSON(`${ROOT}/assets/meta.json`, {});
   const bogus = Object.keys(meta).filter((k) => !k.startsWith('_') && Number.isNaN(parseInt(k, 10)));
   bogus.length ? bad(`meta.json keys that are not numbers: ${bogus}`)

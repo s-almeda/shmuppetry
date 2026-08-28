@@ -1,7 +1,156 @@
-# CNMAT_openlab — script
+- <black, lh puppet: “drumroll please” text>
+- <curtain_bg masked, with hands as spotlights>
+    - announcer: “goooood afternoon CNMAT OpenLab 2026!” (speech bubble pointing offstage as text box)
+- <full curtain bg>
+    - announcer: “put your hands together for…..{
+- suddenly, plain default full webcam feed, normal xp.css dialogue box
+    - shm: … me!
+- <shm garanganao almeda label #b4dd13 bounding box around my face>
+    - “Hi everyone! my name is shm garanganao almeda; I use they/them pronouns. I’m grateful and honored to have been asked to share an overview of my recent work with y’all!“
+- “now I wasn’t sure what to talk about, and I was so gracefully assured that it’s okay that I have *nothing* to tell y’all about music or instruments, but even then…”
+- “i do… a *lot* of …different things…“
+- <artist beret hat> <left hand puppets: Bjorn drawing, UC Berkeley EECS logo>
+    - “i’m an artist, I’m a computer scientist. For the past 6 years, (and for a little bit longer) I’ve been doing my PhD in computer science with the great DJ Björn Hartmann at UC Berkeley EECS.”
+- <lh puppets: Adobe Research, MJ storytelling lab>
+    - I’ve also been seen doing HCI + AI Creativity Support research and other stunts at places like here, and here,
+- <lh puppets: Jacobs Design Institute>
+    - co-teaching Creative Programming & Electronics with the great Sudhu Tewari here,
+- <lh puppets: BART costume 1, BART costume 2, tiat>
+    - cosplaying as, or yapping about, trains, at the Downtown Berkeley BART platform or down at tiat,
+- <no puppets>
+    - but in the interest of explaining what the heck… *this* is about, I should probably start with the work I’ve been doing this summer.
+- <Stochastic triangle hat, lh puppet: stochastic labs logo>
+    - I’m currently a resident in the Creative Tools & Theater groups at Stochastic Labs, which has created such amazing space and… pressure… to seriously invest into my passion…
+- <stochastic hat, both hands are talking sock puppets>
+    - …….. digital puppetry.
+- <same as above, but take off the stochastic hat now>
+    - so this is v3.0 of the shmuppetry rig. I’ve been using it at every given opportunity instead of slide software because. If you *could* give a presentation as a puppet show. why wouldn’t you.
 
-Prose script. `<angle brackets>` for what is on stage, indented numbers for lines.
-Same shape as `shows/shmidpoint/script.md`.
+=== NEW SCENES BELOW ===
+- “and with every lecture and performance I’ve used it for, I’ve been reworking it”
+- “for example, i was thinking about how this puppet is not attached to my hand.”
+- <black screen, but keep the lh sock puppet>
+    - it’s not even really attached to my webcam hand. this is a png, or a tray of pixels, being displayed at a particular coordinate,
+- <keep puppet, still black screen, but show hand landmark points>
+    - that coordinate is the output of a Computer Vision model (I’m using Mediapipe for hand tracking) in response to my webcam feed as input.  and  it recently dawned on me that, my webcam feed, like my puppets,
+- <black bg, webcam feeds as left and right hand puppets>
+    - is also, just, a tray of pixels that i can display at any arbitrary on-screen coordinate.
+- <ring of 5 webcam feeds pinned around face nose>
+    - and I can have as many of them as i want
+- <block out my hands in all white like we did when testing the hand bodypart cutout; turn on lines /points for my face mesh landmarks>
+    - “and, especially if we add in an image segmentation models… we can cut out the trays of pixels that probably represent my hands, face, eyes… anything else we were already looking for.”
 
-1. <webcam on, default xp.css look>
-    1. shm: …
+NEW SCENES INSERTED HERE ===
+
+- <hand body part pinned to my face, LH is a face, RH is also a face cutout>
+    - “which means i can move my hand pixels with my face, and my face pixels with my hands”
+- <full bricolmage many eyes in mouth setup, but no png hat or clothes; use the left hand as the body pinned under the mouth instead (i will hold it as a peace sign and we’ll rotate it 180º to make it look like legs). we’ll use 2 copies of the right hand, mirrored, for both hands>
+    - “Biblically Accurate Puppet”: “the character presented on the screen can be made entirely of pixels collected from the camera looking at me, without the character on screen being me at all”
+- <same>
+    - “which is delightfully weird! but, why am i telling you all this”
+
+====== old scenes, but with some changes , below === 
+
+- slow dissolve transition into this scene, for which…
+    - <i want to do this kind of "ghost" effect where theres a curtain bg image, but masked to only appear in a triangle-ish shaped spotlight. my face should cutout, be wearing a "beard" png that makes it look like i'm sitting in a chair, + a little microphone png should stick to my right hand. there's a double of my face, mirrored and made semi-transparent in the top right corner so it appears like a ghost semitransparent over the black background. >
+    - “I wanted to give a proper peek behind the curtain here because…i think right now a lot of people I talk to are super excited about doing NEW MEDIA stuff with the BIGGEST, NEWEST AI models…”
+- <same>
+    - “but like, these models are like, 7 years old. it’s all running in the browser. the face tracking is like, a couple megabytes. the hand tracking is like, less than 12MB. “
+- <same> “…nowadays we’re measuring language model size in TERABYTES and the growth is NOT stopping. I feel like… we’re creating big new media technologies faster than we can culturally metabolize them. I think it was Marshall McLuhan who once said”
+- <same bg, but no shm. png of marshall mcLuhan at stage left, it bounces and mouth flaps (which is just a 2nd png with the mouth moved) with mic threshold, the textbox is a speechbubble with paper texture at stage right, it must be around 50% as wide as usual  to fit on the screen>
+    - speaker “Marshall McLuhan”: “The effects of technology do not occur at the level of opinions or concepts, but alter…patterns of perception….
+- <same>
+    - “The serious artist is the only person able to encounter technology with impunity, just because he is an expert aware of the changes in sense perception.”
+- <plain default full webcam feed, normal xp.css dialogue box
+    - “shm”: “I think I feel the responsibility as a new media artist to explore the possibilities enabled by new media technologies; to confront through art-making what the technology is for. what it’s not for. what it’s doing to us.”
+- <same> “but I fear that we’ve been churning out new media possibilities at a breakneck speed that far outpaces our ability to explore, let alone critically engage with them.”
+- <8 historical self portraits series, as masks, shm will cycle through tem by breaking them with their hands>  “i don’t think we’re done critically engaging with the old media possibilities, and metabolizing how they’ve changed meaning in the context of our strange new world, how our perception has changed.”
+- <masks off, plain default again>
+    - “i’ve got a confession. I think my obsession with the webcam stems from a much longer-held, and sometimes embarrassing, obsession…”
+- <mirror the webcam. aka, split the webcam in half but the crop should be centerd around the center; duplicate and flip; i’ll turn to the right which will make it look like my face is talking to its reflection>
+    - “…with my reflection.”
+- <same>
+    - “at the risk of sounding like Narcissus himself, I spent a lot of time gazing into my reflection as a child.”
+- <6 self portraits, mask series>
+    - “and i think that obsession with What My Face Looks Like is not totally unrelated to so much of the work I did back in fine art land being… portraits of my reflection in mirrors”
+- <same>
+    - “my face was the site where I realized that there was no Objectively True Way of Seeing. Or if there is, I certainly don’t have access to it.”
+- <age, gender, expression, and (fake) race (it’s always “<happy/sad/etc> <x> year old Asian <woman/man>” bounding box labeled around face, using face-api.js>
+    - “That other people were conditioned to perceive things I didn’t realize were there. And as the queer child of immigrants growing up in a primarily white community, I had to learn how to predict the way an external, black-box, majoritized perception model would receive me.”
+- “this has made working with computer vision models feel cathartic. not comfortable, but cathartic, to confront it, and to ask others to confront this with me. “
+- <add lh flock camera article screenshot>
+    - “and I felt that way even before I found out folks were using CV to power horrifically violating mass surveillance campaigns.”
+- “I’ve realized that the medium or practice I am most interested in is not charcoal or oil or pixels or models, per se.  nor is my subject of interest really my face, per se…”
+- “i think I’m making art to confront the unreality of human and machine perception.”
+- <AITL VIDEO>
+    - this combined interest led to this piece, called Artist-in-the-Loop, where I perform the act of painting my self in a mirror, alongside a computational system that is also trying to “””paint””” my reflection.
+- <same, don’t restart video>
+    - “I’m so grateful to have had the space to perform this piece at Jacobs, at tiat in SF (ily ash), and at Central St. Martens in London this past July, and in all of those venues,”
+- “i had many great conversations about why it matters that humans keep painting what they see, even, or especially, in a world of photography and AI vision and generation.”
+- “to use, and to honor, the power of creative human hands, and––perhaps more critically, of creative human eyes.“
+- <lh: ways of seeing image>
+    - “how else might we stay conscious of the ways new machine ways of seeing, can shift our cultural ways of seeing the world and each other?”
+- <lh jon berger image>
+    - shm: “oh what’s up john berger”
+- <eft hand john berger that bounces>
+    - “john berger”: “hi shm it’s me john berger”
+- <image annotation video1, take up whole screen as a slide>
+    - i’ve been thinking about datasets, like the ones we use to train computer vision models; the materials that comprise their “intelligence”…
+- <same, dont restart video>
+    - I’m interested in the images of a training dataset being a kind of portrait series about human perception.  how annotating an image dataset is documentating a way of seeing.
+- <plain webcam default>
+    - ““and as an educator, watching as programs around the glob update curriculum to include more AI, to prepare students of computational science, art, and otherwise for an AI WORLD….”
+- <lh: ”in the weeds” textbox >
+    - “’ve been told that dataset and database work is too… in the weeds. “
+- <same >
+    - and  what i think this phrase, “in the weeds” means, is that we consider data work to be very difficult, very tedious, and also . . . . . beneath us.
+- <lh, wapo data work image>
+    - we look away from the people to whom this necessary labor is outsourced; we look away from my countrymen in the Philippines.
+- <Stable diffusion headline image>
+    - we look away from nonconsensual, careless data scraping
+- and when we look at the power of an AI model, we are seeing the enormous value and power that comes from large-scale organization of many generations of human effort.
+- we look away from the labor through which that value is coordinated and extracted,
+- we look at these artifacts of international, integenerational, collective human intelligence… and we label that intelligence “artificial”
+- then we thank white men in San Francisco for making it. by giving them many dollars.
+- I do not fear evil AI robots taking over the world.
+- I fear that it is reasonable to expect that abusive ecosystems of model production, produce models that enact and empower abusive ways of seeing the world; abusive ways of seeing each other.
+- i want to envision something different.
+- <image annotation video2, take up whole screen as a slide>
+    - Can data annotation be an act of love and honor?
+    - can we collect intelligence carefully, intentionally? Can we let them start as small as possible and grow slowly; sustainably? can we protect, while critically engaging with those collections?
+- I know what you’re thinking. Technology people are never gonna do that. How would we do that. Even if we wanted to, we don’t know how treat knowledge collections with respect or whatever.
+- But you know who does?
+- Librarians. Art historians. Curators and archivists. Museum staff!
+- That’s why AI bots are stealing their collections! they’re really good collections of intelligence!
+- and yet these systems of great valueare so underresourced the AI bots are taking them offline!
+- y’know my amazing PhD Research Advisor is here and I wonder if he’s thinking,
+- bjoern: “hmm, sure is a lot of puppets… and anti-technocapitalism today….  iwonder if shm is gonna  mention their…. research projects. “
+- <artographer video 1 full screen>
+    - shm: So this is a research system called Artograper. we made this to explore new media curation. Curation, meaning, the work of selecting and presenting a collection of artworks.
+    - hi future shm if ur feeling brave you’ll show a live demo of the system now. love, 3am shm.
+    - Artographer selects and presents a dataset of artworks in a zoomable, spatial-visual map interface. Artworks that are “similar” or “related”, are presented closer together.
+    - We recruited expert art historians and novice art enthusiasts to collect art in it to help teach us about new media curation, about how we can design more engaging experiences like this respectfully and effectively.
+    - artographer has an image generator in it. we put it in the corner and made it hideable  because some people really didn’t wanna use it.
+    - but some users really did. which lead to one of my favorite moments our user study,
+- <artographer video image gen full screen>
+    - see, when you generate an image in Artographer, the system places it next to its nearest visual neighbors. Participant 3, who reported that they regularly use AI to generate fantasy imagery, generated a landscape. So Artographer placed this new image in an area full of 19th century landscape paintings. They said,
+- <webcam feed but over my eyes, a textbox that says “Participant 3”>
+    - “P3”: “*It almost looks like they’re all Midjourney generated... But... oh, wow. I like these. if you showed me this, I would say that this was AI-generated. I didn’t know that this would be real.”*
+- <default shm cam>
+    - shm: “we asked everyone to submit their favorite artworks collected in the system. and P3 submitted all landscape paintings collected in this area, saying,”
+- <over my eyes, a textbox that says “Participant 3”, in the foreground three images, spaced lef middle and right, albert bierstadt paintings, ebcam >
+    - “P3”: “It’s interesting how people actually drew this in the past, and these aren’t actually AI-generated, and it looks really, like it really requires talent.”
+- <default shm cam>
+    - shm “so anyway I’m really interested designing interactions that lead us towards engaging with, and sustaining, human art-making and knowledge collections. “
+- we did like, a bunch of dataset work with public domain art collections to make this kind of interactive presentation possible, and then a bunch of curation algorithm and data vis type work to make it feel intentionally designed for people to engage with.
+- and that was really fun!
+- <lh puppet, “data.snailbunny.site” textbox> you can check out the database we collected at this link; it also contains public domain poetry and comics that we didn’t get to include in this project.
+- <lh puppet, smithsoninan logo>
+    - i’m really excited to do more work like this in my future position that i start nEXT TUESDAY, September 1st, as a postdoctoral fellow at The Smithsonian Institute!
+- <bg map, shm left and right eyes cutouts, and left and right hand cutouts in front of it, drawing mode on so that the right hand index finger leaves a drawing trace as it moves. lifting two hands up palm open clears the drawing. the drawing canvas is the most foregrounded layer in this scene.>
+    - On September 14 I start driving across country to the East Coast (I’ll be living in NYC and occasionally commuting to Washington DC) and I will have access to Smithsonian data collections and staff entry to their 21 museums and their ZOO
+- <default shmcam> i’m not saying this just to brag I’m asking you guys to visit me, and to let me know if you, too, want to do fun new media art projects that engage with older media collections cos i think we should do that. and that it would be cool.
+- “3AM Shm”: “okay yeah that’s probablyyy 40 minutes worth of yapping and you can stop talking now”
+- shm: “thank you so much for attending my puppet show, and for your attention.”
+- <right hand cane>
+    - shm: “that’s all, folks!”

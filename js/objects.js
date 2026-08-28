@@ -5,8 +5,8 @@
 
 import { DrawingObject } from './drawing.js';
 import { resolvePlacement } from './stage.js';
-import { resample } from './silhouette.js';
-import { FACE_PARTS } from './tracking.js';
+import { resample, BONES } from './silhouette.js';
+import { FACE_PARTS, HAND_PARTS } from './tracking.js';
 import { isReady, naturalSize, fillMeta } from './assets.js';
 
 const round = (n) => (typeof n === 'number' ? +n.toFixed(4) : n);
@@ -152,11 +152,20 @@ export class StageObject {
       x += this.pin.x;
       y += this.pin.y;
     }
-    // `orbit` places this on a circle around its OWN x/y rather than at its fastener,
-    // while the fastener still decides WHAT is cut and where the pixels are sampled from.
-    // The radius is driven by a tracked point's x, so scene 27's ring of hands opens and
-    // closes as you move your hand across the frame.
+    // `orbit` places this on a circle. The CENTRE is wherever the object would otherwise
+    // have sat — so an unfastened object rings its own x/y, and a fastened one rings its
+    // fastener, with x/y still meaning an offset from it exactly as the pushpin model says.
+    // A ring of webcams `fasten: "nose"` therefore orbits your nose and follows your head.
+    //
+    // This used to read `x = this.x + …`, discarding the pin added just above. Fastened,
+    // x/y default to 0 (they are an OFFSET), so the centre came out at 0,0 and the whole
+    // ring orbited the TOP-LEFT CORNER of the stage — while looking, from the numbers in
+    // the scene file, exactly as though it should be centred.
+    //
+    // The radius is modulated by a tracked point's x, so scene 27's ring of hands opens
+    // and closes as you move your hand across the frame.
     if (this.orbit) {
+      const cx = x, cy = y;
       const src = this.deps.tracking?.fastener(this.orbit.from ?? this.fasten);
       // Centre of frame is 1x, left edge collapses it, right edge doubles it.
       let r = (this.orbit.radius ?? 0.2) * (src ? src.x / 0.5 : 1);
@@ -165,8 +174,8 @@ export class StageObject {
       const th = ((this.orbit.angle ?? 0) * Math.PI) / 180;
       // x is normalised by WIDTH and y by HEIGHT, so the x leg is divided by the aspect
       // or the ring comes out as a wide ellipse.
-      x = this.x + (Math.cos(th) * r) / stage.aspect;
-      y = this.y + Math.sin(th) * r;
+      x = cx + (Math.cos(th) * r) / stage.aspect;
+      y = cy + Math.sin(th) * r;
     }
 
     // A transient vertical nudge, owned by whatever is animating this object — the mic
@@ -223,6 +232,7 @@ export class StageObject {
   // CARRIED BY the object with id `face` — so a hat on a cut-out face moves, scales and
   // rotates with that cutout instead of with the raw webcam (§2.2).
   _resolvePin(stage) {
+    if (!this.fasten) return null;
     const dot = this.fasten.indexOf('.');
     if (dot < 0) return this.deps.tracking?.fastener(this.fasten);
 
@@ -414,14 +424,23 @@ export class ImageObject extends StageObject {
   // js/mic.js, so it IS 2.5.0's `over` and needs no rescaling here. Normalising across the
   // full 0..1 range instead is what made the bounce invisible for months (§8.4).
   // ── Break to cycle ──────────────────────────────────────────────────────
-  // `cycleOn: "reacquire"` steps the series every time the fastener comes BACK. Swipe a
-  // hand past your face, the tracker loses it, and a different mask is on when it
-  // recovers — so changing masks is a gesture rather than a keypress, and the cut is
-  // hidden inside the moment the face is occluded anyway.
+  // `cycleOn: "reacquire"` steps the series every time the fastener comes BACK. Break the
+  // tracking with a deliberate gesture over your face and a different mask is on when it
+  // recovers — so changing masks is a gesture rather than a keypress, and the cut is hidden
+  // inside the moment your face is occluded anyway.
+  //
+  // It takes a BIG, slow gesture to trigger, and that is on purpose. MediaPipe's
+  // FaceLandmarker runs in VIDEO mode, tracking from the previous frame's ROI, and is built
+  // to survive occlusion — a quick hand pass usually still returns landmarks. The two ways
+  // to make it fire more easily are both worse: raising the confidence thresholds degrades
+  // tracking for the whole show to serve one gesture, and watching for a hand NEAR the face
+  // instead misfires constantly in a rig where hand puppets live next to your head. On
+  // stage, a mask that changes when you did not mean it is far worse than one that needs a
+  // deliberate move — so the high activation energy is the feature. `]` is still there when
+  // you want it to be certain.
   //
   // Debounced on TIME, not frames: a single dropped detection is common and must not
-  // count, but the break has to fire on a fast swipe. `breakMs` is how long the face has
-  // to be gone to arm it — raise it if ordinary head-turns are triggering cycles.
+  // count. `breakMs` is how long the face has to be gone to arm it.
   _reacquire(dt) {
     if (this.cycleOn !== 'reacquire' || !this.srcs?.length) return;
     // Undefined until the object has been drawn once. Starting the show mid-cycle because
@@ -557,6 +576,10 @@ export class WebcamFeed extends StageObject {
     ...StageObject.fields,
     { key: 'fit', label: 'fit', type: 'select', options: ['cover', 'box'] },
     { key: 'size', label: 'size', type: 'range', min: 0.05, max: 1.5, step: 0.01 },
+    { key: 'boxWidth', label: 'box width', type: 'range', min: 0.1, max: 2, step: 0.01 },
+    // A webcam is a puppet like anything else — it can ride a hand or orbit the nose.
+    // `fasten` already round-tripped through serialize(); it just was not adjustable.
+    { key: 'fasten', label: 'fasten', type: 'select', options: ['', 'leftHand', 'rightHand', 'face', 'nose', 'hat', 'mouth'] },
   ];
 
   apply(spec) {
@@ -567,9 +590,16 @@ export class WebcamFeed extends StageObject {
   }
 
   _box(stage) {
-    return this.fit === 'cover'
-      ? { w: stage.w, h: stage.h }
-      : { w: this.size * stage.h * stage.aspect, h: this.size * stage.h };
+    if (this.fit === 'cover') return { w: stage.w, h: stage.h };
+    // `boxWidth` narrows the box as a FRACTION of the full-width box, not as an absolute
+    // ratio — so 0.5 is half the stage's width at every window size and aspect, which a
+    // fixed w:h number could never be. 1 (the default) is exactly the stage's own shape.
+    //
+    // The video is COVER-fitted into whatever box this returns, so a narrow box CROPS from
+    // the centre rather than squeezing. That is what makes two 0.5 slices side by side fill
+    // the screen and meet at the middle.
+    const h = this.size * stage.h;
+    return { w: h * stage.aspect * (this.boxWidth ?? 1), h };
   }
 
   render(g, stage) {
@@ -594,6 +624,9 @@ export class WebcamFeed extends StageObject {
   serialize() {
     const out = super.serialize();
     if (this.fit !== 'cover') { out.fit = this.fit; out.size = round(this.size); }
+    // Written unconditionally: it is a panel field, and an omitted key inherits — a scene
+    // that narrowed the box could otherwise never widen it back.
+    out.boxWidth = this.boxWidth ?? null;
     return out;
   }
 }
@@ -618,10 +651,12 @@ export class TextBox extends StageObject {
     { key: 'y', label: 'y', type: 'range', min: 0, max: 1, step: 0.005 },
     { key: 'z', label: 'z', type: 'number', min: -400, max: 400, step: 1 },
     { key: 'width', label: 'width', type: 'range', min: 0.1, max: 1, step: 0.01 },
-    { key: 'style', label: 'style', type: 'select', options: ['speech', 'thought', 'caption', 'plain', 'paper'] },
+    { key: 'style', label: 'style', type: 'select', options: ['speech', 'bubble', 'thought', 'caption', 'plain', 'paper'] },
     { key: 'speed', label: 'speed', type: 'select', options: ['fast', 'normal', 'medium', 'slow'] },
     { key: 'tilt', label: 'tilt°', type: 'range', min: -6, max: 6, step: 0.1 },
     { key: 'speaker', label: 'speaker', type: 'text' },
+    { key: 'hoverFade', label: 'fade off-hover', type: 'checkbox' },
+    { key: 'fadeTo', label: 'faded to', type: 'range', min: 0, max: 1, step: 0.02 },
     { key: 'metaFrom', label: 'meta from', type: 'text' },
     { key: 'template', label: 'template', type: 'textarea' },
     { key: 'text', label: 'text', type: 'textarea' },
@@ -744,6 +779,10 @@ export class TextBox extends StageObject {
     // value would beat the .textbox-hoverfade rule and the fade would do nothing.
     placeDom(el, this, stage);
     el.style.width = `${this.width * 100}%`;
+    // How far it drops when the mouse is away. The CSS multiplies --o by this, so it
+    // composes with the object's own opacity instead of overriding it — a box at 50%
+    // opacity that fades to 0.2 lands at 0.1, not 0.2.
+    el.style.setProperty('--fade', this.fadeTo ?? 0.12);
     if (this.tilt != null) el.style.setProperty('--tilt', `${this.tilt}deg`);
     // Type scales with the stage, so a line occupies the same share of the frame at
     // every window size.
@@ -773,6 +812,7 @@ export class TextBox extends StageObject {
     out.speed = this.speed;
     out.instant = !!this.instant;
     out.hoverFade = !!this.hoverFade;
+    out.fadeTo = this.fadeTo ?? null;
     out.tilt = this.tilt ?? null;
     out.width = round(this.width);
     // Written even when unset, for the same reason `style` is: an omitted key inherits, so
@@ -825,7 +865,8 @@ const PAPER = {
 export class BodyPart extends StageObject {
   static fields = [
     ...StageObject.fields,
-    { key: 'fasten', label: 'part', type: 'select', options: ['leftHand', 'rightHand', 'face', 'leftEye', 'rightEye', 'mouth'] },
+    { key: 'fasten', label: 'pin to', type: 'select', options: ['leftHand', 'rightHand', 'face', 'leftEye', 'rightEye', 'mouth'] },
+    { key: 'part', label: 'cut', type: 'select', options: ['', 'leftHand', 'rightHand', 'face', 'leftEye', 'rightEye', 'mouth'] },
     { key: 'bound', label: 'bound', type: 'range', min: 0.05, max: 0.6, step: 0.01 },
     { key: 'skeleton', label: 'skeleton', type: 'range', min: 0.01, max: 0.3, step: 0.005 },
     { key: 'clean', label: 'clean', type: 'range', min: 0, max: 0.15, step: 0.005 },
@@ -835,8 +876,13 @@ export class BodyPart extends StageObject {
     { key: 'crown', label: 'crown', type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'smooth', label: 'smooth', type: 'range', min: 0, max: 0.95, step: 0.05 },
     { key: 'points', label: 'points', type: 'range', min: 8, max: 96, step: 1 },
+    { key: 'fillOnly', label: 'flat fill', type: 'checkbox' },
     { key: 'debug', label: 'show mask', type: 'checkbox' },
   ];
+
+  // What gets CUT, as opposed to what we hang off. They are the same thing unless a scene
+  // says otherwise, which keeps the ordinary case a single key.
+  get cutPart() { return this.part || this.fasten; }
 
   apply(spec) {
     super.apply(spec);
@@ -845,7 +891,11 @@ export class BodyPart extends StageObject {
     // they read different default groups. Within the face, eyes and mouth override the
     // face's own values. Resolution, most specific first:
     //   the object's own cut → paper.<eye|mouth> → paper.face → built-in equivalents
-    const part = spec.fasten ?? this.fasten;
+    // WHICH PART IS CUT is `part`, falling back to whatever we are pinned to — so the
+    // common case still needs one key, but `part: "face"` with `fasten: "leftHand"` cuts
+    // your face and carries it on your hand. Position and pixel source were the same thing
+    // until a scene needed to swap them.
+    const part = spec.part ?? this.part ?? spec.fasten ?? this.fasten;
     const isFace = FACE_PARTS.includes(part);
     const family = part === 'leftEye' || part === 'rightEye' ? 'eye'
       : part === 'mouth' ? 'mouth' : null;
@@ -889,21 +939,40 @@ export class BodyPart extends StageObject {
     this._poly = null;
     if (!this.showCut || this.visible === false) return;
     const cam = this.deps.camera;
-    this.pin = this._resolvePin(stage);
+    // With no `fasten` the shape is placed ABSOLUTELY at its own x/y — _paintSelf already
+    // skips the pin offset in that case — but a pin is still needed for sizing, because
+    // `crown` is measured in units of the tracked part. So fall back to the cut part's own
+    // fastener: correct scale, no positional pull.
+    this.pin = this.fasten
+      ? this._resolvePin(stage)
+      : (this.deps.tracking?.fastener(this.cutPart) ?? null);
     if (!cam?.live || !this.pin) return;
 
-    const ox = this.pin.x * stage.w, oy = this.pin.y * stage.h;
+    // The polygon is expressed relative to WHERE IT WAS CUT, never to where it will be
+    // drawn. Those are the same point whenever `part` matches `fasten`, which is the normal
+    // case — but when they differ, subtracting the DRAW position here would cancel the move
+    // exactly: the shape gets re-based onto the face and then _paintSelf translates it back
+    // to the hand, landing precisely where it started. That is why a hand cutout "pinned to
+    // the face" went on following the hand, and why `fasten` looked like it did nothing.
+    const cut = this.cutPart === this.fasten
+      ? this.pin
+      : (this.deps.tracking?.fastener(this.cutPart) ?? null);
+    if (!cut) return;
+    const ox = cut.x * stage.w, oy = cut.y * stage.h;
+    // Kept for render(), which has to offset the VIDEO by the same origin or the pixels
+    // stop lining up with the hole they are being drawn through.
+    this._cutOrigin = [ox, oy];
 
-    if (FACE_PARTS.includes(this.fasten)) {
+    if (FACE_PARTS.includes(this.cutPart)) {
       // A face needs none of the hand's colour segmentation: the landmark contour IS the
       // silhouette, and a face does not fold over itself the way a hand does.
       this._poly = this._contourPoly(stage, ox, oy);
       this._sil = null;
     } else {
-      const raw = this.deps.tracking?.hands?.[this.fasten];
+      const raw = this.deps.tracking?.hands?.[this.cutPart];
       const perf = this.deps.renderer?.perf;
       const t0 = perf && performance.now();
-      const sil = raw && this.deps.silhouette?.compute(this.fasten, raw, {
+      const sil = raw && this.deps.silhouette?.compute(this.cutPart, raw, {
         bound: this.bound, skeleton: this.skeleton, clean: this.clean,
         range: this.range, grow: this.grow, smooth: this.smooth, points: this.points,
         frozen: this.deps.tracking?.frozen,
@@ -926,8 +995,10 @@ export class BodyPart extends StageObject {
 
   render(g, stage) {
     const cam = this.deps.camera;
-    if (!this._poly || !cam?.live || !this.pin) return;
-    const ox = this.pin.x * stage.w, oy = this.pin.y * stage.h;
+    if (!this._poly || !cam?.live || !this.pin || !this._cutOrigin) return;
+    // The cut origin, not the pin: the polygon is local to where it was cut, so the video
+    // behind it has to be shifted by the same amount to stay registered with it.
+    const [ox, oy] = this._cutOrigin;
     this._paint(g, stage, this._poly, ox, oy, cam);
     if (this.debug) {
       if (this._sil) this._debug(g, stage, this._sil, this._poly, this._toLocal);
@@ -939,7 +1010,7 @@ export class BodyPart extends StageObject {
   // so the parameterisation is already stable — no anchoring needed the way the traced
   // hand contour needs it.
   _contourPoly(stage, ox, oy) {
-    const pts = this.deps.tracking?.contour(this.fasten);
+    const pts = this.deps.tracking?.contour(this.cutPart);
     if (!pts?.length) return null;
     let poly = pts.map((p) => [p.x * stage.w - ox, p.y * stage.h - oy]);
 
@@ -948,7 +1019,7 @@ export class BodyPart extends StageObject {
     // fringe. The lift is weighted by how high each vertex already sits — squared, so it
     // concentrates at the very top and tapers to nothing by the middle of the face rather
     // than shearing the whole outline upward.
-    if (this.fasten === 'face' && this.crown) {
+    if (this.cutPart === 'face' && this.crown) {
       const ys = poly.map((q) => q[1]);
       const top = Math.min(...ys), mid = (top + Math.max(...ys)) / 2;
       const lift = this.crown * this.pin.size * stage.h;
@@ -1006,6 +1077,16 @@ export class BodyPart extends StageObject {
     g.stroke(path);
     g.fill(path);
     g.restore();
+
+    // `fillOnly` stops here, leaving the flat shape the fill above already laid down — a
+    // solid silhouette in the outline colour instead of a window onto the webcam. It is
+    // the cheapest possible version of this: the fill is drawn either way and normally
+    // just gets covered over, so blocking a part out costs one skipped drawImage.
+    //
+    // The same look is expressible with `isMask` plus a masked white image, but that
+    // allocates a full-stage offscreen canvas per part — heavy for a scene showing both
+    // hands at once.
+    if (this.fillOnly) return;
 
     // A single closed path, so clip() works directly — no offscreen compositing.
     g.save();
@@ -1071,6 +1152,11 @@ export class BodyPart extends StageObject {
     out.outline = { width: round(this.outlineWidth), color: this.outlineColor };
     if (!this.showCut) out.showCut = false;
     if (this.debug) out.debug = true;
+    // Written even when false, unlike `debug` above: `fillOnly` is a LOOK the script
+    // turns on for one beat and off for the next, and an omitted key inherits — so
+    // writing it only when true would make a blocked-out hand impossible to un-block.
+    out.fillOnly = !!this.fillOnly;
+    out.part = this.part || null;
     return out;
   }
 }
@@ -1239,6 +1325,7 @@ export class LabelBoxObject extends StageObject {
     { key: 'pad', label: 'pad', type: 'range', min: 0, max: 0.3, step: 0.01 },
     { key: 'weight', label: 'border', type: 'range', min: 0.002, max: 0.03, step: 0.001 },
     { key: 'textSize', label: 'text size', type: 'range', min: 0.02, max: 0.09, step: 0.002 },
+    { key: 'annotate', label: 'live annotate', type: 'checkbox' },
   ];
 
   apply(spec) {
@@ -1254,13 +1341,101 @@ export class LabelBoxObject extends StageObject {
     return this;
   }
 
-  // Both sources resolve to one padded rect in stage pixels.
+  // ── Live annotation ─────────────────────────────────────────────────────
+  // `annotate: true` turns the box into something you PERFORM rather than something that
+  // simply appears: drag it open from its top-left corner, then click the label and type.
   //
-  // The face gives a normalised box directly. The DETECTOR gives a centre plus a `size` in
-  // stage-HEIGHT units — the same units every fastener uses — so the rect is squared off
-  // by dividing the width by the aspect, which is what keeps it square in pixels rather
-  // than square in normalised space.
-  _box(stage) {
+  // The drag does not author a free-form rectangle. The box's real size is still the
+  // tracked face box — dragging only reveals it, 0 to full. So it always lands correctly
+  // registered no matter how sloppily you drag, which is the only version of this that
+  // survives being done in front of an audience.
+  //
+  // The label is a DOM contentEditable rather than canvas text, for two reasons: you get a
+  // real caret and real in-place editing like the dialogue box, and the player's keydown
+  // handler already ignores every key while focus is in an editable — so SPACE types a
+  // space instead of advancing the scene. Capturing keys off `window` could not fix that:
+  // the player listens on `document`, which bubbles first.
+  //
+  // Nothing typed is saved. serialize() writes the scripted `text`, never the live label,
+  // because what you annotate in performance is not scene state.
+  _armAnnotate(stage) {
+    if (!this._lel) {
+      const el = document.createElement('div');
+      el.className = 'annot-label';
+      el.contentEditable = 'plaintext-only';
+      el.spellcheck = false;
+      el.textContent = this.text || '...';
+      // Clicking the label must not also start a box drag underneath it.
+      el.addEventListener('pointerdown', (e) => e.stopPropagation());
+      el.addEventListener('keydown', (e) => {
+        // Enter COMMITS rather than inserting a newline — the caption is one line, and a
+        // second line would push the box off its corner mid-performance. Escape does the
+        // same without pretending to be different.
+        if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); el.blur(); }
+      });
+      this.deps.domLayer.appendChild(el);
+      this._lel = el;
+    }
+    if (this._wired || !this.deps.stage?.el) return;
+    this._wired = true;
+    const host = this.deps.stage.el;
+
+    const down = (e) => {
+      if (!this.annotate) return;
+      const r = host.getBoundingClientRect();
+      this._drag = { x: e.clientX - r.left, y: e.clientY - r.top };
+      e.preventDefault();
+    };
+    const move = (e) => {
+      if (!this.annotate || !this._drag) return;
+      const box = this._faceBox(stage);
+      if (!box) return;
+      const r = host.getBoundingClientRect();
+      // Progress along the box's own diagonal, so dragging down-right opens it.
+      const dx = (e.clientX - r.left) - this._drag.x;
+      const dy = (e.clientY - r.top) - this._drag.y;
+      const span = Math.hypot(box.w, box.h) || 1;
+      const k = Math.max(0, Math.min(1, Math.hypot(Math.max(0, dx), Math.max(0, dy)) / span));
+      // Only ever grows. Dragging back must not shut the box you just opened — on stage
+      // that reads as a mistake, and there is no reason to want it smaller again.
+      this._reveal = Math.max(this._reveal ?? 0, k);
+    };
+    const up = () => { this._drag = null; };
+    host.addEventListener('pointerdown', down);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    this._unwire = () => {
+      host.removeEventListener('pointerdown', down);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }
+
+  // Park the editable label on the box's caption corner, in the box's own colours.
+  _placeLabel(stage, box, size, ly) {
+    const el = this._lel;
+    if (!el) return;
+    el.hidden = !box;
+    if (!box) return;
+    // Pixels, not percentages: #dom-layer is inset:0 over #stage, so stage CSS px map 1:1
+    // and the caption lands flush on the box's left edge instead of drifting off it.
+    //
+    // The numbers mirror the canvas caption this replaces — height size*1.5, text inset
+    // size*0.4 — so an annotate box is indistinguishable from every other labelled box.
+    el.style.left = `${box.x}px`;
+    el.style.top = `${ly}px`;
+    el.style.height = `${size * 1.5}px`;
+    el.style.lineHeight = `${size * 1.5}px`;
+    el.style.padding = `0 ${size * 0.4}px`;
+    el.style.fontSize = `${size}px`;
+    el.style.background = this.color;
+    el.style.color = this.textColor;
+    el.style.opacity = String(this.opacity);
+    el.style.zIndex = String(Math.round(this.z));
+  }
+
+  // The box the tracker actually reports, before any reveal is applied.
+  _faceBox(stage) {
     if (this.source === 'potato') {
       const d = this.deps.tracking?.detector?.det;
       if (!d) return null;
@@ -1280,6 +1455,17 @@ export class LabelBoxObject extends StageObject {
     };
   }
 
+  // With `annotate` on, the box grows from its TOP-LEFT to its true size as you drag.
+  // Off, or once fully revealed, this is exactly the tracked box.
+  _box(stage) {
+    const box = this._faceBox(stage);
+    if (!box || !this.annotate) return box;
+    const k = this._reveal ?? 0;
+    if (k >= 1) return box;
+    if (k <= 0) return null;
+    return { x: box.x, y: box.y, w: box.w * k, h: box.h * k };
+  }
+
   _label() {
     if (this.source !== 'potato') return this.deps.faces?.fill(this.text) ?? '';
     const d = this.deps.tracking?.detector?.det;
@@ -1291,8 +1477,9 @@ export class LabelBoxObject extends StageObject {
   // Drawn in STAGE space, not at an object position — the box IS wherever the subject is.
   draw(g, stage) {
     if (this.visible === false || this.opacity <= 0) return;
+    if (this.annotate) this._armAnnotate(stage);
     const box = this._box(stage);
-    if (!box) return;
+    if (!box) { if (this._lel) this._lel.hidden = true; return; }
     const { x, y, w, h } = box;
 
     g.save();
@@ -1302,7 +1489,12 @@ export class LabelBoxObject extends StageObject {
     g.strokeRect(x, y, w, h);
 
     const label = this._label();
-    if (label) {
+    if (this.annotate) {
+      // The caption is a DOM element in this mode — position it and draw no canvas text.
+      const size = Math.max(14, stage.h * this.textSize);
+      const th = size * 1.5;
+      this._placeLabel(stage, box, size, y - th < 0 ? y : y - th);
+    } else if (label) {
       // Relative to stage height so it holds its share of the frame at any window size,
       // the same rule every other size in the rig follows.
       const size = Math.max(14, stage.h * this.textSize);
@@ -1323,14 +1515,20 @@ export class LabelBoxObject extends StageObject {
     g.restore();
   }
 
+  dispose() { this._unwire?.(); this._unwire = null; this._wired = false; this._lel?.remove(); this._lel = null; }
+
   serialize() {
     const out = super.serialize();
+    out.source = this.source;
+    // The SCRIPTED template, never the live typing — what you annotate in performance is
+    // not scene state and must not be baked in by a later save.
     out.text = this.text;
     out.color = this.color;
     out.textColor = this.textColor;
     out.pad = round(this.pad);
     out.weight = round(this.weight);
     out.textSize = round(this.textSize);
+    out.annotate = !!this.annotate;
     return out;
   }
 }
@@ -1470,4 +1668,138 @@ export class AudioObject extends StageObject {
   }
 }
 
-export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, label: LabelBoxObject, audio: AudioObject, drawing: DrawingObject };
+// ── Landmarks ─────────────────────────────────────────────────────────────
+// Draws the raw computer-vision output — hand dots and bones, face mesh wireframe — as an
+// ordinary stage object.
+//
+// This is a SHOWING object, not a debugging one. `bodyPart`'s `debug` flag already paints a
+// cyan hull with red vertices for authoring; this exists because a script needs to point at
+// the tracking and say "that coordinate is the output of a model". So it is styleable and
+// sorts by `z` like anything else, rather than being a fixed overlay.
+//
+// It lives here rather than in its own file for a hard reason: `js/landmarks.js` importing
+// StageObject while objects.js imported it back for TYPES is a cycle, and `class X extends
+// Y` is evaluated at module-evaluation time — so whichever loaded first would hit a TDZ
+// ReferenceError and take the whole rig down at boot (§9.7). DrawingObject gets its own file
+// only because it extends nothing.
+
+export class LandmarksObject extends StageObject {
+  static defaultZ = 50;
+  // Deliberately no `fasten` and no scale/rotation: the points ARE their own position, and
+  // fastening this would move the landmarks away from the thing they are landmarks of.
+  static fields = [
+    { key: 'z', label: 'z', type: 'number', min: -400, max: 400, step: 1 },
+    { key: 'opacity', label: 'opacity', type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'source', label: 'source', type: 'select', options: ['hands', 'face', 'both'] },
+    { key: 'show', label: 'show', type: 'select', options: ['both', 'points', 'lines'] },
+    { key: 'color', label: 'color', type: 'text' },
+    { key: 'dotSize', label: 'dot', type: 'range', min: 0, max: 0.02, step: 0.0005 },
+    { key: 'lineWidth', label: 'line', type: 'range', min: 0, max: 0.01, step: 0.0002 },
+  ];
+
+  apply(spec) {
+    super.apply(spec);
+    // FORCED to zero, not defaulted. render() draws in absolute stage coordinates, because
+    // the landmarks already carry their own position — but _paintSelf translates by x,y
+    // first, and StageObject defaults an unfastened object to the middle of the stage. That
+    // shifted the entire overlay half a stage down and to the right, so the dots sat next
+    // to the hand instead of on it. They are not writable for the same reason: there is no
+    // meaningful place to move a landmark overlay TO.
+    this.x = 0;
+    this.y = 0;
+    this.source ??= 'hands';
+    this.show ??= 'both';
+    this.color ??= '#b4dd1e';
+    // Fractions of stage height, like every other size here, so the dots hold their size
+    // relative to the frame at any window size.
+    this.dotSize ??= 0.006;
+    this.lineWidth ??= 0.0018;
+    return this;
+  }
+
+  render(g, stage) {
+    const t = this.deps.tracking;
+    if (!t) return;
+    const dot = this.dotSize * stage.h;
+    const lines = this.show !== 'points';
+    const dots = this.show !== 'lines';
+
+    g.strokeStyle = g.fillStyle = this.color;
+    g.lineWidth = Math.max(0.5, this.lineWidth * stage.h);
+    g.lineJoin = g.lineCap = 'round';
+    // Points are scaled on the way out rather than by a ctx transform, because a scaled
+    // transform would scale the line width and the dot radius along with the geometry.
+    const X = (p) => p.x * stage.w;
+    const Y = (p) => p.y * stage.h;
+
+    if (this.source !== 'face') {
+      for (const name of HAND_PARTS) {
+        // Already in stage space — points() resolves the cover-fit and the mirror.
+        const h = t.points?.(name);
+        if (!h) continue;
+        if (lines) {
+          g.beginPath();
+          for (const [a, b] of BONES) {
+            g.moveTo(X(h[a]), Y(h[a]));
+            g.lineTo(X(h[b]), Y(h[b]));
+          }
+          g.stroke();
+        }
+        if (dots && dot > 0) {
+          for (const p of h) { g.beginPath(); g.arc(X(p), Y(p), dot, 0, Math.PI * 2); g.fill(); }
+        }
+      }
+    }
+
+    if (this.source !== 'hands' && t.face) {
+      // Face landmarks are raw and normalised to the VIDEO, unlike the hand ones —
+      // contour() is the only thing that maps them, and only per-region.
+      const v = this.deps.camera?.video;
+      const P = t.face.map((p) => stage.videoNormToStage(p.x, p.y, v));
+      if (lines) {
+        // ONE path for ~2600 edges. Stroking each separately is the difference between a
+        // free draw and a visible frame-time spike in the middle of the show.
+        g.beginPath();
+        for (const [a, b] of (t.mesh?.length ? t.mesh : this._ringEdges(t))) {
+          const p = P[a], q = P[b];
+          if (!p || !q) continue;
+          g.moveTo(X(p), Y(p));
+          g.lineTo(X(q), Y(q));
+        }
+        g.stroke();
+      }
+      if (dots && dot > 0) {
+        // 478 points at full dot size reads as a solid blob rather than as a mesh, so face
+        // dots are deliberately smaller than hand dots.
+        const r = Math.max(0.5, dot * 0.4);
+        for (const p of P) { g.beginPath(); g.arc(X(p), Y(p), r, 0, Math.PI * 2); g.fill(); }
+      }
+    }
+  }
+
+  // Fallback when the tesselation is unavailable — the four contour rings the tracker
+  // always has. Far fewer lines, but the beat still reads as "the model sees my face".
+  _ringEdges(t) {
+    const out = [];
+    for (const cycles of Object.values(t.rings ?? {})) {
+      for (const ring of cycles) {
+        for (let i = 0; i < ring.length; i++) out.push([ring[i], ring[(i + 1) % ring.length]]);
+      }
+    }
+    return out;
+  }
+
+  serialize() {
+    const out = super.serialize();
+    delete out.scale; delete out.rotation; delete out.fasten;
+    delete out.x; delete out.y;          // always 0; apply() re-forces them
+    out.source = this.source;
+    out.show = this.show;
+    out.color = this.color;
+    out.dotSize = round(this.dotSize);
+    out.lineWidth = round(this.lineWidth);
+    return out;
+  }
+}
+
+export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, label: LabelBoxObject, audio: AudioObject, drawing: DrawingObject, landmarks: LandmarksObject };

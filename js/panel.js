@@ -73,13 +73,29 @@ export class EditMode {
     this.player.script[this.player.index] = scene;
     this.player.reresolve();
 
+    // ONE scene, not the whole script. The server splices it into whatever is on disk at
+    // that instant, so a tab loaded before an outside edit can only clobber the scene it
+    // was actually editing — it no longer rewinds the entire file to what it last saw.
     try {
-      const res = await fetch(`./api/shows/${encodeURIComponent(this.showName)}/script`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(this.player.script, null, 2),
-      });
-      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      const res = await fetch(
+        `./api/shows/${encodeURIComponent(this.showName)}/scene/${this.player.index}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(scene, null, 2),
+        });
+      if (!res.ok) {
+        const detail = await res.text();
+        // 409 means the file has a different number of scenes than this tab does, so the
+        // index points somewhere else now. Say so plainly — it is the one case where
+        // carrying on would write the right scene into the wrong slot.
+        if (res.status === 409) {
+          this.banner.hidden = false;
+          this.banner.textContent = 'script changed on disk — reload before saving';
+          console.warn('[edit]', detail);
+          return false;
+        }
+        throw new Error(`${res.status} ${detail}`);
+      }
       this._setDirty(false);
       console.log(`[edit] saved scene ${scene.id ?? this.player.index + 1}`);
       return true;
@@ -194,7 +210,7 @@ function metaAdapter(rec, { src, assets, tracking, onSave }) {
 
 export class Panel {
   constructor({ el, player, edit, detector = null, tabLabel = null, showcase = null,
-                assets = null, tracking = null }) {
+                assets = null, tracking = null, mic = null }) {
     this.el = el;
     this.player = player;
     this.edit = edit;
@@ -202,6 +218,7 @@ export class Panel {
     this.showcase = showcase;   // the public toggle group; null on a performance rig
     this.assets = assets;
     this.tracking = tracking;
+    this.mic = mic;
     this.tabLabel = tabLabel;   // omit → no tab at all (performance rigs)
     this.selectedId = null;
     this._inspectorFor = null;
@@ -255,6 +272,11 @@ export class Panel {
         <div class="group" id="p-meta-section" hidden>
           <b id="p-meta-title">asset</b>
           <div id="p-meta"></div>
+        </div>
+        <div class="group" id="p-mic-section" hidden>
+          <b>🎤 mic</b>
+          <div class="mic-meter"><i id="p-mic-bar"></i><u id="p-mic-floor"></u></div>
+          <div id="p-mic"></div>
         </div>
         <div class="group" id="p-potato-section" hidden>
           <b>🥔 potato</b>
@@ -341,6 +363,19 @@ export class Panel {
     // a slider for something that is not running reads as broken (§9.5).
     const det = this.detector;
     const show = det && det.state === 'ready' && (det.enabled || det.manual);
+    // Mic controls appear once the grant lands. Like the detector's, a slider for something
+    // that is not running reads as broken (§9.5) — so it stays hidden until there is a
+    // signal to tune against.
+    if (this.mic) {
+      const on = !!this.mic.ready;
+      this.$('#p-mic-section').hidden = !on;
+      if (on && !this._micWired) {
+        this._micWired = true;
+        this._syncMic = this.renderFields(this.$('#p-mic'), this.mic, () => this.mic.save());
+        this._startMicMeter();
+      }
+    }
+
     this.$('#p-potato-section').hidden = !show;
     if (show && this._potatoFor !== det.state) {
       this._potatoFor = det.state;
@@ -363,6 +398,28 @@ export class Panel {
 
     this.$('#p-edit-section').hidden = !this.edit.available;
     this.$('#p-save-row').hidden = !this.edit.dirty;
+  }
+
+  // A level meter, because a threshold slider without one is guesswork — you cannot tell
+  // whether your voice is clearing the line except by watching a puppet and inferring.
+  // The bar is the RAW level on a fixed 0..0.35 scale (speech lives around 0.04–0.22), with
+  // a tick marking where `quiet` sits, and it lights up while the puppets count you as
+  // talking. Tune it by speaking normally and putting the tick just under the bar's floor.
+  //
+  // 12Hz on its own interval rather than in the render loop: this must not add work to a
+  // frame, and a meter does not need 60 readings a second to be read by a human.
+  _startMicMeter() {
+    const bar = this.$('#p-mic-bar'), tick = this.$('#p-mic-floor');
+    if (!bar) return;
+    const SCALE = 0.35;                       // full width of the meter, in RMS
+    clearInterval(this._micTimer);
+    this._micTimer = setInterval(() => {
+      if (this.el.hidden || this.$('#p-mic-section').hidden) return;
+      const m = this.mic;
+      bar.style.width = `${Math.min(100, (m.raw / SCALE) * 100)}%`;
+      bar.classList.toggle('talking', m.level > 0);
+      tick.style.left = `${Math.min(100, (m.floor / SCALE) * 100)}%`;
+    }, 80);
   }
 
   renderObjectList() {

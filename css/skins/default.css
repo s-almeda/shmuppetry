@@ -88,7 +88,10 @@
 /* Hover-fade: lets a full-screen slide actually be full-screen, while keeping the line
    one mouse-move away. In 2.5.0 this was a global body class; here it is a per-object
    property, so one caption can fade while another stays put. */
-.textbox-hoverfade { opacity: calc(var(--o, 1) * 0.12); transition: opacity 0.4s ease; }
+/* --fade is the off-hover level, set per object from `fadeTo` (0.12 if unset). It
+   MULTIPLIES --o rather than replacing it, so a half-opacity box still fades relative to
+   itself instead of jumping brighter than it was. */
+.textbox-hoverfade { opacity: calc(var(--o, 1) * var(--fade, 0.12)); transition: opacity 0.4s ease; }
 .textbox-hoverfade:hover, .textbox-hoverfade:focus-within { opacity: var(--o, 1); }
 
 /* ── paper style ───────────────────────────────────────────────────────────
