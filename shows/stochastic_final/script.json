@@ -1,0 +1,184 @@
+[
+  {
+    "id": 1,
+    "_note": "Open. Default webcam view, one line of dialogue in the DEFAULT xp.css box — translucent beige, speaker name as a tab. `speech` is the rig's own chrome and the two \"default view\" scenes (this one and 12) are the only places the show uses it; the paper treatments are for the headers and the worn label. Scenes are SPARSE: omitting a field changes nothing, `null` removes, and saving through the panel will fatten them into fully-resolved absolute scenes.",
+    "objects": {
+      "cam": { "type": "webcam" },
+      "dialogue": {
+        "type": "text",
+        "style": "speech",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 200,
+        "width": 0.92,
+        "speaker": "Shm",
+        "text": "hi everyone. I'd like to read you a poem."
+      }
+    }
+  },
+
+  {
+    "id": 2,
+    "_note": "THE POEM begins. `reset: true` clears the stage outright rather than nulling the webcam and the dialogue one at a time — the blackout IS the empty stage, because #stage is already black. Each of the next nine scenes adds exactly ONE line and restates nothing: a line inherited from the previous scene keeps its own DOM element and does not re-animate, while the line the scene ADDS is built fresh and its CSS fade fires once. There is no fade feature in the engine; that is the whole mechanism. Stanza 1 of 3.",
+    "reset": true,
+    "objects": {
+      "poem1": { "type": "text", "style": "poem", "x": 0.5, "y": 0.13, "z": 200, "width": 0.9, "instant": true, "text": "i make myself a home in every seat i sit in three times," }
+    }
+  },
+  { "id": 3, "objects": { "poem2": { "type": "text", "style": "poem", "x": 0.5, "y": 0.205, "z": 200, "width": 0.9, "instant": true, "text": "every person i talk to twice," } } },
+  { "id": 4, "objects": { "poem3": { "type": "text", "style": "poem", "x": 0.5, "y": 0.28, "z": 200, "width": 0.9, "instant": true, "text": "every friend i cry with once." } } },
+  { "id": 5, "objects": { "poem4": { "type": "text", "style": "poem", "x": 0.5, "y": 0.355, "z": 200, "width": 0.9, "instant": true, "text": "i circle and settle in to rest." } } },
+
+  {
+    "id": 6,
+    "_note": "Stanza 2. The extra gap between y 0.355 and y 0.45 is the stanza break — spacing inside a stanza is 0.075, between stanzas it is wider.",
+    "objects": { "poem5": { "type": "text", "style": "poem", "x": 0.5, "y": 0.45, "z": 200, "width": 0.9, "instant": true, "text": "i am surprised" } }
+  },
+  { "id": 7, "objects": { "poem6": { "type": "text", "style": "poem", "x": 0.5, "y": 0.525, "z": 200, "width": 0.9, "instant": true, "text": "every single time" } } },
+  { "id": 8, "objects": { "poem7": { "type": "text", "style": "poem", "x": 0.5, "y": 0.6, "z": 200, "width": 0.9, "instant": true, "text": "to be jostled awake and told," } } },
+  { "id": 9, "objects": { "poem8": { "type": "text", "style": "poem", "x": 0.5, "y": 0.675, "z": 200, "width": 0.9, "instant": true, "text": "\"it's time to go\"" } } },
+  { "id": 10, "objects": { "poem9": { "type": "text", "style": "poem", "x": 0.5, "y": 0.75, "z": 200, "width": 0.9, "instant": true, "text": "i wrest myself away in shock and horror…" } } },
+
+  {
+    "id": 11,
+    "_note": "Stanza 3 — the last line, alone, after the widest gap in the poem.",
+    "objects": { "poem10": { "type": "text", "style": "poem", "x": 0.5, "y": 0.845, "z": 200, "width": 0.9, "instant": true, "text": "i will do it again." } }
+  },
+
+  {
+    "id": 12,
+    "_note": "SUDDENLY — default view again, and the default xp.css box again. `reset: true` takes all ten lines and the blackout off in one stroke; ten separate nulls would do the same thing and read as a wall. The cut is meant to be abrupt, so nothing here fades.",
+    "reset": true,
+    "objects": {
+      "cam": { "type": "webcam" },
+      "dialogue": {
+        "type": "text",
+        "style": "speech",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 200,
+        "width": 0.92,
+        "speaker": "Shm",
+        "text": "instead of speaking off a script for this one, I wanted to talk to everyone more directly, so instead, i've got a list of topics to address."
+      }
+    }
+  },
+
+  {
+    "id": 13,
+    "_note": "THE TOPICS begin. `header` style: skinny centred cardstock at the TOP of the frame, Comic Sans, no speaker tab, `instant: true` so the typewriter never runs on it. Everything after this scene changes one field — `topic.text` — and nothing else, so the slip stays exactly put while the words change. Drop `y` to 0.8 if you would rather it sat at the bottom.",
+    "objects": {
+      "dialogue": null,
+      "topic": {
+        "type": "text",
+        "style": "header",
+        "x": 0.5,
+        "y": 0.12,
+        "z": 200,
+        "width": 0.46,
+        "instant": true,
+        "tilt": 0,
+        "text": "My Silly Puppet Stochastic Summer"
+      }
+    }
+  },
+  { "id": 14, "objects": { "topic": { "text": "shmuppetry rig updates" } } },
+  { "id": 15, "objects": { "topic": { "text": "submitted 5 CHI papers (including froggidraw!)" } } },
+  { "id": 16, "objects": { "topic": { "text": "moving is soooo hard >.<" } } },
+  { "id": 17, "objects": { "topic": { "text": "shm across america (the shmtracker)" } } },
+  { "id": 18, "objects": { "topic": { "text": "I learned my medium is perception (s/o Julio LeParc, Sage)" } } },
+  { "id": 19, "objects": { "topic": { "text": "thank you everyone for taking my silliness very seriously" } } },
+  { "id": 20, "objects": { "topic": { "text": "3 Very Silly Things" } } },
+  { "id": 21, "objects": { "topic": { "text": "1: puppet shows are deeply silly. (right now) (s/o Adrian!)" } } },
+  { "id": 22, "objects": { "topic": { "text": "2: building things for theater/performance, especially software, can feel *very* silly" } } },
+
+  {
+    "id": 23,
+    "_note": "THE MANY FACES. Same topic text as scene 22, untouched — the slip is inherited, so it does not so much as flicker while five copies of your face arrive around it. Each copy is a bodyPart cutting `face` and pinned to `face`, so x/y are OFFSETS from your actual head and the whole flock follows you as you move. A face part is cut from the LANDMARK CONTOUR, not from the hand pipeline's colour segmentation, so five of them cost five cheap polygons rather than five silhouette solves. Tune the scatter by dragging x/y in the panel.",
+    "objects": {
+      "face1": { "type": "bodyPart", "fasten": "face", "x": -0.30, "y": -0.17, "z": 20, "scale": 0.55, "rotation": -12 },
+      "face2": { "type": "bodyPart", "fasten": "face", "x": 0.29, "y": -0.21, "z": 20, "scale": 0.48, "rotation": 9 },
+      "face3": { "type": "bodyPart", "fasten": "face", "x": -0.26, "y": 0.20, "z": 20, "scale": 0.62, "rotation": 14 },
+      "face4": { "type": "bodyPart", "fasten": "face", "x": 0.32, "y": 0.16, "z": 20, "scale": 0.5, "rotation": -7 },
+      "face5": { "type": "bodyPart", "fasten": "face", "x": 0.02, "y": -0.31, "z": 20, "scale": 0.42, "rotation": 21 }
+    }
+  },
+
+  {
+    "id": 24,
+    "_note": "…and stop. Just you again, with the SAME topic text still standing — `topic` is not mentioned here, and omitting a field changes nothing, so the words are guaranteed constant across all three scenes rather than being retyped twice and drifting. This is the scene you land on to let the joke settle.",
+    "objects": {
+      "face1": null,
+      "face2": null,
+      "face3": null,
+      "face4": null,
+      "face5": null
+    }
+  },
+
+  { "id": 25, "objects": { "topic": { "text": "3: to love and to attach, is very very silly" } } },
+
+  {
+    "id": 26,
+    "_note": "Close. The label is WORN: `fasten: \"hat\"` pins it above your head and x/y become an offset from that point, so it rides you. A TextBox goes through the same placeDom an image does, which is why puppeting a line of text needs no new machinery. The topic slip is removed — \"no additional textbox\". Nudge `y` more negative to float the label higher.",
+    "objects": {
+      "topic": null,
+      "hatlabel": {
+        "type": "text",
+        "style": "hathead",
+        "fasten": "hat",
+        "x": 0,
+        "y": -0.02,
+        "z": 60,
+        "width": 0.24,
+        "instant": true,
+        "tilt": -1.5,
+        "text": "very silly guy"
+      }
+    }
+  }
+,
+
+  {
+    "id": 27,
+    "_note": "Curtain call, back in the DEFAULT xp.css box — the same chrome scene 1 opened in, so the show closes in the voice it started in. The cane is asset 216, which lives in assets/shmidpoint/ — asset numbers are GLOBAL across every folder under assets/, so a show can reach another show's art by number without copying it. That also means this scene depends on shmidpoint's folder still being on disk; copy the file to assets/stochastic_final/416_cane.png and change src to 416 if you would rather this show owned it. NEEDS the `hands` capability, which config.json declares for this scene alone. `size` is a MULTIPLE of the measured hand span here, not a fraction of the stage — drag it in the panel until the hook is the length you want.",
+    "objects": {
+      "hatlabel": null,
+      "dialogue": {
+        "type": "text",
+        "style": "speech",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 200,
+        "width": 0.92,
+        "speaker": "Shm",
+        "text": "that's all from me, folks. till next time!"
+      },
+      "cane": {
+        "type": "image",
+        "fasten": "rightHand",
+        "src": 216,
+        "size": 1,
+        "z": 30
+      }
+    }
+  },
+
+  {
+    "id": 28,
+    "_note": "THE END. `reset: true` clears the stage outright — the webcam, the dialogue and the cane all go at once, and the blackout IS the empty stage because #stage is already black. White Comic Sans dead centre, `instant: true` so it does not type itself out, and no fade: a title card should simply be there.",
+    "reset": true,
+    "objects": {
+      "endcard": {
+        "type": "text",
+        "style": "endcard",
+        "x": 0.5,
+        "y": 0.5,
+        "z": 200,
+        "width": 0.8,
+        "instant": true,
+        "text": "the end"
+      }
+    }
+  }
+]

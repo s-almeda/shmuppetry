@@ -29,6 +29,12 @@ const stub = () => ({
   appendChild() {}, addEventListener() {}, removeEventListener() {},
   querySelector: () => stub(), setAttribute() {}, remove() {},
   getContext: () => null, textContent: '',
+  // makeMediaEl() returns a real <video> for .mp4/.webm/.mov and calls .play().catch() on
+  // it straight away, so a stub without these throws the moment any scene puts a video in
+  // an image object — including one entry of a `srcs` deck, where the video may not even
+  // be the entry on screen. The failure looked like a broken scene rather than a missing
+  // shim method, which is exactly the kind of false alarm this file exists to avoid.
+  play: () => Promise.resolve(), pause() {}, load() {},
   set innerHTML(v) {}, get innerHTML() { return ''; },
 });
 globalThis.document = {

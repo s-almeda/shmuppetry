@@ -1,14 +1,14 @@
 {
-  "_note": "stochastic_final. Copied from shows/CNMAT_openlab/config.json; the skin and the capability list are what differ. Scenes 1–8 are TEST SCENES — they exercise each new capability against demo art so you can see it work. Replace them as the real script lands.",
-  "title": "stochastic final",
+  "_note": "stochastic_final — the real script, 26 scenes. Copied from shows/CNMAT_openlab/config.json; the skin and the capability list are what differ. Shape: scene 1 opens on camera, scenes 2–11 are the poem (one line added per scene, white on black), scene 12 cuts back to camera, scenes 13–25 are the topic slips (including the five-faces beat at 23–24), scene 26 is the worn label, and 27–28 are the curtain call and the end card. One show asset: the cane, asset 216, which lives in assets/shmidpoint/. Everything else is text, the webcam, or a cutout of you.",
+  "title": "stochastic final presentation",
   "_skin": "css/skins/stochastic_final.css — the default skin plus three textbox styles this show adds: `header` (skinny centred cardstock slip), `hathead` (lined paper worn on your head) and `poem` (white line on black that fades in). The skin <link> is REPLACED, not stacked, so that file @imports default.css as its first rule.",
   "skin": "stochastic_final",
   "aspect": null,
   "mirror": true,
-  "_capabilities": "hands drives the left-hand image deck; face drives the `fasten: \"hat\"` textbox. Both are loaded eagerly at boot because scene 2 needs hands and scene 5 needs face — nothing here is optional enough to be worth a mid-show stall. `potato` and `faceLabels` are deliberately ABSENT: the script uses neither, and each is a whole extra ML runtime at boot.",
+  "_capabilities": "`face` for the five face cutouts in scene 23 and the worn `fasten: \"hat\"` label in scene 26; `hands` for the cane on your right hand in scene 27 — ONE scene, but a fastener with no tracker behind it simply never pins, so the cane would silently not exist. `potato` and `faceLabels` are each a whole extra ML runtime and neither is used. Everything listed here loads EAGERLY at boot: if scene 27 ever loses the cane, drop \"hands\" again, because per-frame inference that nothing needs is exactly what starves the typewriter.",
   "capabilities": [
-    "hands",
-    "face"
+    "face",
+    "hands"
   ],
   "_micOnStart": "Absent on purpose — no ventriloquy puppets (no talkSrc, no bounce) in this script, so there is nothing for the mic to drive and no reason to make the audience watch a second permission prompt. Add it the moment a puppet starts talking.",
   "paper": {

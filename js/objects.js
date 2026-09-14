@@ -655,7 +655,7 @@ export class TextBox extends StageObject {
     // so a name not listed here still works when written into a script by hand; listing it
     // is what makes it reachable from the inspector. `header`, `hathead` and `poem` are
     // defined by the stochastic_final skin and fall back to unstyled text elsewhere.
-    { key: 'style', label: 'style', type: 'select', options: ['speech', 'bubble', 'thought', 'caption', 'plain', 'paper', 'header', 'hathead', 'poem'] },
+    { key: 'style', label: 'style', type: 'select', options: ['speech', 'bubble', 'thought', 'caption', 'plain', 'paper', 'papertalk', 'header', 'hathead', 'poem', 'endcard'] },
     { key: 'speed', label: 'speed', type: 'select', options: ['fast', 'normal', 'medium', 'slow'] },
     { key: 'tilt', label: 'tilt°', type: 'range', min: -6, max: 6, step: 0.1 },
     { key: 'speaker', label: 'speaker', type: 'text' },

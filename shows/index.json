@@ -14,6 +14,11 @@
       "name": "shmidpoint",
       "title": "shm's stochastic midpoint presentation",
       "scenes": 37
+    },
+    {
+      "name": "stochastic_final",
+      "title": "stochastic final presentation",
+      "scenes": 28
     }
   ]
 }

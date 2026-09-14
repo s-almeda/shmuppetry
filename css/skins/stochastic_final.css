@@ -27,10 +27,11 @@
   border: 0;
   border-radius: 2px;
   color: #241c14;
-  /* Comic Sans is installed locally and this show is performed locally, so it leads.
-     Chalkboard SE ships with every macOS and PlaywriteCU is bundled in assets/fonts/ —
-     between them the box never falls back to a UI face on a strange machine. */
-  font-family: 'Comic Sans MS', 'Chalkboard SE', 'PlaywriteCU', cursive;
+  /* Comic Sans, and NOTHING cursive behind it. PlaywriteCU — the joined handwriting face
+     the default skin's `paper` style leads with — is deliberately not in this stack: it is
+     what made the paper boxes read as cursive. Chalkboard SE ships with every macOS and is
+     the closest non-joined substitute; the generic is `sans-serif`, never `cursive`. */
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
   font-weight: 400;
   /* Smaller than dialogue on purpose. It is a reminder, not the line. */
   font-size: 0.82em;
@@ -58,7 +59,7 @@
   border: 0;
   border-radius: 1px;
   color: #241c14;
-  font-family: 'Comic Sans MS', 'Chalkboard SE', 'PlaywriteCU', cursive;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
   font-weight: 400;
   font-size: 0.8em;
   line-height: 1.3;
@@ -87,18 +88,34 @@
 .textbox-poem .textbox-tabs { display: none !important; }
 
 .textbox-poem .textbox-text {
+  /* NOTHING is drawn around a poem line — just type on black. Every one of these is a
+     reset of something further up the cascade, so none of them is redundant:
+       background  — .textbox .textbox-text paints a translucent beige panel
+       border      — .textbox .textbox-text draws a 1px #888 rule, and xp.css styles
+                     [role=tabpanel] (which this element is) with a frame of its own
+       box-shadow  — xp.css's tabpanel treatment again
+       min-height  — `speech` reserves four lines so the dialogue box cannot grow under the
+                     audience mid-line; a poem line is one line and must occupy one line
+       text-shadow — there is no shadow at all: the poem scenes remove the webcam, so the
+                     stage behind istruly black and white type needs no help separating from it.
+                     A glow here reads as an outline around the words. */
   background: none;
   border: 0;
+  box-shadow: none;
+  text-shadow: none;
   color: #fff;
   text-align: center;
   min-height: 0;
   padding: 0;
-  font-family: 'PlayfairSC', Georgia, serif;
-  font-size: 1.05em;
+  /* Plain Arial. No display face, no small caps, no tracking. */
+  font-family: Arial, Helvetica, sans-serif;
+  /* Sized for the TEN-line poem, which is the most the frame holds at 0.075 spacing. The
+     longest line ("I make myself a home in every seat I sit in three times,") sets this:
+     at 0.95em and width 0.9 it stays on ONE line at 16:9 and wider. A much narrower window
+     wraps it — drop this to 0.85em if you ever perform on a squarer screen, rather than
+     re-spacing every line's y. */
+  font-size: 0.95em;
   line-height: 1.4;
-  letter-spacing: 0.02em;
-  /* Just enough to hold the line off a background that is not perfectly black. */
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
 }
 
 /* Opacity is animated on the WRAPPER, whose resting value is `opacity: var(--o, 1)` from
@@ -111,13 +128,124 @@
 /* The rise goes on the INNER .textbox-text, never the wrapper — the wrapper's transform is
    `translate(-50%, -50%)`, which is what centres it on its x/y, and animating that would
    throw the line off its own position for the length of the animation. */
-@keyframes poem-rise { from { transform: translateY(0.5em); } to { transform: none; } }
+@keyframes poem-rise { from { transform: translateY(0.25em); } to { transform: none; } }
 
-.textbox-poem { animation: poem-fade 1.15s ease-out; }
-.textbox-poem .textbox-text { animation: poem-rise 1.15s cubic-bezier(0.16, 0.84, 0.44, 1); }
+/* Deliberately quick. A poem that takes over a second per line to arrive puts a pause in
+   the reading you have to perform around; half a second registers as "a line appeared"
+   without becoming an event of its own. The rise is short for the same reason — far enough
+   to read as settling, not as sliding in. */
+.textbox-poem { animation: poem-fade 0.45s ease-out; }
+.textbox-poem .textbox-text { animation: poem-rise 0.45s cubic-bezier(0.16, 0.84, 0.44, 1); }
 
 /* A poem is read, not performed — respect the OS setting and drop the motion, keeping the
    fade only. */
 @media (prefers-reduced-motion: reduce) {
   .textbox-poem .textbox-text { animation: none; }
+}
+
+/* ── papertalk ─────────────────────────────────────────────────────────────
+   A paper DIALOGUE box — cardstock sheet, lined-paper scrap carrying the speaker name, a
+   reserved four lines so it cannot grow under the audience mid-line — in **Comic Sans**.
+
+   Why it is a new style rather than an edit to `paper`: `.textbox-paper` lives in
+   default.css, which CNMAT_openlab and shmidpoint both load, and it leads with PlaywriteCU
+   — the joined handwriting face. That is the BricolMage's voice in those shows and changing
+   it under them would be a costume change they never asked for. So this show gets its own
+   name, and the shared one is left exactly as it was.
+
+   Unused by the current script (scenes 1 and 12 are on the default xp.css `speech` box).
+   It is one field away if you want a scene's dialogue on paper: "style": "papertalk". */
+.textbox-papertalk .textbox-text {
+  background: #efe7d6 url('../../assets/textures/cardstock.jpeg') center / cover;
+  border: 0;
+  border-radius: 2px;
+  color: #241c14;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+  /* Comic Sans sets shorter and rounder than PlaywriteCU, so it needs less leading than
+     the cursive box did — 1.45 there, 1.3 here — and the reserved height follows it. */
+  line-height: 1.3;
+  min-height: calc(4 * 1.3em + 1.3em);
+  /* Extra room at the top so the scrap sits in margin, not on the first line. */
+  padding: 1.15em 0.7em 0.55em;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.13), 0 14px 30px rgba(0, 0, 0, 0.4);
+  /* Explicitly positioned and BELOW the scrap — without a z-index of its own it competes
+     with the scrap on paint order alone, which is fragile. */
+  position: relative;
+  z-index: 1;
+  transform: rotate(var(--tilt, 0deg));
+}
+
+/* Lifted OUT of the flow and onto the sheet's corner. As a tab it would sit behind the
+   panel by construction — a tab belongs to the thing under it. A scrap of paper sits on
+   top. */
+.textbox-papertalk .textbox-tabs {
+  position: absolute;
+  top: 0;
+  left: 0.7em;
+  transform: translateY(-96%);
+  z-index: 3;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+/* SPECIFICITY, not decoration. xp.css styles the selected tab with
+   `menu[role=tablist] button[aria-selected=true]` — 0,2,1 — which beats a 0,2,0 selector
+   and silently wins every declaration that matters: its background, its borders, and an
+   `inset 0 2px #ffc73c` that REPLACES the drop shadow rather than adding to it. Naming the
+   tabs container and the element gets to 0,3,1 and wins honestly, without !important. */
+.textbox-papertalk .textbox-tabs button.textbox-name {
+  background: #f6f1e2 url('../../assets/textures/lined_paper.jpeg') center / cover;
+  border: 0;
+  border-radius: 1px;
+  /* xp.css sets these as LONGHANDS on the higher-specificity rule, so a `margin: 0`
+     shorthand would not have cleared them even at equal specificity. */
+  margin: 0;
+  padding: 0.3em 1em 0.4em;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 8px 18px rgba(0, 0, 0, 0.45);
+  color: #241c14;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+  font-size: 0.7em;
+  /* Tilted the opposite way from the sheet, so the two read as two separate scraps rather
+     than one rotated object. */
+  transform: rotate(calc(var(--tilt, 0deg) * -2.2 - 1deg));
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+}
+
+/* xp.css draws a 2px border stub under the first tab to join it to the panel below. A
+   scrap of paper is not joined to anything. */
+.textbox-papertalk .textbox-tabs button.textbox-name:before { display: none; }
+
+/* The tab's hover/focus chrome would also read as a widget. */
+.textbox-papertalk .textbox-tabs button.textbox-name:hover {
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.16), 0 8px 18px rgba(0, 0, 0, 0.45);
+  border: 0;
+}
+.textbox-papertalk .textbox-tabs button.textbox-name:focus { outline: none; }
+
+/* ── endcard ───────────────────────────────────────────────────────────────
+   "the end". White Comic Sans in the middle of a black stage, and nothing else — the
+   scene removes the webcam, so the blackout IS the empty stage.
+
+   Same bare treatment as `poem`: every reset here is undoing something real further up the
+   cascade (the beige panel and 1px rule on .textbox .textbox-text, xp.css's frame on
+   [role=tabpanel], and `speech`'s four reserved lines). Larger than a poem line and with a
+   little tracking, because it is a title card rather than a line of verse. */
+.textbox-endcard .textbox-tabs { display: none !important; }
+
+.textbox-endcard .textbox-text {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  text-shadow: none;
+  color: #fff;
+  text-align: center;
+  min-height: 0;
+  padding: 0;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+  font-size: 1.8em;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
