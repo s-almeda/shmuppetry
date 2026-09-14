@@ -26,7 +26,7 @@ it at roughly two-thirds of the frame's width. Drag it in the panel.
 | 12 | hard cut back to camera — "I've got a list of topics" |
 | 13–25 | **the topic slips**, one `topic.text` change per scene |
 | 23–24 | the five-faces beat, inside the topics |
-| 26 | the worn label, no other textbox |
+| 26 | the green face-box label — "very silly guy" |
 | 27 | curtain call — default xp.css box, cane on your right hand |
 | 28 | the end card |
 
@@ -114,16 +114,34 @@ the flock vanishes. That is the beat: the joke stops, the sentence does not.
 
 Tune the scatter by dragging x/y in the panel and hitting **save scene**.
 
-## the worn label — scene 26
+## the face-box label — scene 26
 
 ```json
-"hatlabel": { "type": "text", "style": "hathead", "fasten": "hat",
-              "x": 0, "y": -0.02, "z": 60, "width": 0.24, "instant": true,
-              "tilt": -1.5, "text": "very silly guy" }
+"facebox": { "type": "label", "text": "very silly guy",
+             "color": "#b4dd1e", "textColor": "#000000", "z": 60 }
 ```
 
-A TextBox goes through the same `placeDom` an image does, which is why puppeting a line of
-text needs no new machinery at all. Nudge `y` more negative to float it higher off your head.
+The same object shmidpoint scenes 4 and 6 introduce you with — identical `type`, `color`,
+`textColor` and `z`, only the words differ. `#b4dd1e` is that show's green.
+
+A `label` is **not a textbox**. It draws its own rectangle from the tracked face rect and
+parks the caption on the box's top-left corner, so it needs no `x`/`y` and sizes itself; the
+fields worth reaching for are `pad` (how far the box sits off the face), `weight` (stroke) and
+`textSize`, all of which shmidpoint scene 8 sets by hand.
+
+Add `"annotate": true` if you want to **draw the box open** by dragging across the stage
+rather than having it appear whole. It grows from its top-left along its own diagonal and
+only ever grows — dragging back will not shut a box you just opened.
+
+### it costs a second ML runtime
+
+`label` reads its rect from **face-api.js**, which is why `config.json` declares
+`faceLabels`. The MediaPipe `face` tracker this show already loads does *not* report this
+box and cannot stand in. That makes scene 26 the most expensive thing in the show at boot —
+worth knowing if you ever cut it, because the capability should go with it.
+
+`hathead` — the lined-paper slip worn via `fasten: "hat"` — is what this scene used to be.
+It is still defined in the skin and still works; nothing uses it now.
 
 ## the skin
 
@@ -136,7 +154,7 @@ with it, and `@import` is only legal before any other statement.
 |---|---|---|
 | `speech` | 1, 12 | the rig's own xp.css box — translucent beige, speaker as a tab. From `default.css`, not added here. |
 | `header` | 13–25 | skinny centred cardstock slip, Comic Sans, no speaker tab, fits its own text |
-| `hathead` | 26 | the same slip in lined white with a slight drop shadow, worn via `fasten: "hat"` |
+| `hathead` | — | the same slip in lined white, worn via `fasten: "hat"`. Unused since 26 became a face box; still works. |
 | `poem` | 2–11 | one white line of plain Arial on black, nothing drawn around it, fades in |
 | `papertalk` | — | a paper *dialogue* box in Comic Sans. Unused; one field away if a scene wants it. |
 | `endcard` | 28 | "the end" — white Comic Sans, dead centre, nothing drawn around it |
@@ -169,8 +187,10 @@ any later copy-paste would disagree with what is on stage.
 and per-frame inference that nothing needs is exactly what starves the typewriter — so this
 list is worth re-checking whenever a scene is cut.
 
-- `face` — the five cutouts (23) and the worn label (26)
-- `hands` — the cane (27), and that is its only use in the show
+- `face` (MediaPipe) — the five cutouts (23)
+- `hands` (MediaPipe) — the cane (27), and that is its only use in the show
+- `faceLabels` (face-api.js) — the green box (26). A **second** ML runtime, and the
+  priciest line in this list.
 
 A fastener with no tracker behind it simply never pins: the cane would silently not exist
 rather than erroring. Same trap in reverse if you paste the deck below back in.
