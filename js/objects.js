@@ -651,7 +651,11 @@ export class TextBox extends StageObject {
     { key: 'y', label: 'y', type: 'range', min: 0, max: 1, step: 0.005 },
     { key: 'z', label: 'z', type: 'number', min: -400, max: 400, step: 1 },
     { key: 'width', label: 'width', type: 'range', min: 0.1, max: 1, step: 0.01 },
-    { key: 'style', label: 'style', type: 'select', options: ['speech', 'bubble', 'thought', 'caption', 'plain', 'paper'] },
+    // The list the panel offers. A style is only ever a CSS class — `textbox-<style>` —
+    // so a name not listed here still works when written into a script by hand; listing it
+    // is what makes it reachable from the inspector. `header`, `hathead` and `poem` are
+    // defined by the stochastic_final skin and fall back to unstyled text elsewhere.
+    { key: 'style', label: 'style', type: 'select', options: ['speech', 'bubble', 'thought', 'caption', 'plain', 'paper', 'header', 'hathead', 'poem'] },
     { key: 'speed', label: 'speed', type: 'select', options: ['fast', 'normal', 'medium', 'slow'] },
     { key: 'tilt', label: 'tilt°', type: 'range', min: -6, max: 6, step: 0.1 },
     { key: 'speaker', label: 'speaker', type: 'text' },

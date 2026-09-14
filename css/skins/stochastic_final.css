@@ -1,0 +1,123 @@
+/* ── skin: stochastic_final ────────────────────────────────────────────────
+   Everything the default skin does, plus three textbox styles this show needs.
+
+   The skin <link> is REPLACED wholesale by main.js (`el.skin.href = ./css/skins/<skin>.css`),
+   not stacked — so a show skin that wants the default treatment has to pull it in itself.
+   This @import is that, and it must stay the first rule in the file: @import is only legal
+   before any other statement, so adding a comment is fine and adding a rule above it
+   silently drops the whole default skin. */
+@import url('./default.css');
+
+/* ── header ────────────────────────────────────────────────────────────────
+   NOT dialogue. A skinny centred slip of cardstock that sits at the TOP of the frame and
+   says what this bit is about — a note to the puppeteer that the audience can also read.
+
+   Three things separate it from `paper`, which is the BricolMage's dialogue box:
+     · no speaker tab — a header is not said by anyone
+     · no min-height — `paper` reserves four lines so the dialogue box does not grow under
+       the audience mid-line. A header is written once and shown whole, so it fits itself.
+     · text-align: center — it is a title, not a paragraph.
+
+   Set `instant: true` on the object. The typewriter re-runs every time `text` changes, and
+   a header that types itself out is a header you are waiting on instead of talking over. */
+.textbox-header .textbox-tabs { display: none !important; }
+
+.textbox-header .textbox-text {
+  background: #efe7d6 url('../../assets/textures/cardstock.jpeg') center / cover;
+  border: 0;
+  border-radius: 2px;
+  color: #241c14;
+  /* Comic Sans is installed locally and this show is performed locally, so it leads.
+     Chalkboard SE ships with every macOS and PlaywriteCU is bundled in assets/fonts/ —
+     between them the box never falls back to a UI face on a strange machine. */
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'PlaywriteCU', cursive;
+  font-weight: 400;
+  /* Smaller than dialogue on purpose. It is a reminder, not the line. */
+  font-size: 0.82em;
+  line-height: 1.35;
+  text-align: center;
+  padding: 0.55em 0.9em 0.6em;
+  min-height: 0;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12), 0 10px 22px rgba(0, 0, 0, 0.35);
+  /* Straight by default — the scene sets `tilt: 0`. Give it a degree or two if you want
+     it to read as laid down by hand rather than typeset. */
+  transform: rotate(var(--tilt, 0deg));
+}
+
+/* ── hathead ───────────────────────────────────────────────────────────────
+   The same slip of paper, in lined white, WORN — `"fasten": "hat"` pins it above your
+   head and x/y become an offset from that point, so it rides your head like any other
+   puppet. A TextBox goes through placeDom exactly as an image does, so fastening a line of
+   text needs no new machinery at all.
+
+   Needs the `face` capability (it is the face landmarker that provides the hat point). */
+.textbox-hathead .textbox-tabs { display: none !important; }
+
+.textbox-hathead .textbox-text {
+  background: #fbfaf5 url('../../assets/textures/lined_paper.jpeg') center / cover;
+  border: 0;
+  border-radius: 1px;
+  color: #241c14;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'PlaywriteCU', cursive;
+  font-weight: 400;
+  font-size: 0.8em;
+  line-height: 1.3;
+  text-align: center;
+  padding: 0.5em 0.85em 0.55em;
+  min-height: 0;
+  /* "Slight" drop shadow: a short hard offset reads as paper lifted a few millimetres off
+     the head, and the soft one underneath keeps it legible against a bright background
+     without turning into a halo. Both are deliberately smaller than `paper`'s. */
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.10), 0 7px 14px rgba(0, 0, 0, 0.42);
+  transform: rotate(var(--tilt, 0deg));
+}
+
+/* ── poem ──────────────────────────────────────────────────────────────────
+   One line of white text on black, no box and no tab, which FADES IN when its scene
+   arrives. Stack several down the frame and give each its own scene: every scene adds one
+   line, the earlier ones stay exactly where they are.
+
+   The fade is CSS, not a new engine feature, and that is load-bearing. The object pool
+   keys on the object's ID: a line that persists from the previous scene keeps the very
+   same element, and a line the scene ADDS is constructed fresh. A CSS animation runs on
+   element creation — so the new line animates and the standing lines do not, which is
+   precisely the behaviour wanted, with nothing in JS having to know about "new".
+   Stepping BACK removes the object and disposes its element, so stepping forward again
+   re-creates it and it fades in a second time. */
+.textbox-poem .textbox-tabs { display: none !important; }
+
+.textbox-poem .textbox-text {
+  background: none;
+  border: 0;
+  color: #fff;
+  text-align: center;
+  min-height: 0;
+  padding: 0;
+  font-family: 'PlayfairSC', Georgia, serif;
+  font-size: 1.05em;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  /* Just enough to hold the line off a background that is not perfectly black. */
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+}
+
+/* Opacity is animated on the WRAPPER, whose resting value is `opacity: var(--o, 1)` from
+   base — placeDom writes the object's own opacity into --o every frame, so the keyframe
+   lands on `var(--o)` rather than a hardcoded 1 and a half-opacity line still fades in to
+   half. fill-mode is left at `none` on purpose: once the animation ends the element falls
+   back to the base rule and tracks --o live again. */
+@keyframes poem-fade { from { opacity: 0; } to { opacity: var(--o, 1); } }
+
+/* The rise goes on the INNER .textbox-text, never the wrapper — the wrapper's transform is
+   `translate(-50%, -50%)`, which is what centres it on its x/y, and animating that would
+   throw the line off its own position for the length of the animation. */
+@keyframes poem-rise { from { transform: translateY(0.5em); } to { transform: none; } }
+
+.textbox-poem { animation: poem-fade 1.15s ease-out; }
+.textbox-poem .textbox-text { animation: poem-rise 1.15s cubic-bezier(0.16, 0.84, 0.44, 1); }
+
+/* A poem is read, not performed — respect the OS setting and drop the motion, keeping the
+   fade only. */
+@media (prefers-reduced-motion: reduce) {
+  .textbox-poem .textbox-text { animation: none; }
+}

@@ -13,7 +13,14 @@
       "Bash(awk '/^export class LabelBoxObject/,/^\\\\/\\\\/ ── Audio/' js/objects.js)",
       "Read(//private/tmp/**)",
       "Bash(awk '{printf \"  %-12s %s\\\\n\", $5, $9}')",
-      "Bash(xargs -I{} echo \"serialize\\(\\) methods in LabelBox now: {}\")"
+      "Bash(xargs -I{} echo \"serialize\\(\\) methods in LabelBox now: {}\")",
+      "Bash(~/myenv/lib/python3.9/site-packages/imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1 -y -i assets/CNMAT_openlab/307_tiat_soundsculpture.mp4 -c:v libvpx-vp9 -crf 36 -b:v 0 -vf \"scale=576:-2\" -row-mt 1 -threads 8 -deadline good -cpu-used 3 -c:a libopus -b:a 64k /tmp/307_tiat.webm)",
+      "Bash(awk '{printf \"  encoded so far: %.1f MB\\\\n\", $5/1048576}')",
+      "Bash(mv /tmp/307_tiat.webm assets/CNMAT_openlab/307_tiat_soundsculpture.webm)",
+      "Bash(mkdir -p ~/Desktop/shmuppetry_originals)",
+      "Bash(mv assets/CNMAT_openlab/307_tiat_soundsculpture.mp4 ~/Desktop/shmuppetry_originals/)",
+      "Bash(awk '{printf \"  %.1f MB  %s\\\\n\", $5/1048576, $9}')",
+      "Bash(~/myenv/lib/python3.9/site-packages/imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1 -y -i assets/CNMAT_openlab/307_tiat_soundsculpture.webm -c:v libvpx-vp9 -crf 40 -b:v 0 -vf \"scale=360:-2\" -row-mt 1 -threads 8 -deadline good -cpu-used 3 -c:a libopus -b:a 48k /tmp/307_small.webm)"
     ]
   }
 }

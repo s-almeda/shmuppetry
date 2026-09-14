@@ -1,0 +1,58 @@
+{
+  "_note": "stochastic_final. Copied from shows/CNMAT_openlab/config.json; the skin and the capability list are what differ. Scenes 1–8 are TEST SCENES — they exercise each new capability against demo art so you can see it work. Replace them as the real script lands.",
+  "title": "stochastic final",
+  "_skin": "css/skins/stochastic_final.css — the default skin plus three textbox styles this show adds: `header` (skinny centred cardstock slip), `hathead` (lined paper worn on your head) and `poem` (white line on black that fades in). The skin <link> is REPLACED, not stacked, so that file @imports default.css as its first rule.",
+  "skin": "stochastic_final",
+  "aspect": null,
+  "mirror": true,
+  "_capabilities": "hands drives the left-hand image deck; face drives the `fasten: \"hat\"` textbox. Both are loaded eagerly at boot because scene 2 needs hands and scene 5 needs face — nothing here is optional enough to be worth a mid-show stall. `potato` and `faceLabels` are deliberately ABSENT: the script uses neither, and each is a whole extra ML runtime at boot.",
+  "capabilities": [
+    "hands",
+    "face"
+  ],
+  "_micOnStart": "Absent on purpose — no ventriloquy puppets (no talkSrc, no bounce) in this script, so there is nothing for the mic to drive and no reason to make the audience watch a second permission prompt. Add it the moment a puppet starts talking.",
+  "paper": {
+    "cut": {
+      "bound": 0.11,
+      "skeleton": 0.01,
+      "clean": 0.015,
+      "range": 1,
+      "grow": 0.08,
+      "smooth": 0.55,
+      "points": 45,
+      "join": "miter"
+    },
+    "outline": {
+      "width": 0.045,
+      "color": "#ffffff"
+    },
+    "shadow": {
+      "dx": 0,
+      "dy": 0.012,
+      "blur": 0.02,
+      "color": "rgba(0,0,0,0.45)"
+    },
+    "face": {
+      "grow": 0.02,
+      "points": 13,
+      "smooth": 0.55,
+      "crown": 0.22,
+      "join": "miter"
+    },
+    "eye": {
+      "grow": 0.8,
+      "points": 7,
+      "outline": {
+        "width": 0.14
+      }
+    },
+    "mouth": {
+      "points": 10,
+      "outline": {
+        "width": 0.08
+      }
+    }
+  },
+  "_panelTab": "Absent on purpose — this is a performance rig, and you do not need to be told mid-show that the control panel is a control panel.",
+  "_showcase": "Absent on purpose — the public toggle group belongs on the demo page, not on stage."
+}

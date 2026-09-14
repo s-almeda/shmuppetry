@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "_note": "The rig. Needs no models at all, so the page paints immediately \u2014 everything here comes from the toggles.",
+    "_note": "The rig. Needs no models at all, so the page paints immediately — everything here comes from the toggles.",
     "objects": {
       "cam": {
         "type": "webcam",
@@ -57,7 +57,7 @@
   },
   {
     "id": 2,
-    "_note": "Paper cutouts on black. The webcam is REMOVED rather than hidden \u2014 #stage is already black, so taking the feed away is the blackout.",
+    "_note": "Paper cutouts on black. The webcam is REMOVED rather than hidden — #stage is already black, so taking the feed away is the blackout.",
     "objects": {
       "dialogue": {
         "type": "text",
@@ -296,7 +296,7 @@
         "maxX": null,
         "minY": null,
         "maxY": null,
-        "text": "...introducing... the one... the only...\n\n (spotlight test! press RIGHT\u2192 or SPACE to proceed...)",
+        "text": "...introducing... the one... the only...\n\n (spotlight test! press RIGHT→ or SPACE to proceed...)",
         "speaker": "???",
         "style": "bubble",
         "speed": "normal",
@@ -392,7 +392,7 @@
   },
   {
     "id": 4,
-    "_note": "The BricolMage, as performed in the shmidpoint show \u2014 but in the rig's own chrome. The greyscale marquee titlebar belongs to that show, not to the demo.",
+    "_note": "The BricolMage, as performed in the shmidpoint show — but in the rig's own chrome. The greyscale marquee titlebar belongs to that show, not to the demo.",
     "objects": {
       "dialogue": {
         "type": "text",
@@ -419,8 +419,11 @@
         "speed": "normal",
         "instant": false,
         "hoverFade": false,
+        "fadeTo": null,
         "tilt": null,
-        "width": 0.92
+        "width": 0.92,
+        "metaFrom": null,
+        "template": null
       },
       "curtain": {
         "type": "image",
@@ -445,7 +448,12 @@
         "maxY": null,
         "src": 8,
         "pinScale": true,
-        "fit": "cover"
+        "fit": "cover",
+        "talkSrc": null,
+        "bounce": null,
+        "align": null,
+        "cycleOn": null,
+        "breakMs": null
       },
       "bm_eyeL1": {
         "type": "bodyPart",
@@ -482,7 +490,9 @@
         "outline": {
           "width": 0.165,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_eyeL2": {
         "type": "bodyPart",
@@ -519,7 +529,9 @@
         "outline": {
           "width": 0.2,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_eyeR1": {
         "type": "bodyPart",
@@ -556,7 +568,9 @@
         "outline": {
           "width": 0.26,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_eyeR2": {
         "type": "bodyPart",
@@ -593,7 +607,9 @@
         "outline": {
           "width": 0.14,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_eyeR3": {
         "type": "bodyPart",
@@ -630,7 +646,9 @@
         "outline": {
           "width": 0.22,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_mouth": {
         "type": "bodyPart",
@@ -667,14 +685,16 @@
         "outline": {
           "width": 0.08,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_body": {
         "type": "image",
         "x": 0.025,
         "y": 0,
         "z": 24,
-        "scale": 0.59,
+        "scale": 1.17,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -692,7 +712,12 @@
         "maxY": null,
         "src": 7,
         "pinScale": true,
-        "size": 1.4
+        "size": 1.4,
+        "talkSrc": null,
+        "bounce": null,
+        "align": null,
+        "cycleOn": null,
+        "breakMs": null
       },
       "bm_handL": {
         "type": "bodyPart",
@@ -728,7 +753,9 @@
         "outline": {
           "width": 0.025,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_handL2": {
         "type": "bodyPart",
@@ -764,7 +791,9 @@
         "outline": {
           "width": 0.045,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_tophat": {
         "type": "image",
@@ -790,6 +819,11 @@
         "src": 6,
         "pinScale": true,
         "size": 1,
+        "talkSrc": null,
+        "bounce": null,
+        "align": null,
+        "cycleOn": null,
+        "breakMs": null,
         "anchor": "bottom"
       },
       "bm_eyeL3": {
@@ -827,7 +861,9 @@
         "outline": {
           "width": 0.14,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "bm_handR": {
         "type": "bodyPart",
@@ -863,7 +899,9 @@
         "outline": {
           "width": 0.045,
           "color": "#ffffff"
-        }
+        },
+        "fillOnly": false,
+        "part": null
       },
       "spotL": null,
       "spotR": null
