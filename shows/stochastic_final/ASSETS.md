@@ -5,13 +5,16 @@ webcam, or a cutout of you.
 
 | # | file | scene | what it is |
 |---|---|---|---|
-| 216 | `assets/shmidpoint/216_cane.png` | 27 | the hook, on your right hand |
+| 309 | `assets/CNMAT_openlab/309_sock_rest.png` | 14 | sock puppet, mouth closed |
+| 310 | `assets/CNMAT_openlab/310_sock_talk.png` | 14 | sock puppet, mouth open |
+| 216 | `assets/shmidpoint/216_cane.png` | 29 | the hook, on your right hand |
 
 Asset numbers are **global across every folder** under `assets/`, so a show can reach another
-show's art by number without copying it — which is why `"src": 216` works from here. The cost
-is a dependency: scene 27 goes blank if shmidpoint's folder ever leaves your disk. If you
-would rather this show owned it, copy the file to `assets/stochastic_final/416_cane.png` and
-change `src` to `416`.
+show's art by number without copying it — which is why `"src": 216` and `"src": 309` work
+from here. The cost is a dependency: those scenes go blank if shmidpoint's or CNMAT_openlab's
+folders ever leave your disk. If you would rather this show owned them, copy the files into
+`assets/stochastic_final/` as `416_cane.png` and `409/410_sock_*.png` and change the numbers
+to match.
 
 The cane is a **wide** image (845×142, about 6:1), and for a hand-pinned puppet `size` is a
 multiple of the *measured hand span* rather than a fraction of the stage — so `size: 1` puts
@@ -24,11 +27,12 @@ it at roughly two-thirds of the frame's width. Drag it in the panel.
 | 1 | opens on camera — "I'd like to read you a poem" |
 | 2–11 | **the poem**, one line added per scene, white on black |
 | 12 | hard cut back to camera — "I've got a list of topics" |
-| 13–25 | **the topic slips**, one `topic.text` change per scene |
-| 23–24 | the five-faces beat, inside the topics |
-| 26 | the green face-box label — "very silly guy" |
-| 27 | curtain call — default xp.css box, cane on your right hand |
-| 28 | the end card |
+| 13–27 | **the topic slips**, one `topic.text` change per scene |
+| 14 | the sock puppet, inside the topics |
+| 25–26 | the five-faces beat, inside the topics |
+| 28 | the green face-box label — "very silly guy" |
+| 29 | curtain call — default xp.css box, cane on your right hand, still labelled |
+| 30 | the end card |
 
 Scenes are **sparse** and should stay that way while you are writing: omitting a field
 changes nothing, `null` removes, `"reset": true` starts from an empty stage. Saving a scene
@@ -77,7 +81,7 @@ it will crowd poem2. If you ever perform on a narrow screen, drop `font-size` in
 
 To add a line: copy a block, give it the next unused id, step `y` by `0.075`.
 
-## the topic slips — scenes 13–25
+## the topic slips — scenes 13–27
 
 Scene 13 places the slip; **every scene after it changes one field and nothing else**:
 
@@ -86,7 +90,7 @@ Scene 13 places the slip; **every scene after it changes one field and nothing e
 ```
 
 That is why the slip does not move, flicker, or resize as you step through thirteen topics —
-and why scenes 22, 23 and 24 are guaranteed to show *identical* text without it being typed
+and why scenes 24, 25 and 26 are guaranteed to show *identical* text without it being typed
 out three times and drifting apart.
 
 `header` style: skinny centred cardstock at the top of the frame, Comic Sans, no speaker tab,
@@ -94,7 +98,7 @@ out three times and drifting apart.
 `y` to `0.8` if you would rather it sat at the bottom, or give it a degree or two of `tilt` if
 dead-straight reads too typeset.
 
-## the five faces — scenes 23–24
+## the five faces — scenes 25–26
 
 ```json
 "face3": { "type": "bodyPart", "fasten": "face", "x": -0.26, "y": 0.20,
@@ -109,12 +113,38 @@ Cheap, and worth knowing why: a face part is cut from the **landmark contour**, 
 colour-segmentation pipeline the hands use. Five faces cost five polygon builds, not five
 silhouette solves — this beat will not stutter the way five hand cutouts would.
 
-Scene 24 nulls all five and says nothing about `topic`, so the text stands untouched while
+Scene 26 nulls all five and says nothing about `topic`, so the text stands untouched while
 the flock vanishes. That is the beat: the joke stops, the sentence does not.
 
 Tune the scatter by dragging x/y in the panel and hitting **save scene**.
 
-## the face-box label — scene 26
+## the sock puppet — scene 14
+
+```json
+"sock": { "type": "image", "fasten": "leftHand", "x": 0, "y": -0.175,
+          "z": 30, "scale": 1.35, "size": 1.2,
+          "src": 309, "talkSrc": 310, "bounce": 0.3 }
+```
+
+Lifted from CNMAT_openlab scene 14 — same assets, same numbers, same geometry.
+
+A ventriloquy puppet is an **ordinary image with two extra fields**, not a separate puppet
+system: `talkSrc` swaps the frame while you speak and `bounce` hops it, both driven by mic
+level. That is exactly why it still takes `fasten` and can ride your hand. `bounce` is a
+fraction of stage height; 0.3 is what CNMAT uses, 0.07 was 2.5.0's default if that reads too
+jumpy.
+
+**It needs the mic** — see the capabilities section. Nothing about it works without one and
+nothing tells you so.
+
+CNMAT puts a *second* sock on the right hand: the same object with `"flipX": true` and
+`y: -0.095`. One paste away if you want both.
+
+Scene 15 nulls it, and that line is load-bearing: omitting an object changes nothing, so
+without it the sock would ride your hand through every remaining topic, the face-box close
+and the curtain call.
+
+## the face-box label — scene 28
 
 ```json
 "facebox": { "type": "label", "text": "very silly guy",
@@ -132,6 +162,18 @@ fields worth reaching for are `pad` (how far the box sits off the face), `weight
 Add `"annotate": true` if you want to **draw the box open** by dragging across the stage
 rather than having it appear whole. It grows from its top-left along its own diagonal and
 only ever grows — dragging back will not shut a box you just opened.
+
+### it rides through the curtain call
+
+Scene 29 never mentions `facebox`, and omitting an object changes nothing — so the green box
+stays on your face while you hook yourself off stage. That is deliberate; do not add a
+`"facebox": null` back in. Scene 30 resets, so it goes with everything else at the end.
+
+One catch, and it is the reason this is written down: **scene 29 has been saved through the
+panel**, so it is fully-resolved absolute rather than sparse — and a saved scene *cannot
+express a removal*. Save wrote out what was on stage, which is why an earlier `null` there
+disappeared without a trace. If you ever do want the box gone at 29, the null has to be
+re-added by hand after each save.
 
 ### it costs a second ML runtime
 
@@ -153,11 +195,11 @@ with it, and `@import` is only legal before any other statement.
 | style | scenes | what it is |
 |---|---|---|
 | `speech` | 1, 12 | the rig's own xp.css box — translucent beige, speaker as a tab. From `default.css`, not added here. |
-| `header` | 13–25 | skinny centred cardstock slip, Comic Sans, no speaker tab, fits its own text |
-| `hathead` | — | the same slip in lined white, worn via `fasten: "hat"`. Unused since 26 became a face box; still works. |
+| `header` | 13–27 | skinny centred cardstock slip, Comic Sans, no speaker tab, fits its own text |
+| `hathead` | — | the same slip in lined white, worn via `fasten: "hat"`. Unused since 28 became a face box; still works. |
 | `poem` | 2–11 | one white line of plain Arial on black, nothing drawn around it, fades in |
 | `papertalk` | — | a paper *dialogue* box in Comic Sans. Unused; one field away if a scene wants it. |
-| `endcard` | 28 | "the end" — white Comic Sans, dead centre, nothing drawn around it |
+| `endcard` | 30 | "the end" — white Comic Sans, dead centre, nothing drawn around it |
 
 **Nothing in this show is cursive.** `default.css`'s own `paper` style leads with
 PlaywriteCU — the joined handwriting face — which is the BricolMage's voice in CNMAT_openlab
@@ -183,14 +225,19 @@ any later copy-paste would disagree with what is on stage.
 
 ## capabilities
 
-`config.json` declares **`face` and `hands`**. Everything listed there loads eagerly at boot,
+`config.json` declares **`face`, `hands` and `faceLabels`**. Everything listed there loads eagerly at boot,
 and per-frame inference that nothing needs is exactly what starves the typewriter — so this
 list is worth re-checking whenever a scene is cut.
 
-- `face` (MediaPipe) — the five cutouts (23)
-- `hands` (MediaPipe) — the cane (27), and that is its only use in the show
-- `faceLabels` (face-api.js) — the green box (26). A **second** ML runtime, and the
+- `face` (MediaPipe) — the five cutouts (25)
+- `hands` (MediaPipe) — the sock (14) and the cane (29)
+- `faceLabels` (face-api.js) — the green box (28). A **second** ML runtime, and the
   priciest line in this list.
+
+`config.json` also sets **`micOnStart: true`**. Camera and mic are separate `getUserMedia`
+grants, so *"it's showtime!"* asks for both at once. Scene 14's sock needs the mic and
+nothing else does — but a missing mic grant does not error, the sock just never moves, which
+reads as a broken puppet rather than a missing permission.
 
 A fastener with no tracker behind it simply never pins: the cane would silently not exist
 rather than erroring. Same trap in reverse if you paste the deck below back in.

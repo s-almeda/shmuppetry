@@ -95,6 +95,17 @@ Coordinates are **normalized**: `x`/`y` are `0..1` of the stage, and `size` is a
 stage *height*, so a composition holds its proportions at every window size and aspect.
 Named positions (`CENTER`, `LEFT`, `RIGHT`, …) take structured offsets: `{ "at": "LEFT", "dx": 0.05 }`.
 
+`cue` is a line for **you**, shown in the presenter view as what Space is about to do —
+`{ "id": 7, "cue": "cycle ] through the flags", "objects": { … } }`. Like `_note` it does
+not inherit. Without one, the presenter view works the hint out from the diff.
+
+### presenter view
+
+`control.html?show=<name>` is a second window for the laptop screen while the rig runs
+fullscreen on the projector: a live mirror of the rig tab (click **mirror the rig tab** and
+pick it in Chrome's share dialog) plus what the next Space will change and where every
+cycling series is. It loads no models, and keys still go to the rig window.
+
 `_note` is preserved everywhere and ignored by the engine. Use it. Writing the usage notes
 into the artifact is why 2.5.0 was still legible months later.
 

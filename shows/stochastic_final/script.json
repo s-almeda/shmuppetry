@@ -13,7 +13,7 @@
         "y": 0.8,
         "z": 200,
         "width": 0.92,
-        "speaker": "Shm",
+        "speaker": "shm",
         "text": "hi everyone. I'd like to read you a poem."
       }
     }
@@ -187,7 +187,7 @@
         "y": 0.8,
         "z": 200,
         "width": 0.92,
-        "speaker": "Shm",
+        "speaker": "shm",
         "text": "instead of speaking off a script for this one, I wanted to talk to everyone more directly, so instead, i've got a list of topics to address."
       }
     }
@@ -212,18 +212,359 @@
   },
   {
     "id": 14,
+    "_note": "The sock puppet, lifted from CNMAT_openlab scene 14 — same assets, same numbers. A ventriloquy puppet is an ORDINARY image with two extra fields: `talkSrc` swaps the frame while you speak and `bounce` hops it, both driven by mic level. That is why it still takes `fasten` and can ride your hand. NEEDS THE MIC: config.json now sets micOnStart so \"it's showtime!\" asks for camera and mic together — without it the sock loads and simply never moves, which looks like a broken puppet rather than a missing permission. Assets 309/310 live in assets/CNMAT_openlab/, reached by number; copy them into assets/stochastic_final/ as 409/410 if you would rather this show owned them. CNMAT puts a second sock on the right hand (same object, `\"flipX\": true`) — one paste away if you want both.",
     "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "boxWidth": null
+      },
       "topic": {
-        "text": "shmuppetry rig updates"
+        "type": "text",
+        "x": 0.5,
+        "y": 0.12,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "shmuppetry rig updates",
+        "speaker": null,
+        "style": "header",
+        "speed": "normal",
+        "instant": true,
+        "hoverFade": false,
+        "fadeTo": null,
+        "tilt": 0,
+        "width": 0.46,
+        "metaFrom": null,
+        "template": null
+      },
+      "sock": {
+        "type": "image",
+        "x": 0.025,
+        "y": -0.22,
+        "z": 30,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftHand",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "src": 309,
+        "pinScale": true,
+        "size": 1.2,
+        "talkSrc": 310,
+        "bounce": 0.3,
+        "align": null,
+        "cycleOn": null,
+        "breakMs": null
+      },
+      "leftEye": {
+        "type": "bodyPart",
+        "x": 0.27,
+        "y": 0,
+        "z": 26,
+        "scale": 2.78,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
+      },
+      "face": {
+        "type": "bodyPart",
+        "x": -0.22,
+        "y": 0,
+        "z": 25,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "face",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
+      },
+      "webcam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "fit": "box",
+        "size": 0.5,
+        "boxWidth": null
       }
     }
   },
   {
     "id": 15,
+    "_note": "The sock comes OFF here. It has to be nulled explicitly — omitting an object changes nothing, so without this line it would ride your hand through every remaining topic, the face-box close and the curtain call.",
     "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "boxWidth": null
+      },
       "topic": {
-        "text": "submitted 5 CHI papers (including froggidraw!)"
-      }
+        "type": "text",
+        "x": 0.5,
+        "y": 0.12,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "submitted 5 CHI papers (including froggidraw!)",
+        "speaker": null,
+        "style": "header",
+        "speed": "normal",
+        "instant": true,
+        "hoverFade": false,
+        "fadeTo": null,
+        "tilt": 0,
+        "width": 0.46,
+        "metaFrom": null,
+        "template": null
+      },
+      "leftEye": {
+        "type": "bodyPart",
+        "x": 0.27,
+        "y": 0,
+        "z": 26,
+        "scale": 2.78,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": false,
+        "fasten": "leftEye",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 7,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
+      },
+      "face": {
+        "type": "bodyPart",
+        "x": -0.22,
+        "y": 0,
+        "z": 25,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": false,
+        "fasten": "face",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
+      },
+      "webcam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": false,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "fit": "box",
+        "size": 0.5,
+        "boxWidth": null
+      },
+      "sock": null
     }
   },
   {
@@ -246,7 +587,7 @@
     "id": 18,
     "objects": {
       "topic": {
-        "text": "I learned my medium is perception (s/o Julio LeParc, Sage)"
+        "text": "i started my new job !!"
       }
     }
   },
@@ -254,23 +595,345 @@
     "id": 19,
     "objects": {
       "topic": {
-        "text": "thank you everyone for taking my silliness very seriously"
+        "text": "i got really into collage"
       }
     }
   },
   {
     "id": 20,
     "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "boxWidth": null
+      },
       "topic": {
-        "text": "3 Very Silly Things"
+        "type": "text",
+        "x": 0.5,
+        "y": 0.12,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "I learned my medium is perception (s/o Julio LeParc, Sage)",
+        "speaker": null,
+        "style": "header",
+        "speed": "normal",
+        "instant": true,
+        "hoverFade": false,
+        "fadeTo": null,
+        "tilt": 0,
+        "width": 0.46,
+        "metaFrom": null,
+        "template": null
+      },
+      "leftEye": {
+        "type": "bodyPart",
+        "x": 0.1,
+        "y": 0,
+        "z": 26,
+        "scale": 1.74,
+        "rotation": 6,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
+      },
+      "rightEye": {
+        "type": "bodyPart",
+        "x": -0.12,
+        "y": 0,
+        "z": 26,
+        "scale": 1.68,
+        "rotation": 26,
+        "opacity": 1,
+        "visible": true,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
       }
     }
   },
   {
     "id": 21,
     "objects": {
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "boxWidth": null
+      },
       "topic": {
-        "text": "1: puppet shows are deeply silly. (right now) (s/o Adrian!)"
+        "type": "text",
+        "x": 0.5,
+        "y": 0.12,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "thank you everyone for taking my silliness very seriously",
+        "speaker": null,
+        "style": "header",
+        "speed": "normal",
+        "instant": true,
+        "hoverFade": false,
+        "fadeTo": null,
+        "tilt": 0,
+        "width": 0.46,
+        "metaFrom": null,
+        "template": null
+      },
+      "leftEye": {
+        "type": "bodyPart",
+        "x": 0.1,
+        "y": 0,
+        "z": 26,
+        "scale": 1.74,
+        "rotation": 6,
+        "opacity": 1,
+        "visible": false,
+        "fasten": "leftEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
+      },
+      "face": {
+        "type": "bodyPart",
+        "x": -0.22,
+        "y": 0,
+        "z": 25,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": false,
+        "fasten": "face",
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.02,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 13,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.045,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
+      },
+      "webcam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": false,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "fit": "box",
+        "size": 0.5,
+        "boxWidth": null
+      },
+      "rightEye": {
+        "type": "bodyPart",
+        "x": -0.12,
+        "y": 0,
+        "z": 26,
+        "scale": 1.68,
+        "rotation": 26,
+        "opacity": 1,
+        "visible": false,
+        "fasten": "rightEye",
+        "flipX": true,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "cut": {
+          "bound": 0.11,
+          "skeleton": 0.01,
+          "clean": 0.015,
+          "range": 1,
+          "grow": 0.8,
+          "smooth": 0.55,
+          "crown": 0.22,
+          "points": 8,
+          "join": "miter"
+        },
+        "outline": {
+          "width": 0.14,
+          "color": "#ffffff"
+        },
+        "fillOnly": false,
+        "part": null
       }
     }
   },
@@ -278,13 +941,29 @@
     "id": 22,
     "objects": {
       "topic": {
-        "text": "2: building things for theater/performance, especially software, can feel *very* silly"
+        "text": "3 Very Silly Things"
       }
     }
   },
   {
     "id": 23,
-    "_note": "THE MANY FACES. Same topic text as scene 22, untouched — the slip is inherited, so it does not so much as flicker while five copies of your face arrive around it. Each copy is a bodyPart cutting `face` and pinned to `face`, so x/y are OFFSETS from your actual head and the whole flock follows you as you move. A face part is cut from the LANDMARK CONTOUR, not from the hand pipeline's colour segmentation, so five of them cost five cheap polygons rather than five silhouette solves. Tune the scatter by dragging x/y in the panel.",
+    "objects": {
+      "topic": {
+        "text": "1: puppet shows are deeply silly. (right now) (s/o Adrian!)"
+      }
+    }
+  },
+  {
+    "id": 24,
+    "objects": {
+      "topic": {
+        "text": "2: building things for theater/performance, especially software, can feel *very* silly (thank you ace)"
+      }
+    }
+  },
+  {
+    "id": 25,
+    "_note": "THE MANY FACES. Same topic text as scene 24, untouched — the slip is inherited, so it does not so much as flicker while five copies of your face arrive around it. Each copy is a bodyPart cutting `face` and pinned to `face`, so x/y are OFFSETS from your actual head and the whole flock follows you as you move. A face part is cut from the LANDMARK CONTOUR, not from the hand pipeline's colour segmentation, so five of them cost five cheap polygons rather than five silhouette solves. Tune the scatter by dragging x/y in the panel.",
     "objects": {
       "face1": {
         "type": "bodyPart",
@@ -334,7 +1013,7 @@
     }
   },
   {
-    "id": 24,
+    "id": 26,
     "_note": "…and stop. Just you again, with the SAME topic text still standing — `topic` is not mentioned here, and omitting a field changes nothing, so the words are guaranteed constant across all three scenes rather than being retyped twice and drifting. This is the scene you land on to let the joke settle.",
     "objects": {
       "face1": null,
@@ -345,7 +1024,7 @@
     }
   },
   {
-    "id": 25,
+    "id": 27,
     "objects": {
       "topic": {
         "text": "3: to love and to attach, is very very silly"
@@ -353,7 +1032,7 @@
     }
   },
   {
-    "id": 26,
+    "id": 28,
     "_note": "Close. The label is a `label` object — the green detection box around your face, exactly as shmidpoint scenes 4 and 6 introduce you with \"shm garanganao almeda\", same #b4dd1e green and same black caption. It is NOT a textbox: it draws its own box from the tracked face rect and parks the caption on the box's top-left corner, so it needs no x/y of its own and sizes itself. The topic slip is removed — \"no additional textbox\". NEEDS the `faceLabels` capability (face-api.js, a second ML runtime), which config.json now declares; the MediaPipe `face` tracker does not report this box. Add \"annotate\": true if you want to DRAW the box open by dragging across the stage instead of having it simply appear.",
     "objects": {
       "topic": null,
@@ -367,8 +1046,8 @@
     }
   },
   {
-    "id": 27,
-    "_note": "Curtain call, back in the DEFAULT xp.css box — the same chrome scene 1 opened in, so the show closes in the voice it started in. The cane is asset 216, which lives in assets/shmidpoint/ — asset numbers are GLOBAL across every folder under assets/, so a show can reach another show's art by number without copying it. That also means this scene depends on shmidpoint's folder still being on disk; copy the file to assets/stochastic_final/416_cane.png and change src to 416 if you would rather this show owned it. NEEDS the `hands` capability, which config.json declares for this scene alone. `size` is a MULTIPLE of the measured hand span here, not a fraction of the stage — drag it in the panel until the hook is the length you want.",
+    "id": 29,
+    "_note": "Curtain call, back in the DEFAULT xp.css box — the same chrome scene 1 opened in, so the show closes in the voice it started in. The cane is asset 216, which lives in assets/shmidpoint/ — asset numbers are GLOBAL across every folder under assets/, so a show can reach another show's art by number without copying it. That also means this scene depends on shmidpoint's folder still being on disk; copy the file to assets/stochastic_final/416_cane.png and change src to 416 if you would rather this show owned it. NEEDS the `hands` capability, which scene 14's sock also uses. `size` is a MULTIPLE of the measured hand span here, not a fraction of the stage — drag it in the panel until the hook is the length you want. THE GREEN FACE-BOX FROM 28 RIDES THROUGH ON PURPOSE: it is not mentioned here, and omitting an object changes nothing, so you stay labelled while you hook yourself off. Do not add a `\"facebox\": null` back in. One catch — this scene has been saved through the panel, so it is fully-resolved absolute rather than sparse, and a SAVED SCENE CANNOT EXPRESS A REMOVAL. If you ever do want the box gone here, the null has to be re-added by hand after each save or it will quietly vanish again. Scene 30 resets, so the box goes with everything else at the end.",
     "objects": {
       "cam": {
         "type": "webcam",
@@ -413,7 +1092,7 @@
         "minY": null,
         "maxY": null,
         "text": "that's all from me, folks. till next time!",
-        "speaker": "Shm",
+        "speaker": "shm",
         "style": "speech",
         "speed": "normal",
         "instant": false,
@@ -453,12 +1132,11 @@
         "align": null,
         "cycleOn": null,
         "breakMs": null
-      },
-      "hatlabel": null
+      }
     }
   },
   {
-    "id": 28,
+    "id": 30,
     "_note": "THE END. `reset: true` clears the stage outright — the webcam, the dialogue and the cane all go at once, and the blackout IS the empty stage because #stage is already black. White Comic Sans dead centre, `instant: true` so it does not type itself out, and no fade: a title card should simply be there.",
     "reset": true,
     "objects": {

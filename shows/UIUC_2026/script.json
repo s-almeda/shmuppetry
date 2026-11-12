@@ -1,0 +1,462 @@
+[
+  {
+    "id": 1,
+    "reset": true,
+    "_note": "Lights up. Spotlights ARE your two hands: white circles with isMask, so the curtain shows only through them. From CNMAT scene 2.",
+    "objects": {
+      "curtain": {
+        "type": "image",
+        "src": 204,
+        "fit": "cover",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -90,
+        "maskedBy": [
+          "spotL",
+          "spotR"
+        ]
+      },
+      "spotL": {
+        "type": "image",
+        "src": 100,
+        "fasten": "leftHand",
+        "isMask": true,
+        "size": 2.2
+      },
+      "spotR": {
+        "type": "image",
+        "src": 100,
+        "fasten": "rightHand",
+        "isMask": true,
+        "size": 2.2
+      },
+      "dialogue": {
+        "type": "text",
+        "style": "bubble",
+        "speaker": "announcer",
+        "x": 0.5,
+        "y": 0.78,
+        "z": 200,
+        "width": 0.8,
+        "text": "goooood afternoon UIUC's IC Seminar!"
+      }
+    }
+  },
+  {
+    "id": 2,
+    "_note": "Full curtain — re-declared without maskedBy, spotlights gone.",
+    "objects": {
+      "curtain": {
+        "type": "image",
+        "src": 204,
+        "fit": "cover",
+        "z": -90
+      },
+      "spotL": null,
+      "spotR": null,
+      "dialogue": {
+        "text": "put your hands together for….."
+      }
+    }
+  },
+  {
+    "id": 3,
+    "_note": "THE CUT. Everything theatrical drops at once: a person on a webcam in a plain xp.css window.",
+    "objects": {
+      "curtain": null,
+      "cam": {
+        "type": "webcam",
+        "fit": "cover",
+        "z": -100
+      },
+      "dialogue": {
+        "text": "… me!",
+        "style": "speech",
+        "speaker": "shm",
+        "y": 0.8,
+        "width": 0.92
+      }
+    }
+  },
+  {
+    "id": 4,
+    "_note": "Name label — the same `label` object as CNMAT scene 5, in #b4dd13 (other shows use #b4dd1e).",
+    "objects": {
+      "namebox": {
+        "type": "label",
+        "source": "face",
+        "z": 60,
+        "text": "shm garanganao almeda",
+        "color": "#b4dd13",
+        "textColor": "#000000"
+      },
+      "dialogue": {
+        "text": "Hello everyone! my name is shm garanganao almeda; I use they/them pronouns. I'm grateful and honored to give a talk at this seminar today."
+      }
+    }
+  },
+  {
+    "id": 5,
+    "cue": "] ×3 — paintbrush → computer → nonbinary flag → filipino flag",
+    "_note": "551 is cs10's beret — _hat suffix mounts it. Label drops so it doesn't fight the hat.",
+    "objects": {
+      "namebox": null,
+      "hat": {
+        "type": "image",
+        "src": 551,
+        "fasten": "hat",
+        "size": 1,
+        "z": 40
+      },
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "srcs": [
+          501,
+          502,
+          503,
+          504
+        ],
+        "index": 0,
+        "cycleKey": "]"
+      },
+      "dialogue": {
+        "text": "I am an artist, I am a computer scientist, I am a non-binary Filipino American."
+      }
+    }
+  },
+  {
+    "id": 6,
+    "objects": {
+      "hat": null,
+      "lh": null,
+      "dialogue": {
+        "text": "in the interest of explaining what the heck… *this* is all about…"
+      }
+    }
+  },
+  {
+    "id": 7,
+    "_note": "203 is the stochastic labs party hat — _hat suffix, mounts itself.",
+    "objects": {
+      "hat": {
+        "type": "image",
+        "src": 203,
+        "fasten": "hat",
+        "size": 1,
+        "z": 40
+      },
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "src": 308
+      },
+      "dialogue": {
+        "text": "I just finished up a residency in the Creative Tools & Theater groups at an institution called Stochastic Labs, where I was given the space and community support to invest in the development of a… particular passion…"
+      }
+    }
+  },
+  {
+    "id": 8,
+    "_note": "THE REVEAL. Both hands become mic-driven socks (micOnStart grabs the mic at showtime). lh is re-declared with `type` so none of the logo's fields carry over. Positions from CNMAT scene 14. Hat stays on.",
+    "objects": {
+      "lh": {
+        "src": 309,
+        "talkSrc": 310,
+        "bounce": 0.3,
+        "size": 1.2,
+        "z": 30,
+        "type": "image",
+        "fasten": "leftHand",
+        "y": -0.175,
+        "scale": 1.35
+      },
+      "rh": {
+        "src": 309,
+        "talkSrc": 310,
+        "bounce": 0.3,
+        "size": 1.2,
+        "z": 30,
+        "type": "image",
+        "fasten": "rightHand",
+        "flipX": true,
+        "y": -0.095,
+        "scale": 1.37
+      },
+      "dialogue": {
+        "text": "…….. digital puppetry.",
+        "speed": "slow"
+      }
+    }
+  },
+  {
+    "id": 9,
+    "cue": "hat comes off",
+    "objects": {
+      "hat": null,
+      "dialogue": {
+        "text": "this is version 3.0 of my shmuppetry rig. I've been using it at every given opportunity instead of slide software because. y'know. if you spent a bunch of time making custom software just so that you *can* give presentations as puppet shows. why wouldn't you.",
+        "speed": "normal"
+      }
+    }
+  },
+  {
+    "id": 10,
+    "objects": {
+      "lh": null,
+      "rh": null,
+      "dialogue": {
+        "text": "but uhh, all of my research project slides are in Keynote, and I think they're pretty good, and I didn't want to recreate them all as puppets…. So I'm just gonna use this to introduce myself a bit more and then slide over to Keynote."
+      }
+    }
+  },
+  {
+    "id": 11,
+    "cue": "] ×10 — TCNJ → 5 self-portraits → 5 more of your art",
+    "_note": "560 is the TCNJ slide from cs10, used as a hand puppet here. 350–354 are your mirror self-portraits (CNMAT scene 37 wore them as face masks; 355 is the sixth, if you want to swap one in). 534–538 are the art from stochastic_intro.",
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "srcs": [
+          560,
+          350,
+          351,
+          352,
+          353,
+          354,
+          534,
+          535,
+          536,
+          537,
+          538
+        ],
+        "index": 0,
+        "cycleKey": "]"
+      },
+      "dialogue": {
+        "text": "Before my PhD, I studied Computer Science & fine art at a small liberal arts college called The College of New Jersey, with a focus on self-portraiture, charcoal, and oil painting, though I'd been making anime & video game fanart and digital paintings since middle school."
+      }
+    }
+  },
+  {
+    "id": 12,
+    "_note": "Bear photo (301 — named eecs_logo, but it's the bear). `srcs: null` stops scene 11's art series inheriting, which is what made this look wrong.",
+    "objects": {
+      "dialogue": {
+        "type": "text",
+        "x": 0.5,
+        "y": 0.8,
+        "z": 200,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "text": "Then, for the past 6 years, (and for a just a little bit longer) I've been doing my PhD in computer science, working with Björn Hartmann at UC Berkeley.",
+        "speaker": "shm",
+        "style": "speech",
+        "speed": "normal",
+        "instant": false,
+        "hoverFade": false,
+        "fadeTo": null,
+        "tilt": null,
+        "width": 0.92,
+        "metaFrom": null,
+        "template": null
+      },
+      "cam": {
+        "type": "webcam",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -100,
+        "scale": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "fasten": null,
+        "flipX": false,
+        "holdPin": false,
+        "orbit": null,
+        "maskedBy": null,
+        "isMask": false,
+        "lockX": null,
+        "lockY": null,
+        "minX": null,
+        "maxX": null,
+        "minY": null,
+        "maxY": null,
+        "boxWidth": null
+      },
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "src": 301,
+        "srcs": null,
+        "cycleKey": null
+      }
+    }
+  },
+  {
+    "id": 13,
+    "cue": "] — Adobe → MJ",
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "srcs": [
+          302,
+          303
+        ],
+        "index": 0,
+        "cycleKey": "]"
+      },
+      "dialogue": {
+        "text": "I've been seen doing this work and other HCI + AI Creativity Support research stunts in places like here and here,"
+      }
+    }
+  },
+  {
+    "id": 14,
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "src": 505,
+        "srcs": null,
+        "cycleKey": null
+      },
+      "dialogue": {
+        "text": "and as part of a group called The Berkeley Institute of Design Lab (which was also once home to the great Professor Sarah Sterman, who was the first person to teach me how to submit an IRB protocol.),"
+      }
+    },
+    "_note": "`srcs: null` matters: scene 13's Adobe/MJ series would otherwise inherit, and a series beats `src`."
+  },
+  {
+    "id": 15,
+    "_note": "CSEdrawing full-frame behind you (z -60, above the webcam at -100), sister's art on your hand. 571 is a real file, converted from the Keynote copy — not a link, since Keynote's tmp folder gets cleared.",
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "src": 507,
+        "srcs": null,
+        "cycleKey": null
+      },
+      "dialogue": {
+        "text": "But i think I actually first became interested in my area of research a long time ago, when, as a kid, I spent hours watching my older sister learn how to draw in Adobe Photoshop. She's now a professional children's book illustrator! (see: christinealmeda.com)"
+      },
+      "slide": {
+        "type": "image",
+        "src": 571,
+        "fit": "cover",
+        "x": 0.5,
+        "y": 0.5,
+        "z": -60
+      }
+    }
+  },
+  {
+    "id": 16,
+    "objects": {
+      "lh": null,
+      "dialogue": {
+        "text": "I'm an HCI researcher whose particular focus is in Creativity Support Research, or Creativity Support Tools (CSTs). So I'm interested in how technology design can help artists (by which I kinda mean *everyone*) make art and be creative."
+      },
+      "slide": null
+    }
+  },
+  {
+    "id": 17,
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "src": 315
+      },
+      "dialogue": {
+        "text": "My research has gone from designing novel color mixing and digital painting systems…"
+      }
+    }
+  },
+  {
+    "id": 18,
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.1,
+        "src": 316
+      },
+      "dialogue": {
+        "text": "to my dissertation work on creative ecosystems— investigating the social and technical systems that prevent communities from making more art more often, and how we might build infrastructure to support vibrant online creative community instead…"
+      }
+    }
+  },
+  {
+    "id": 19,
+    "_note": "Artographer on the hand, as in CNMAT scene 85. For it full-frame instead, see CNMAT scene 74 (fit cover, z -60, audio).",
+    "objects": {
+      "lh": {
+        "type": "image",
+        "fasten": "leftHand",
+        "z": 30,
+        "size": 1.15,
+        "src": 343
+      },
+      "dialogue": {
+        "text": "…to my current focus on cultural and historical data work, designing interactions that lead us towards engaging with, appreciating, and sustaining human artists, art-making, and culture."
+      }
+    }
+  },
+  {
+    "id": 20,
+    "_note": "The hook, on the left hand, flipped to face left. Scale from stochastic_final scene 29, where it rode the right hand — re-tune in the panel.",
+    "objects": {
+      "lh": {
+        "type": "image",
+        "src": 216,
+        "fasten": "leftHand",
+        "flipX": true,
+        "size": 1,
+        "scale": 0.39,
+        "z": 30
+      },
+      "dialogue": {
+        "text": "well, that's my cue to hand it over to my Keynote slides. So that's all from me, puppet shm! whoaaa!"
+      }
+    }
+  },
+  {
+    "id": 21,
+    "reset": true,
+    "cue": "⌘-Tab to Keynote, ⌥⌘P",
+    "_note": "Blackout for the hand-off. An empty stage is black, so the cut to Keynote's first slide happens from nothing rather than from your face mid-sentence."
+  }
+]

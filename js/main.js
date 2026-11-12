@@ -13,6 +13,7 @@ import { Detector } from './detector.js';
 import { Mic } from './mic.js';
 import { FaceAnalysis } from './facelabel.js';
 import { Showcase } from './showcase.js';
+import { Remote } from './remote.js';
 
 const params = new URLSearchParams(location.search);
 const showName = params.get('show') || 'demo';
@@ -116,6 +117,8 @@ let player = null;
 // boot and closes over this, and a top-level `const` declared further down would be in its
 // temporal dead zone until then — a ReferenceError that takes the whole rig with it (§9.7).
 let panel = null;
+// The presenter view's feed (control.html). Same TDZ reasoning as `panel`.
+let remote = null;
 let mic = { ready: false, denied: false };
 
 function startStatusBar() {
@@ -219,7 +222,7 @@ async function main() {
     // Cycling changes which asset is on stage, so the inspector — and the metadata editor
     // keyed on that asset — are now showing the previous one. Authoring a series is the
     // main reason to cycle at all, so this has to follow.
-    if (cycled) panel?.renderInspector();
+    if (cycled) { panel?.renderInspector(); remote?.send(); }
   });
 
   // Dependencies passed explicitly — NOT a grab-bag that modules mutate to hand
@@ -247,7 +250,7 @@ async function main() {
     bodyBase: document.body.className,
     // showcase.afterScene runs FIRST: it re-asserts the detector flags and the .editing
     // class that goto() has just overwritten, before the panel paints from that state.
-    onSceneChange: (s) => { showcase.afterScene(s); panel.onSceneChange(s); edit.onSceneChange(); },
+    onSceneChange: (s) => { showcase.afterScene(s); panel.onSceneChange(s); edit.onSceneChange(); remote?.send(); },
   });
   const showcase = new Showcase({
     player, edit, tracking, detector, faces, showName, toggles: config.showcase,
@@ -267,6 +270,7 @@ async function main() {
   deps.find = (id) => player.pool.live.get(id);
   deps.list = () => player.pool.objects;
   player.load(scenes);
+  remote = new Remote({ showName, player, assets });
   panel.mount();
 
   boot(90, 'checking for local server…');
@@ -307,7 +311,7 @@ async function main() {
 
   if (params.has('nocam')) { el.boot.classList.add('hidden'); el.boot.hidden = true; }
 
-  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, showcase, tracking, silhouette, detector, mic, faces };
+  window.shmuppetry = { stage, renderer, player, camera, assets, panel, edit, showcase, tracking, silhouette, detector, mic, faces, remote };
 }
 
 main().catch((err) => {

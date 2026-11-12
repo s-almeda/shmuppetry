@@ -116,7 +116,10 @@ export class AssetLibrary {
     this.byMeta = new Map();
     this.cache = new Map();
     for (const file of manifest?.files ?? []) {
-      const n = parseInt(file.match(/(\d+)/)?.[1], 10);
+      // The FILENAME's number, not the path's: `UIUC_2026/503_flag.png` is 503, not 2026.
+      // Matching the whole path made every file in a folder with digits in its name
+      // collapse onto one number — the same basename rule check.mjs already used.
+      const n = parseInt(file.split('/').pop().match(/(\d+)/)?.[1], 10);
       if (Number.isNaN(n)) { console.warn(`[assets] "${file}" has no number in its name — not addressable`); continue; }
       this.byNumber.set(n, file);
       this.numberOf.set(file, n);

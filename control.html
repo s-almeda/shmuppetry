@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>shmuppetry control</title>
+  <!-- The presenter view: a live mirror of the rig tab plus what Space will do next. Loads
+       no models and no camera — it is a picture and some text, so it costs the laptop
+       almost nothing while the rig does the real work in its own window. -->
+  <link rel="stylesheet" href="./css/control.css" />
+</head>
+<body>
+  <main id="mirror">
+    <video id="mirror-video" autoplay muted playsinline></video>
+    <div id="mirror-empty">
+      <button id="pick" type="button">click to mirror</button>
+      <p>select the browser window displaying the puppetry rig</p>
+    </div>
+  </main>
+
+  <section id="notes">
+    <header>
+      <button id="back" type="button" title="step this view back (the show doesn't move)">◀</button>
+      <button id="where" type="button" title="click to snap back to where the rig is"></button>
+      <button id="fwd" type="button" title="step this view forward (the show doesn't move)">▶</button>
+      <span id="link" class="off"></span>
+    </header>
+    <div class="col now">
+      <h2>now</h2>
+      <ul id="now"></ul>
+      <h2 id="series-h">series</h2>
+      <ul id="series"></ul>
+    </div>
+    <div class="col next">
+      <h2>next</h2>
+      <p id="cue"></p>
+      <ul id="changes"></ul>
+    </div>
+  </section>
+
+  <script type="module" src="./js/control.js"></script>
+</body>
+</html>

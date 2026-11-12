@@ -1,0 +1,57 @@
+{
+  "_note": "UIUC 2026 talk — the rig runs the INTRO only; the rest of the talk is Keynote. Copied from shows/CNMAT_openlab/config.json; title and capabilities differ.",
+  "title": "shm @ UIUC 2026",
+  "skin": "default",
+  "aspect": null,
+  "mirror": true,
+  "_micOnStart": "Camera and mic are separate getUserMedia grants, so \"it's showtime!\" asks for both. This show has mic-driven puppets (bounce + talk frames) and nothing about them works without it — better one extra prompt at boot than a dead puppet on stage.",
+  "micOnStart": true,
+  "_capabilities": "`hands` for every hand puppet; `face` for hats/headings; `faceLabels` (face-api.js, a SECOND ML runtime) for the green #b4dd13 name box around your face. `potato` is dropped — nothing in the intro uses it. Everything here loads eagerly at boot, so trim it once the script settles.",
+  "capabilities": [
+    "hands",
+    "face",
+    "faceLabels"
+  ],
+  "paper": {
+    "cut": {
+      "bound": 0.11,
+      "skeleton": 0.01,
+      "clean": 0.015,
+      "range": 1,
+      "grow": 0.08,
+      "smooth": 0.55,
+      "points": 45,
+      "join": "miter"
+    },
+    "outline": {
+      "width": 0.045,
+      "color": "#ffffff"
+    },
+    "shadow": {
+      "dx": 0,
+      "dy": 0.012,
+      "blur": 0.02,
+      "color": "rgba(0,0,0,0.45)"
+    },
+    "face": {
+      "grow": 0.02,
+      "points": 13,
+      "smooth": 0.55,
+      "crown": 0.22,
+      "join": "miter"
+    },
+    "eye": {
+      "grow": 0.8,
+      "points": 7,
+      "outline": {
+        "width": 0.14
+      }
+    },
+    "mouth": {
+      "points": 10,
+      "outline": {
+        "width": 0.08
+      }
+    }
+  }
+}

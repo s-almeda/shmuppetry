@@ -6,6 +6,11 @@
       "scenes": 93
     },
     {
+      "name": "UIUC_2026",
+      "title": "shm @ UIUC 2026",
+      "scenes": 21
+    },
+    {
       "name": "demo",
       "title": "shmuppetry rig 3.0",
       "scenes": 4
@@ -18,7 +23,7 @@
     {
       "name": "stochastic_final",
       "title": "stochastic final presentation",
-      "scenes": 28
+      "scenes": 30
     }
   ]
 }

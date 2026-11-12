@@ -1,0 +1,48 @@
+/* The presenter view. Dark so it doesn't glow on stage, and fluid so the window can be
+   any size you drag it to — the mirror takes whatever the notes don't. */
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: flex; flex-direction: column;
+  background: #111; color: #ddd;
+  font: 15px/1.35 -apple-system, system-ui, sans-serif;
+}
+[hidden] { display: none !important; }
+
+#mirror { position: relative; flex: 1 1 auto; min-height: 120px; background: #000; }
+#mirror-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+#mirror-empty {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.5em; text-align: center; color: #888;
+}
+#pick { font-size: 1.1em; padding: 0.6em 1.2em; cursor: pointer; }
+
+#notes {
+  flex: 0 0 auto; max-height: 45vh; overflow-y: auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.25em 1.5em; padding: 0.6em 1em 1em; border-top: 1px solid #333;
+}
+#notes header {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 0.4em;
+  font-variant-numeric: tabular-nums; color: #999;
+}
+#notes header button {
+  background: #222; color: #ccc; border: 1px solid #444; border-radius: 4px;
+  font: inherit; padding: 0.15em 0.6em; cursor: pointer;
+}
+#notes header button:hover { background: #333; }
+#where.shifted { color: #e0a030; border-color: #e0a030; }
+#link { margin-left: auto; }
+#link.on { color: #b4dd13; }
+#link.off { color: #e0a030; }
+
+h2 { margin: 0.4em 0 0.15em; font-size: 0.75em; letter-spacing: 0.08em; text-transform: uppercase; color: #777; }
+ul { margin: 0; padding: 0; list-style: none; }
+li { padding: 0.1em 0; }
+
+/* NOW is what you're saying — white and big. NEXT is a glance — grey and quieter. */
+.now #now { color: #fff; font-size: 1.3em; line-height: 1.3; }
+.now #series { color: #aaa; }
+.next { color: #888; }
+.next #cue { margin: 0 0 0.2em; font-size: 1.1em; color: #bbb; }

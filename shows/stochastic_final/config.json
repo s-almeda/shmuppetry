@@ -1,17 +1,18 @@
 {
-  "_note": "stochastic_final — the real script, 26 scenes. Copied from shows/CNMAT_openlab/config.json; the skin and the capability list are what differ. Shape: scene 1 opens on camera, scenes 2–11 are the poem (one line added per scene, white on black), scene 12 cuts back to camera, scenes 13–25 are the topic slips (including the five-faces beat at 23–24), scene 26 is the green face-box label, and 27–28 are the curtain call and the end card. One show asset: the cane, asset 216, which lives in assets/shmidpoint/. Everything else is text, the webcam, or a cutout of you.",
+  "_note": "stochastic_final — the real script, 26 scenes. Copied from shows/CNMAT_openlab/config.json; the skin and the capability list are what differ. Shape: scene 1 opens on camera, scenes 2–11 are the poem (one line added per scene, white on black), scene 12 cuts back to camera, scenes 13–27 are the topic slips (including the sock at 14 and the five-faces beat at 25–26), scene 28 is the green face-box label, and 29–30 are the curtain call and the end card. One show asset: the cane, asset 216, which lives in assets/shmidpoint/. Everything else is text, the webcam, or a cutout of you.",
   "title": "stochastic final presentation",
   "_skin": "css/skins/stochastic_final.css — the default skin plus three textbox styles this show adds: `header` (skinny centred cardstock slip), `hathead` (lined paper worn on your head) and `poem` (white line on black that fades in). The skin <link> is REPLACED, not stacked, so that file @imports default.css as its first rule.",
   "skin": "stochastic_final",
   "aspect": null,
   "mirror": true,
-  "_capabilities": "`face` (MediaPipe landmarker) for the five face cutouts in scene 23; `hands` for the cane on your right hand in scene 27; `faceLabels` (face-api.js) for the green detection box in scene 26. The last one is a SECOND ML runtime on top of MediaPipe and is the most expensive thing this show loads — it is here because the `label` object reads its rect from face-api and nothing else reports it, so the MediaPipe tracker cannot stand in. `potato` is the only one left out; nothing uses it. Everything listed here loads EAGERLY at boot, so if a scene is ever cut, re-check this list: per-frame inference that nothing needs is exactly what starves the typewriter.",
+  "_capabilities": "`face` (MediaPipe landmarker) for the five face cutouts in scene 25; `hands` for the sock puppet in scene 14 and the cane in scene 29; `faceLabels` (face-api.js) for the green detection box in scene 28. The last one is a SECOND ML runtime on top of MediaPipe and is the most expensive thing this show loads — it is here because the `label` object reads its rect from face-api and nothing else reports it, so the MediaPipe tracker cannot stand in. `potato` is the only one left out; nothing uses it. Everything listed here loads EAGERLY at boot, so if a scene is ever cut, re-check this list: per-frame inference that nothing needs is exactly what starves the typewriter.",
   "capabilities": [
     "face",
     "hands",
     "faceLabels"
   ],
-  "_micOnStart": "Absent on purpose — no ventriloquy puppets (no talkSrc, no bounce) in this script, so there is nothing for the mic to drive and no reason to make the audience watch a second permission prompt. Add it the moment a puppet starts talking.",
+  "_micOnStart": "Camera and mic are SEPARATE getUserMedia grants, so \"it's showtime!\" asks for both together. Scene 14's sock puppet is mic-driven — `talkSrc` swaps its frame on your voice and `bounce` hops it — and neither does anything without this. Better one extra prompt at boot than a dead puppet on stage: a missing mic grant does not error, the sock simply never moves.",
+  "micOnStart": true,
   "paper": {
     "cut": {
       "bound": 0.11,
