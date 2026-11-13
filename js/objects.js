@@ -269,6 +269,9 @@ export class StageObject {
     // The bounce is added BEFORE this, so clamps stay the final authority on where an
     // object may be — a bouncing puppet cannot hop out through a maxY it was given.
     ({ x, y } = this._constrain(x, y));
+    // Where it actually landed this frame, pin and all — the panel's "which one is this?"
+    // outline reads it, since x/y alone are only an offset on a pinned object.
+    this._at = { x, y };
 
     // A fastener may carry an angle — the head's roll — so a hat tilts with the head.
     // The object's own rotation is applied on top of it.
@@ -394,6 +397,7 @@ export class StageObject {
     // like anything else, and the importer writes slide scenes absolute anyway.
     if (this.in) out.in = this.in;
     if (this.out) out.out = this.out;
+    if (this.actions?.length) out.actions = this.actions;
     if (this._note) out._note = this._note;
     return out;
   }
@@ -792,6 +796,9 @@ export class WebcamFeed extends StageObject {
     return { w: h * stage.aspect * (this.boxWidth ?? 1), h };
   }
 
+  // The box builds clip against (a wipe) — centred on the feed's point, like the video.
+  bounds(stage) { const { w, h } = this._box(stage); return { w, h, dy: -h / 2 }; }
+
   render(g, stage) {
     const { w, h } = this._box(stage);
     const cam = this.deps.camera;
@@ -1005,6 +1012,15 @@ export class TextBox extends StageObject {
     // the importer writes from a Keynote point size — and wins over the skin's default.
     const basePx = this.size ? this.size * stage.h : Math.max(12, stage.h * 0.036);
     el.style.fontSize = `${basePx * (this._shrink ?? 1)}px`;
+    // Keynote sizes a text box to hug its text exactly, and a browser sets the same font
+    // a hair wider — enough to wrap the last word of every line. So a slide box gets a
+    // third of an em of slack, added on the side the text does NOT align to, so the text
+    // itself stays where the deck put it.
+    if (this.style === 'slide') {
+      const slack = basePx * (this._shrink ?? 1) * 0.35;
+      el.style.width = `calc(${this.width * 100}% + ${slack}px)`;
+      el.style.marginLeft = `${this.align === 'right' ? -slack / 2 : this.align === 'center' ? 0 : slack / 2}px`;
+    } else el.style.marginLeft = '';
     // Slide typography is inline, since it is per-box rather than per-skin.
     // `font` may be a comma list — the importer writes "PostScriptName, Family Guess" —
     // and each entry is quoted so names with spaces and dashes both resolve.
@@ -1670,6 +1686,10 @@ export class LabelBoxObject extends StageObject {
     };
   }
 
+  // A build waiting for its step: the renderer skips draw(), so the DOM caption has to be
+  // hidden from here or it would sit on stage without its box.
+  update() { if (this._hidden && this._lel) this._lel.hidden = true; }
+
   // Park the editable label on the box's caption corner, in the box's own colours.
   _placeLabel(stage, box, size, ly) {
     const el = this._lel;
@@ -1740,9 +1760,13 @@ export class LabelBoxObject extends StageObject {
     const box = this._box(stage);
     if (!box) { if (this._lel) this._lel.hidden = true; return; }
     const { x, y, w, h } = box;
+    // Builds: this type draws itself rather than going through _paintSelf, so it reads
+    // the fade channel here. Its box follows a face, so move / scale / wipe all fade.
+    const alpha = this.fx?.alpha ?? 1;
+    if (this._lel) this._lel.style.opacity = alpha < 1 ? String(alpha) : '';
 
     g.save();
-    g.globalAlpha = this.opacity;
+    g.globalAlpha = this.opacity * alpha;
     g.lineWidth = Math.max(2, stage.h * this.weight);
     g.strokeStyle = this.color;
     g.strokeRect(x, y, w, h);

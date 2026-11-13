@@ -401,3 +401,21 @@ body.editing .textbox-name:focus { outline: 1px dotted rgba(0, 92, 167, 0.7); ou
 #dom-layer > .slide-obj { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
 #dom-layer > div.slide-obj { overflow: hidden; }   /* images: a crop is a window */
 .slide-obj .slide-media { position: absolute; display: block; max-width: none; user-select: none; }
+
+/* ── Panel: which object is this? ─────────────────────────────────────────────
+   A thumbnail of the selected object in the inspector, and a brief outline around it on
+   stage when it is picked from the list (panel.js flash / renderPreview). */
+#p-preview { margin: 4px 0; font-style: italic; color: #444; overflow: hidden; }
+#p-preview img, #p-preview video {
+  display: block; max-width: 100%; max-height: 90px; margin: 0 auto; object-fit: contain;
+  background: repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 0 0 / 12px 12px;
+}
+.select-flash {
+  position: absolute; z-index: 50; pointer-events: none; box-sizing: border-box;
+  border: 2px dotted #b4dd1e; box-shadow: 0 0 0 1px #d7822d, 0 0 5px #669420;
+  animation: select-flash 1.4s ease-out forwards;
+}
+@keyframes select-flash { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
+/* Every dropdown in a panel row: `width: 0` throws away the natural width (its longest
+   option), and flex gives back exactly what the row has. See DROPDOWN WIDTH in panel.js. */
+.panel-row select { flex: 1 1 0; width: 0; min-width: 0; }

@@ -229,6 +229,41 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, entries: Object.keys(parsed).length });
     }
 
+    // ── Upload one asset into a show's folder ─────────────────────────────
+    // The panel's "upload" button, when authoring. The body is the raw file; the name
+    // comes in the query. It is given the next free asset NUMBER — after the highest one
+    // already in this show's folder, so a show's art stays in its own band — and written
+    // as assets/<show>/<n>_<name>. Never overwrites: a taken number is skipped.
+    const assetRoute = pathname.match(/^\/api\/shows\/([\w.-]+)\/asset$/);
+    if (assetRoute) {
+      if (req.method !== 'PUT') return send(res, 405, 'method not allowed');
+      if (!isLoopback(req)) return send(res, 403, 'authoring is loopback-only');
+      const show = assetRoute[1];
+      const raw = path.basename(url.searchParams.get('name') ?? '');
+      if (!ASSET_EXT.test(raw)) return send(res, 400, 'not an image, video or sound file');
+      // Strip any number the file already leads with, and anything a path could abuse.
+      const clean = raw.replace(/^\d+[_-]*/, '').replace(/[^\w.-]+/g, '_') || 'upload' + path.extname(raw);
+      const chunks = []; let size = 0;
+      for await (const chunk of req) {
+        size += chunk.length;
+        if (size > 200 * 1024 * 1024) return send(res, 413, 'file too large (200MB limit)');
+        chunks.push(chunk);
+      }
+      if (!size) return send(res, 400, 'empty file');
+      const num = (f) => parseInt(f.split('/').pop().match(/(\d+)/)?.[1], 10);
+      const files = (await walk(path.join(ROOT, 'assets'))).filter((f) => !f.startsWith('textures/'));
+      const taken = new Set(files.map(num).filter((n) => !Number.isNaN(n)));
+      const own = files.filter((f) => f.startsWith(`${show}/`)).map(num).filter((n) => !Number.isNaN(n));
+      let n = (own.length ? Math.max(...own) : Math.max(0, ...taken)) + 1;
+      while (taken.has(n)) n++;
+      const dir = path.join(ROOT, 'assets', show);
+      await fs.mkdir(dir, { recursive: true });
+      const name = `${n}_${clean}`;
+      await fs.writeFile(path.join(dir, name), Buffer.concat(chunks), { flag: 'wx' });
+      console.log(`[dev] uploaded assets/${show}/${name} (${size} bytes) as asset ${n}`);
+      return json(res, 200, { ok: true, number: n, file: `${show}/${name}` });
+    }
+
     // ── One scene, spliced into whatever is on disk NOW ───────────────────
     // The whole-script route above is a footgun whenever anything else is also editing the
     // file: the panel PUTs its entire in-memory copy, so a tab loaded ten minutes ago

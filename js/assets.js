@@ -132,6 +132,10 @@ export class AssetLibrary {
     }
   }
 
+  // A file added to the library after boot (the panel's authoring upload), so its number
+  // resolves without reloading the manifest.
+  register(n, file) { this.byNumber.set(n, file); this.numberOf.set(file, n); }
+
   // The asset NUMBER for a number or a path. Returns null for anything unaddressable —
   // a data:/blob: upload has no number, and the digits inside a base64 payload must never
   // be mistaken for one.

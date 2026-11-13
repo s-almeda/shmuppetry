@@ -418,7 +418,12 @@ async function main() {
   // 1, 2, 3 (with 0 kept for builds that play on arrival).
   const buildsOnSlide = () => {
     const out = [];
-    for (const o of player.pool.objects) for (const kind of ['in', 'out']) if (o[kind]) out.push({ o, kind, b: o[kind] });
+    for (const o of player.pool.objects) {
+      for (const kind of ['in', 'out']) if (o[kind]) out.push({ o, kind, b: o[kind] });
+      // Actions (builds that change the object) share the same steps, so they are listed
+      // and reordered here too. Creating one is still done in the script JSON.
+      for (const a of o.actions ?? []) out.push({ o, kind: 'action', b: a });
+    }
     return out.sort((a, b) => (a.b.step ?? 1) - (b.b.step ?? 1) || (a.b.delay ?? 0) - (b.b.delay ?? 0) || (a.kind === 'in' ? -1 : 1));
   };
   const nextStep = () => Math.max(0, ...buildsOnSlide().map((x) => x.b.step ?? 1)) + 1;
@@ -492,7 +497,7 @@ async function main() {
       if (st !== last) li.classList.add('step-start');
       if (x.o.id === selected) li.classList.add('sel');
       li.innerHTML = `<span class="step">${st !== last ? (st === 0 ? 'auto' : st) : ''}</span>` +
-        `<span class="what">${x.kind === 'out' ? '⇥ ' : ''}${esc(x.b.effect)}${x.b.dir ? ' ' + esc(x.b.dir) : ''}${x.b.delay ? ` +${x.b.delay}s` : ''} <small>${esc(describe(x.o))}</small></span>` +
+        `<span class="what">${x.kind === 'out' ? '⇥ ' : x.kind === 'action' ? '✎ ' : ''}${esc(x.b.effect ?? `set ${Object.keys(x.b.set ?? {}).join(', ')}`)}${x.b.dir ? ' ' + esc(x.b.dir) : ''}${x.b.delay ? ` +${x.b.delay}s` : ''} <small>${esc(describe(x.o))}</small></span>` +
         `<span class="ctl"><button type="button" data-d="-1" title="one click earlier">▲</button><button type="button" data-d="1" title="one click later">▼</button></span>`;
       last = st;
       li.addEventListener('click', (e) => {

@@ -26,6 +26,7 @@ export class EditMode {
   setEditing(on) {
     this.editing = !!on;
     document.body.classList.toggle('editing', this.editing);
+    this.onEditing?.(this.editing);
   }
 
   get isLoopback() { return LOOPBACK.has(location.hostname); }
@@ -267,6 +268,7 @@ export class Panel {
         </div>
         <div class="group" id="p-inspector-section" hidden>
           <b id="p-inspector-title">object</b>
+          <div id="p-preview" hidden></div>
           <div id="p-inspector"></div>
         </div>
         <div class="group" id="p-meta-section" hidden>
@@ -460,6 +462,58 @@ export class Panel {
     this._inspectorFor = null;
     this.renderObjectList();
     this.renderInspector();
+    this.flash(id ? this.player.pool.live.get(id) : null);
+  }
+
+  // A brief outline on stage around the object just picked in the on-stage list
+  flash(obj) {
+    const stage = obj?.deps?.stage;
+    if (!stage?.el) return;
+    const host = stage.el.getBoundingClientRect();
+    let box = null;
+    const el = obj._wrap ?? obj._el;            // page elements know their own rect
+    if (el?.getBoundingClientRect && !el.hidden) {
+      const r = el.getBoundingClientRect();
+      if (r.width || r.height) box = { x: r.left - host.left, y: r.top - host.top, w: r.width, h: r.height, rot: 0 };
+    }
+    if (!box) {
+      let b = null;
+      try { b = obj.bounds?.(stage) ?? obj._box?.(stage); } catch { /* not ready */ }
+      const w = b?.w ?? 80, h = b?.h ?? 80, sc = obj.scale ?? 1;
+      const at = obj._at ?? { x: obj.x ?? 0.5, y: obj.y ?? 0.5 };
+      const cy = at.y * stage.h + ((b?.dy ?? -h / 2) + h / 2) * sc;
+      box = { x: at.x * stage.w - (w * sc) / 2, y: cy - (h * sc) / 2, w: w * sc, h: h * sc, rot: obj.rotation ?? 0 };
+    }
+    this._flash?.remove();
+    const mark = this._flash = document.createElement('div');
+    mark.className = 'select-flash';
+    Object.assign(mark.style, {
+      left: `${box.x}px`, top: `${box.y}px`, width: `${Math.max(box.w, 8)}px`, height: `${Math.max(box.h, 8)}px`,
+      transform: box.rot ? `rotate(${box.rot}deg)` : '',
+    });
+    mark.addEventListener('animationend', () => mark.remove());
+    stage.el.appendChild(mark);
+  }
+
+  // A thumbnail of what the selected object is showing right now. Re-checked on every
+  // inspector refresh, so cycling a series moves the picture along with it.
+  renderPreview(obj) {
+    const host = this.$('#p-preview');
+    const ref = obj?.srcs?.length ? obj.srcs[obj.index ?? 0] : obj?.src;
+    const url = ref != null && this.assets ? this.assets.src(ref) : null;
+    const text = !url && obj?.type === 'text' ? String(obj.text ?? '').slice(0, 80) : '';
+    const key = url ?? `t:${text}`;
+    host.hidden = !url && !text;
+    if (this._previewKey === key) return;
+    this._previewKey = key;
+    host.replaceChildren();
+    if (url) {
+      const isVideo = obj.type === 'video' || /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url);
+      const el = document.createElement(isVideo ? 'video' : 'img');
+      el.src = url;
+      if (isVideo) { el.muted = true; el.preload = 'metadata'; }
+      host.appendChild(el);
+    } else if (text) host.textContent = `“${text}”`;
   }
 
   // The generic inspector. It knows nothing about what kind of object it is editing —
@@ -471,6 +525,7 @@ export class Panel {
     const obj = this.selectedId ? this.player.pool.live.get(this.selectedId) : null;
     if (!obj) { section.hidden = true; host.innerHTML = ''; return; }
     section.hidden = false;
+    this.renderPreview(obj);
     this.$('#p-inspector-title').textContent = `${obj.id} · ${obj.type}`;
 
     // Rebuild only when the SELECTION changes, so dragging a slider never destroys the
@@ -514,6 +569,17 @@ export class Panel {
   // rebuilding the DOM — needed because the same object stays selected across a scene
   // change, and a control still showing the previous scene's value is worse than no
   // control: a toggle reading "off" for something that is on inverts your next click.
+  //
+  // DROPDOWN WIDTH — how to keep a <select> inside the panel. Two separate things go wrong:
+  //   1. The CLOSED control. A select's natural width is its longest option, and as a flex
+  //      item it refuses to shrink below that, so it pokes out of the row. Give it
+  //      `flex: 1 1 0; width: 0; min-width: 0` (css/base.css, `.panel-row select`): width 0
+  //      discards the natural width and flex hands back exactly the room the row has.
+  //   2. The OPEN list. That is a native OS menu — CSS cannot size it — and it is as wide
+  //      as its longest option, starting at the control's left edge. The panel sits at the
+  //      right of the screen, so one long name sends the menu off-screen. The only fix is
+  //      SHORT OPTION TEXT: clip the label (~22 characters) and put the full name in the
+  //      option's `title`. Optgroup labels count too.
   renderFields(host, obj, onChange = () => {}) {
     host.innerHTML = '';
     const syncs = [];
@@ -527,9 +593,7 @@ export class Panel {
       // Booleans are a BUTTON, not a checkbox. xp.css paints a checkbox entirely through
       // pseudo-elements on a sibling label, positioned with hardcoded pixel offsets that
       // assume the label is laid out exactly as its demo does — any flex, font-size or
-      // overflow in the surrounding row pulls the tick off the box. A button carries its
-      // own state inside its own border, needs no sibling, and already matches every
-      // other control in this panel.
+      // overflow in the surrounding row pulls the tick off the box.
       const isCheck = field.type === 'checkbox';
       let input;
       if (isCheck) {
@@ -567,7 +631,80 @@ export class Panel {
         input.type = 'text';
         input.value = obj[field.key] ?? '';
         syncs.push(() => { input.value = obj[field.key] ?? ''; });
-        if (this.showcase) {
+        if (this.edit.available && !this.showcase?.ids.length) {
+          // AUTHORING: a dropdown of every picture and video in the library — this show's
+          // own folder first — instead of a box you type a number into. The last entry
+          // uploads a new file into assets/<show>/ under the next free number and selects
+          // it, so "save scene" keeps it. (A public showcase keeps a visitor's art in
+          // their own browser instead; see below.)
+          const NEW = '__new__';
+          const file = document.createElement('input');
+          file.type = 'file'; file.hidden = true; file.accept = 'image/*,video/*';
+          const sel = document.createElement('select');
+          sel.className = 'asset-select';
+          const fill = () => {
+            sel.replaceChildren(new Option('(none)', ''));
+            const groups = new Map();
+            for (const [n, f] of this.assets?.byNumber ?? []) {
+              if (!/\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)$/i.test(f)) continue;
+              const folder = f.includes('/') ? f.slice(0, f.indexOf('/')) : '(top)';
+              if (!groups.has(folder)) groups.set(folder, []);
+              groups.get(folder).push([n, f.split('/').pop().replace(/^\d+[_-]*/, '').replace(/\.\w+$/, '')]);
+            }
+            const mine = this.edit.showName;
+            const order = [...groups.keys()].sort((x, y) => (y === mine) - (x === mine) || x.localeCompare(y));
+            for (const folder of order) {
+              const g = document.createElement('optgroup');
+              g.label = folder === mine ? `${folder} (this show)` : folder;
+              for (const [n, name] of groups.get(folder).sort((x, y) => x[0] - y[0])) {
+                // Clipped: see the DROPDOWN WIDTH note above renderFields.
+                const o = new Option(`${n} · ${name.length > 22 ? `${name.slice(0, 21)}…` : name}`, String(n));
+                o.title = name;
+                g.appendChild(o);
+              }
+              sel.appendChild(g);
+            }
+            sel.appendChild(new Option('+ add new…', NEW));
+          };
+          const show = () => {
+            const v = obj[field.key] == null ? '' : String(obj[field.key]);
+            // Something the library has no number for (a path, a visitor's upload): show it
+            // as its own entry rather than silently reading "(none)".
+            if (v && ![...sel.options].some((o) => o.value === v)) sel.insertBefore(new Option(v.length > 28 ? `${v.slice(0, 26)}…` : v, v), sel.options[1]);
+            sel.value = v;
+          };
+          fill(); show();
+          syncs.push(show);
+          sel.addEventListener('change', () => {
+            if (sel.value === NEW) { show(); file.click(); return; }
+            setImage(obj, field.key, sel.value);
+            onChange();
+            this.renderPreview(obj);
+          });
+          file.addEventListener('change', async () => {
+            const f = file.files?.[0]; file.value = '';
+            if (!f) return;
+            sel.disabled = true;
+            try {
+              const res = await fetch(`./api/shows/${encodeURIComponent(this.edit.showName)}/asset?name=${encodeURIComponent(f.name)}`, { method: 'PUT', body: f });
+              if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+              const out = await res.json();
+              this.assets?.register(out.number, out.file);
+              setImage(obj, field.key, String(out.number));
+              fill(); show();
+              onChange();
+              this.renderPreview(obj);
+            } catch (err) {
+              console.error('[panel] upload failed', err);
+              sel.title = `upload failed: ${err.message ?? err}`;
+              alert(`Upload failed.\n\n${err.message ?? err}\n\nIf the dev server was started before this feature was added, restart it.`);
+            } finally { sel.disabled = false; }
+          });
+          row.append(sel, file);
+          host.appendChild(row);
+          continue;
+        }
+        if (this.showcase?.fileInput) {
           const pick = document.createElement('button');
           pick.type = 'button';
           pick.className = 'upload';
@@ -576,7 +713,7 @@ export class Panel {
           pick.addEventListener('click', () => this.showcase.pickFor(obj.id));
           row.appendChild(input);
           row.appendChild(pick);
-          input.addEventListener('input', () => { obj[field.key] = input.value; onChange(); });
+          input.addEventListener('change', () => { setImage(obj, field.key, input.value); onChange(); });
           host.appendChild(row);
           continue;
         }
@@ -635,7 +772,9 @@ export class Panel {
       if (!isCheck) {
         const commit = () => {
           const numeric = field.type === 'range' || field.type === 'number';
-          obj[field.key] = numeric ? parseFloat(input.value) : input.value;
+          if (field.type === 'image') setImage(obj, field.key, input.value);
+          else if (field.key === 'fasten') { refasten(obj, input.value); for (const f of syncs) f(); }
+          else obj[field.key] = numeric ? parseFloat(input.value) : input.value;
           if (readout) readout.textContent = fmt(obj[field.key]);
           onChange();
         };
@@ -647,6 +786,34 @@ export class Panel {
     return () => { for (const f of syncs) f(); };
   }
 
+}
+
+// A typed image source. "12" is asset NUMBER 12, not a file called 12, and the object
+// only looks at `src` when a scene is applied — so it is told to load the new picture.
+function setImage(obj, key, raw) {
+  const v = String(raw).trim();
+  obj[key] = v === '' ? null : /^\d+$/.test(v) ? parseInt(v, 10) : v;
+  obj._load?.();
+  // Art named for a mount ("001_beret_hat.png") pins itself to the head on load, and
+  // that needs tracking the show may not have declared.
+  if (obj.fasten) obj.deps?.tracking?.load?.(/Hand/.test(obj.fasten) ? 'hands' : 'face');
+}
+
+// Pinning or unpinning from the panel. `x`/`y` are a stage POSITION on a free object but
+// an OFFSET from the pin on a fastened one, and an image's `size` is a share of the stage
+// when free but a multiple of the hand when pinned. Changing only `fasten` would leave a
+// centred picture half a stage away from your hand — off screen — at a third of its size.
+// So crossing between the two resets them to that mode's defaults.
+function refasten(obj, value) {
+  const was = !!obj.fasten;
+  obj.fasten = value || null;
+  if (was !== !!obj.fasten) {
+    obj.x = obj.y = obj.fasten ? 0 : 0.5;
+    if (obj.type === 'image' || obj.type === 'video') obj.size = obj.fasten ? 1.1 : 0.5;
+    obj._lastPin = null;
+  }
+  // Pinning needs tracking the show may never have declared (a no-op once loaded).
+  if (obj.fasten) obj.deps?.tracking?.load?.(/Hand/.test(obj.fasten) ? 'hands' : 'face');
 }
 
 function fmt(v) {

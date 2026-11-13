@@ -56,8 +56,10 @@ export class Tweens {
     if (!this.active.length) return;
     const done = [];
     for (const tw of this.active) {
-      if (now < tw.t0) continue;                      // still waiting out its delay
-      const k = tw.dur ? Math.min(1, (now - tw.t0) / tw.dur) : 1;
+      // A tween is stamped with the clock at the keypress, which can be a few ms AHEAD of
+      // the next frame's own timestamp. Only a real delay waits; otherwise it starts at 0.
+      if (now < tw.t0 && tw.delay) continue;
+      const k = tw.dur ? Math.max(0, Math.min(1, (now - tw.t0) / tw.dur)) : 1;
       this._apply(tw, k);
       if (k >= 1) done.push(tw);
     }
@@ -67,7 +69,9 @@ export class Tweens {
   _apply(tw, k) {
     if (!tw.started) { tw.started = true; tw.onStart?.(); }
     const e = k >= 1 ? 1 : tw.ease(k);
-    if (tw.target) for (const key of tw.keys) tw.target[key] = tw.from[key] + (tw.to[key] - tw.from[key]) * e;
+    // The last frame writes the destination itself, not from + (to − from): that sum can
+    // land a hair off, and an undone action must put back EXACTLY what was there.
+    if (tw.target) for (const key of tw.keys) tw.target[key] = k >= 1 ? tw.to[key] : tw.from[key] + (tw.to[key] - tw.from[key]) * e;
     tw.onUpdate?.(e, k);
     if (k >= 1) tw.onDone?.();
   }

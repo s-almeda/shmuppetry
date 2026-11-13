@@ -1,41 +1,35 @@
 # shmuppetry 3.0
 
-A paper puppet theatre that runs on a webcam.
+shm's puppet theatre presentation rig! 
 
-A general **stage** on which any number of **objects** appear at positions, each with a
-transform and a `z`. Scenes are JSON listing what is on stage. The webcam, the dialogue box,
-background art, props, and later the cut-out pieces of the puppeteer's own body are all *the
-same kind of thing* — a positioned object — rather than separate features with separate
-toggles.
+building upon [shmuppetry 2.5.0](https://github.com/s-almeda/shmspace) but making it more flexibly object-oriented-y. the architecture is built around the metaphor of a **stage**, on which any number of **objects** (like props, actors) can appear at a scripted position (specified as an x, y, and z (for layering) coordinate and with transforms (rotation, flip) applied) 
 
-Ground-up rebuild of [shmuppetry 2.5.0](https://github.com/s-almeda/shmspace). The design
-brief is [PORTING_TO_3.0.md](PORTING_TO_3.0.md); section references throughout the code point
-back at it.
+There is also support for creating and controlling assets via webcam+CV-driven puppet shenanigans!! webcam feed(s) are an object that can appear on stage, as are the objects we can cut out of a webcam feed using hand and face tracking CV + image segmentation. And (to support the actual puppeteering) any on stage object can have its position manipulated/derived from the coordinate of a recognized hand/face object captured by the webcam (this is true whether the webcam feed image is being displayed on "stage" or not)
 
-**Status: spine step 1.** Stage, transforms, one render loop, scene player, control panel,
-with `image` / `webcam` / `text` as the only object types. Loads no ML models at all.
-Steps 2 (bindings) and 3 (body parts + paper cutouts) are not built yet.
+A presentation is written as a **script** (ex: ``script.json``). A script is made of **scenes**, which are themselves each a JSON object with a list of what is on stage, including (optionally) a **character name** and their **dialogue** which will appear in the dialogue text box (but any arbitrary text appearing wherever is also possible). 
+Nov 2026 update: shm added the capability to import slides from keynote, which can be interspersed between puppet scenes. 
 
-## run it
+The rig also wears skins. (by default, it uses my favorite css framework, **xp.css** from unpkg)
+
+## credits
+
+- Thank you to Peter Sobot for **[keynote-parser](https://github.com/psobot/keynote-parser)**  (and Sean Patrick O'Brien for [his work documenting the iWork File Format](https://github.com/obriensp/iWorkFileFormat/blob/master/Docs/index.md))---we use this in `scripts/import-keynote.py` to import `.key` files into readable YAML and then into puppet rig compatible slides!
+
+-------
+### some of the text below is claude produced. pardon my slop.
+## running the rig
 
 ```
 node server/dev-server.js        # → http://localhost:8000
 node scripts/check.mjs           # smoke check — run this before a show
 ```
 
-`check.mjs` loads every module, resolves every scene of every show, constructs every object
-and asserts `serialize()` is a fixed point. It is not a test suite; it is the five-second
-answer to "did I just break the rig?". Anything needing a canvas, a camera or a model is out
-of scope and still needs eyes on a browser.
+`check.mjs` loads every module, resolves every scene of every show, constructs every object and asserts `serialize()` is a fixed point.
 
-No build step, no `npm install`. Plain ES modules and Node's standard library. The only
-external thing the page loads is **xp.css** from unpkg, which is the default skin.
 
-For the public read-only version, any static host works — the page is written to run from a
-subdirectory, so GitHub Pages serving from `/<repo>/` is fine:
-
+For the public demo version (live and accessible via shmuh.co/shmuppetry), any static host works; GitHub Pages serves from `/<repo>/`;
 ```
-node scripts/build-manifests.js  # bake the asset listing for static hosting
+node scripts/build-manifests.js  # bakes the asset listing for static hosting
 ```
 
 ### URL params
@@ -219,6 +213,13 @@ an ordinary scene with `"slide": true` whose objects are `text` (style `slide`),
   next scene; ← undoes one; Shift+arrows skip straight between scenes. `dir` is the
   direction of travel: `up`, `down`, `left`, `right`, `upLeft`, `upRight`, `downLeft`,
   `downRight`.
+- **Actions**: builds that CHANGE something already on stage, on the same steps.
+  On an object: `"actions": [{ "step": 2, "set": { "src": 331, "x": 0.3 }, "dur": 0.4 }]`
+  — numbers glide, a new picture crossfades, anything else switches. Or an emphasis that
+  changes nothing: `{ "step": 3, "effect": "pulse", "amount": 1.1 }` (also `jiggle`,
+  `blink`). On the scene itself, for its flags: `"actions": [{ "step": 1, "set":
+  { "freeze": true } }]`. The next scene inherits the result; ← undoes it. Edit mode
+  shows the scene as written, with every action undone.
 - **Editor**: `editor.html?show=<name>` — timeline on the left (puppet runs collapse into
   one box), the real stage in the middle, inspector on the right. Drag to move, corner
   handle to resize, double-click text to type, rename an id to link it. ⌘S saves the
@@ -228,3 +229,4 @@ an ordinary scene with `"slide": true` whose objects are `text` (style `slide`),
   `--into --after <sceneId>` splices into an existing show; `--png` flattens slides with
   tables/charts via Keynote; `--dry` prints without writing. The report lists what was
   approximated. `shows/slidetest` exercises every feature by hand.
+

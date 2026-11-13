@@ -25,6 +25,8 @@ import { Transitions, normalizeTransition } from './transition.js';
 // without restating it.
 const SCENE_FLAGS = ['freeze', 'bodyClass', 'potato', 'potatoManual'];
 
+const byStep = (actions) => (Array.isArray(actions) ? [...actions].sort((a, b) => (a?.step ?? 1) - (b?.step ?? 1)) : []);
+
 export function resolveScript(scenes) {
   const out = [];
   let previous = {};
@@ -36,13 +38,23 @@ export function resolveScript(scenes) {
     if (scene.reset) flags = {};
     for (const k of SCENE_FLAGS) if (k in scene) flags[k] = scene[k];
 
-    // Inherit everything from the previous resolved stage.
-    for (const [id, spec] of Object.entries(base)) objects[id] = { ...spec };
+    // Inherit everything from the previous resolved stage — except BUILDS. An `in` or
+    // `out` belongs to the scene that states it: an object that built in on scene 5 is
+    // simply THERE on scene 6, not hidden again waiting for another click. And an object
+    // that built OUT has left: it is not carried forward unless the next scene names it.
+    // ACTIONS do carry their RESULT forward: an action changes the object (builds.js), so
+    // the next scene starts from what the audience was last shown, not from before it.
+    const left = {};
+    for (const [id, spec] of Object.entries(base)) {
+      const { in: _in, out, actions, ...rest } = spec;
+      for (const a of byStep(actions)) if (a?.set) Object.assign(rest, a.set);
+      if (out) left[id] = rest; else objects[id] = rest;
+    }
 
     // Apply this scene's patch.
     for (const [id, patch] of Object.entries(scene.objects ?? {})) {
       if (patch === null) { delete objects[id]; continue; }
-      const prior = objects[id];
+      const prior = objects[id] ?? left[id];
       if (!prior) {
         if (!patch.type) {
           console.warn(`[scene ${scene.id ?? i}] object "${id}" is new but has no "type" — skipped`);
@@ -70,9 +82,15 @@ export function resolveScript(scenes) {
       // scene 12 says nothing about how scene 13 should come in.
       transition: normalizeTransition(scene.transition),
       slide: !!scene.slide,
+      // Scene-level actions: builds that set this scene's own flags (freeze, …) on a step.
+      actions: Array.isArray(scene.actions) ? scene.actions : undefined,
       objects,
       ...flags,
     });
+    // …and, like an object's, their result is what the next scene inherits.
+    for (const a of byStep(scene.actions)) {
+      for (const k of SCENE_FLAGS) if (a?.set && k in a.set) flags = { ...flags, [k]: a.set[k] };
+    }
     previous = objects;
   }
   return out;
@@ -204,7 +222,8 @@ export class Player {
     // Motion between and within scenes (js/tween.js, js/builds.js, js/transition.js).
     // `tick` runs them from the renderer's frame clock.
     this.tweens = new Tweens();
-    this.builds = new Builds({ pool: this.pool, tweens: this.tweens });
+    this.builds = new Builds({ pool: this.pool, tweens: this.tweens, onScene: (set) => this._sceneAction(set) });
+    this.liveFlags = {};
     this.transitions = new Transitions({ pool: this.pool, tweens: this.tweens, renderer, stage, domLayer });
   }
 
@@ -279,7 +298,9 @@ export class Player {
     const objects = this.pool.sync(target);
     this.transitions.after(handle, resolved);
     // Builds: objects with a pending `in` start hidden, unless we arrive from ahead.
-    this.builds.prepare(resolved, { done: built || (from > next) });
+    this.liveFlags = Object.fromEntries(SCENE_FLAGS.map((k) => [k, scene[k]]));
+    this.builds.prepare(resolved, { done: built || (from > next), sceneActions: scene.actions });
+    if (this.reveal) this.builds.revealAll();
     // Freeze holds the SOUND as well as the picture and the tracking. Applied AFTER sync
     // so it overrides the resolved spec for the length of the freeze without editing it —
     // step to a scene that is not frozen and the scene's own `playing` value comes back,
@@ -289,6 +310,42 @@ export class Player {
     this.renderer.setObjects(objects);
     this.onSceneChange(this.resolved[next], this);
     console.log(`[player] scene ${this.resolved[next].id} (${next + 1}/${this.resolved.length})`);
+  }
+
+  // Edit mode shows EVERY object in the scene — ones waiting on a build and ones already
+  // built out — because you cannot adjust what you cannot see. Turning it off puts the
+  // scene in its fully-built state without re-syncing, so unsaved edits stay on stage.
+  setReveal(on) {
+    this.reveal = !!on;
+    if (this.index < 0) return;
+    if (this.reveal) this.builds.revealAll();
+    else this.builds.prepare(this.scene.objects, { done: true, sceneActions: this.scene.actions });
+  }
+
+  // A scene-level action (builds.js): change this scene's flags mid-scene, on a build
+  // step. Returns the values it replaced, which is what ← hands back to undo it.
+  _sceneAction(set) {
+    const prev = {};
+    for (const k of SCENE_FLAGS) if (k in set) { prev[k] = this.liveFlags[k]; this.liveFlags[k] = set[k]; }
+    const f = this.liveFlags;
+    if ('freeze' in set) {
+      if (this.tracking) this.tracking.frozen = !!f.freeze;
+      if (this.camera) { if (f.freeze) this.camera.snap(); else this.camera.release(); }
+    }
+    const det = this.tracking?.detector;
+    if (det && ('potato' in set || 'potatoManual' in set)) {
+      det.enabled = !!f.potato;
+      det.manual = !!f.potatoManual;
+      if (!det.manual) det.manualOn = false;
+    }
+    // classList, not className: rewriting the whole attribute mid-scene would also drop
+    // `editing` and whatever else has been toggled on the body since the scene began.
+    if ('bodyClass' in set) {
+      const split = (v) => String(v ?? '').split(/\s+/).filter(Boolean);
+      document.body.classList.remove(...split(prev.bodyClass));
+      document.body.classList.add(...split(f.bodyClass));
+    }
+    return prev;
   }
 
   next() { this.goto(this.index + 1); }
@@ -341,6 +398,10 @@ export class Player {
     // Name it for what it is — `leftEye`, not `bodyPart3`.
     const obj = this.pool.add({ id: spec.fasten ?? spec.type, ...spec });
     if (obj) this.renderer.setObjects(this.pool.objects);
+    // A cutout is pinned to a hand or the face, and draws nothing until that is tracked.
+    // A show that never declared the capability would add an object that can never
+    // appear — so adding one loads what it needs (a no-op when it is already loaded).
+    if (obj?.fasten) this.tracking?.load?.(/Hand/.test(obj.fasten) ? 'hands' : 'face');
     return obj;
   }
 
@@ -352,7 +413,14 @@ export class Player {
 
   captureCurrentScene() {
     if (this.index < 0) return null;
+    // Land anything mid-flight first: a Magic Move halfway there would save halfway
+    // positions, and an object fading out on its way off stage would be saved as present.
+    this.tweens.finishAll();
+    // …and undo any action that has played: the file holds the scene as it STARTS, with
+    // its actions listed, not the state three clicks in. Put back straight after.
+    const replay = this.builds.suspendActions();
     const objects = this.pool.serialize();
+    replay();
 
     // Anything `decorate` put on stage belongs to the visitor, not to the script. Without
     // this, an author on localhost with the showcase toggles on would bake `hat`,

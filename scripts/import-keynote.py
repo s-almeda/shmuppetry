@@ -12,6 +12,7 @@ builds and transitions — plus the referenced media into assets/<show>/. After 
 for slides with tables/charts/unknown drawables, flattened to a PNG via Keynote itself.
 
 Needs keynote-parser in .venv-kp (see scripts/try-keynote-parser.sh).
+keynote-parser is by Peter Sobot, MIT licensed: https://github.com/psobot/keynote-parser
 """
 import argparse, glob, json, os, re, shutil, subprocess, sys, tempfile, hashlib
 
@@ -519,11 +520,37 @@ class Importer:
             targets = drawable_ids.get(str(dig(b, 'drawable', 'identifier')))
             if not targets:
                 self.note(no, f'build on a drawable that was not imported ({a.get("effect")})'); continue
+            if kind == 'Action':
+                # An action changes something already on the slide (js/builds.js "Actions").
+                at = dig(b, 'attributes', default={}) or {}
+                name = (a.get('effect') or '').lower()
+                act = {'step': step, 'dur': rnd(a.get('duration', 0.5), 2)}
+                if start > 0.001: act['delay'] = rnd(start, 2)
+                if 'pulse' in name:
+                    act['effect'] = 'pulse'
+                    act['amount'] = rnd(float(at.get('customActionScale', 110)) / 100, 3)
+                    rep = int(at.get('customActionRepeatCount', 1) or 1)
+                    if rep > 1: act['repeat'] = rep
+                elif 'scale' in name:
+                    act['_scaleBy'] = float(at.get('actionScaleSize', 1) or 1)
+                else:
+                    self.note(no, f'action build ({a.get("effect")}) not supported — skipped'); continue
+                for k in targets:
+                    o = objects.get(k)
+                    if not o: continue
+                    mine = dict(act)
+                    by = mine.pop('_scaleBy', None)
+                    if by is not None:
+                        # Text has no `scale`: its type size and box width grow instead.
+                        if o.get('type') == 'text':
+                            mine['set'] = {'size': rnd(o.get('size', 0.05) * by), 'width': rnd(o.get('width', 0.5) * by)}
+                        else:
+                            mine['set'] = {'scale': rnd(o.get('scale', 1) * by)}
+                    o.setdefault('actions', []).append(mine)
+                continue
             eff, warn = map_effect(a.get('effect'), kind)
             if warn: self.note(no, warn)
             if eff is None: continue
-            if kind == 'Action':
-                self.note(no, f'action build ({a.get("effect")}) not supported — skipped'); continue
             build = {'effect': eff, 'dur': rnd(a.get('duration', 0.5), 2), 'step': step}
             if start > 0.001: build['delay'] = rnd(start, 2)
             if eff == 'movieStart':

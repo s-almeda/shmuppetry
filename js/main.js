@@ -289,6 +289,9 @@ async function main() {
     tabLabel: config.panelTab ?? null,
   });
   edit.player = player;
+  // Authoring only (`available` = the local dev server): on the public site edit mode is
+  // just retyping text, and a visitor must still see builds arrive one by one.
+  edit.onEditing = (on) => player.setReveal(on && edit.available);
   // Lets one object pin to another (`fasten: "face.hat"`), and lets the panel offer those
   // combinations. Wired after the player exists, since the pool lives there.
   deps.find = (id) => player.pool.live.get(id);

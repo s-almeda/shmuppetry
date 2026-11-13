@@ -4,6 +4,51 @@
   "skin": "default",
   "aspect": 1.778,
   "mirror": true,
-  "capabilities": [],
-  "showcase": []
+  "capabilities": [
+    "hands",
+    "face"
+  ],
+  "showcase": [],
+  "paper": {
+    "cut": {
+      "bound": 0.11,
+      "skeleton": 0.01,
+      "clean": 0.015,
+      "range": 1,
+      "grow": 0.08,
+      "smooth": 0.55,
+      "points": 45,
+      "join": "miter"
+    },
+    "outline": {
+      "width": 0.045,
+      "color": "#ffffff"
+    },
+    "shadow": {
+      "dx": 0,
+      "dy": 0.012,
+      "blur": 0.02,
+      "color": "rgba(0,0,0,0.45)"
+    },
+    "face": {
+      "grow": 0.02,
+      "points": 13,
+      "smooth": 0.55,
+      "crown": 0.22,
+      "join": "miter"
+    },
+    "eye": {
+      "grow": 0.8,
+      "points": 7,
+      "outline": {
+        "width": 0.14
+      }
+    },
+    "mouth": {
+      "points": 10,
+      "outline": {
+        "width": 0.08
+      }
+    }
+  }
 }
