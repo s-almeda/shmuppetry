@@ -14,6 +14,7 @@ import { Mic } from './mic.js';
 import { FaceAnalysis } from './facelabel.js';
 import { Showcase } from './showcase.js';
 import { Remote } from './remote.js';
+import { Admin } from './admin.js';
 
 const params = new URLSearchParams(location.search);
 const showName = params.get('show') || 'demo';
@@ -274,7 +275,8 @@ async function main() {
   panel.mount();
 
   boot(90, 'checking for local server…');
-  await edit.probe();
+  // Local only: the [?] admin menu rides the same gate as authoring.
+  if (await edit.probe()) new Admin({ button: document.getElementById('admin-btn'), showName }).mount();
 
   player.bindKeys();
   renderer.start();

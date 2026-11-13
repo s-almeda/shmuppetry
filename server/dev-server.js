@@ -98,6 +98,22 @@ export async function buildAssetManifest() {
   };
 }
 
+// The same shape scripts/build-manifests.js bakes into shows/index.json.
+export async function buildShowIndex() {
+  const showsDir = path.join(ROOT, 'shows');
+  const shows = [];
+  for (const e of await fs.readdir(showsDir, { withFileTypes: true }).catch(() => [])) {
+    if (!e.isDirectory()) continue;
+    const config = await fs.readFile(path.join(showsDir, e.name, 'config.json'), 'utf8')
+      .then(JSON.parse).catch(() => ({}));
+    const script = await fs.readFile(path.join(showsDir, e.name, 'script.json'), 'utf8')
+      .then(JSON.parse).catch(() => null);
+    if (!script) continue;
+    shows.push({ name: e.name, title: config.title ?? e.name, scenes: script.length });
+  }
+  return { shows };
+}
+
 function readBody(req, limit = 8 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -276,6 +292,13 @@ const server = http.createServer(async (req, res) => {
     // ── Live manifest, overriding the committed static one ────────────────
     if (pathname === '/assets/manifest.json') {
       return json(res, 200, await buildAssetManifest());
+    }
+
+    // ── Live show list, same override trick ───────────────────────────────
+    // The committed one is only as fresh as the last build-manifests run, so a show folder
+    // made since then would be missing from the admin menu (js/admin.js).
+    if (pathname === '/shows/index.json') {
+      return json(res, 200, await buildShowIndex());
     }
 
     // ── Static files ──────────────────────────────────────────────────────

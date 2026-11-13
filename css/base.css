@@ -366,3 +366,14 @@ body.editing .textbox-name:focus { outline: 1px dotted rgba(0, 92, 167, 0.7); ou
   opacity: var(--o, 1);
 }
 .stage-button { font-size: 18px; padding: 8px 20px; }
+
+/* ── Admin menu (js/admin.js) — local only ─────────────────────────────── */
+.admin-menu {
+  position: fixed; top: 56px; right: 16px; z-index: 1000;
+  width: min(360px, calc(100vw - 32px));
+  max-height: calc(100vh - 80px); overflow: auto;
+}
+.admin-menu .window-body { display: flex; flex-direction: column; gap: 6px; }
+.admin-menu .admin-label { margin: 6px 0 0; font-weight: bold; }
+.admin-menu .admin-shows { display: flex; flex-direction: column; gap: 4px; }
+.admin-menu button { text-align: left; }
