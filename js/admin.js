@@ -31,11 +31,18 @@ export class Admin {
       <div class="title-bar"><div class="title-bar-text">admin</div></div>
       <div class="window-body">
         <button type="button" class="admin-control">open control in new tab</button>
+        <button type="button" class="admin-editor">open slide editor in new tab</button>
         <p class="admin-label">shows</p>
         <div class="admin-shows">loading…</div>
       </div>`;
     menu.querySelector('.admin-control').addEventListener('click', () => {
       window.open(`./control.html?show=${encodeURIComponent(this.showName)}`, '_blank');
+      this.close();
+    });
+    // The editor opens on the scene the rig is showing, so "fix this slide" is one click.
+    menu.querySelector('.admin-editor').addEventListener('click', () => {
+      const scene = (window.shmuppetry?.player?.index ?? 0) + 1;
+      window.open(`./editor.html?show=${encodeURIComponent(this.showName)}&scene=${scene}`, '_blank');
       this.close();
     });
     document.body.appendChild(menu);

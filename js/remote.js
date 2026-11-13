@@ -67,6 +67,8 @@ export class Remote {
       id: scene?.id ?? null,
       now: scene ? this.lines(scene.objects) : [],
       series: this.series(),
+      // Build position within the scene — live, so only at the rig's own scene.
+      step: i === p.index ? { at: p.builds.at, n: p.builds.total } : null,
       next: this.next(i),
     };
   }
@@ -97,7 +99,7 @@ export class Remote {
   // the diff underneath is always included, since it is what the stage will actually do.
   next(i) {
     const p = this.player;
-    if (i + 1 >= p.length) return { cue: 'end of script — over to Keynote', changes: [] };
+    if (i + 1 >= p.length) return { cue: 'end of script', changes: [] };
     const a = p.resolved[i]?.objects ?? {};
     const b = p.resolved[i + 1].objects;
     const raw = p.script[i + 1] ?? {};

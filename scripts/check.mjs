@@ -56,7 +56,8 @@ const bad = (msg) => { failures++; console.log(`  \x1b[31mFAIL\x1b[0m  ${msg}`);
 // not exported fails here rather than in the browser console mid-show.
 console.log('\nmodules');
 const MODULES = ['assets', 'stage', 'scene', 'objects', 'panel', 'tracking',
-                 'silhouette', 'detector', 'mic', 'facelabel', 'showcase', 'drawing'];
+                 'silhouette', 'detector', 'mic', 'facelabel', 'showcase', 'drawing',
+                 'tween', 'builds', 'transition'];
 for (const m of MODULES) {
   try { await import(`${ROOT}/js/${m}.js`); ok(`js/${m}.js`); }
   catch (e) { bad(`js/${m}.js — ${e.message}`); }
@@ -120,6 +121,33 @@ for (const show of shows) {
   if (!problems) ok(`${show} — ${resolved.length} scenes, ${objects} objects round-trip`);
 }
 console.warn = warn;
+
+// ── 2b. slide objects as page elements ────────────────────────────────────
+// Slide scenes build image/video/shape objects with `dom: true` deps. Construction and
+// serialize() must behave identically in that mode, or saving from the editor drifts.
+console.log('\nslide objects');
+{
+  const domDeps = Object.create(deps); domDeps.dom = true;
+  let n = 0, bads = 0;
+  for (const show of shows) {
+    for (const scene of resolveScript(readJSON(`${ROOT}/shows/${show}/script.json`, []))) {
+      if (!scene.slide) continue;
+      for (const [id, spec] of Object.entries(scene.objects ?? {})) {
+        const Type = TYPES[spec?.type];
+        if (!Type?.domCapable) continue;
+        try {
+          const a = new Type({ ...spec, id }, deps).serialize();
+          const o = new Type({ ...spec, id }, domDeps);
+          const b = o.serialize();
+          if (!o.isDom) { bad(`${show} scene ${scene.id} · ${id} — not in DOM mode`); bads++; }
+          if (JSON.stringify(a) !== JSON.stringify(b)) { bad(`${show} scene ${scene.id} · ${id} — serialize differs in DOM mode`); bads++; }
+          n++;
+        } catch (e) { bad(`${show} scene ${scene.id} · ${id} (dom) — ${e.message}`); bads++; }
+      }
+    }
+  }
+  if (!bads) ok(`${n} slide objects serialize identically as page elements`);
+}
 
 // ── 3. asset addressing ───────────────────────────────────────────────────
 // Duplicate numbers are the quiet one: the manifest is sorted, so the later path wins and

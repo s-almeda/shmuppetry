@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "reset": true,
+    "slide": true,
+    "_note": "Title slide. A white shape as the backdrop; slide text in Helvetica Neue; miku and a star.",
+    "objects": {
+      "bg": { "type": "shape", "path": "M 0 0 H 1 V 1 H 0 Z", "size": 3, "aspect": 3, "fill": "#f4f1ea", "stroke": "none", "strokeWidth": 0, "z": -150 },
+      "title": { "type": "text", "style": "slide", "instant": true, "text": "Slides on the rig", "font": "Helvetica Neue", "weight": 700, "size": 0.11, "color": "#1b1b1b", "align": "left", "x": 0.42, "y": 0.3, "width": 0.6 },
+      "sub": { "type": "text", "style": "slide", "instant": true, "text": "Space advances builds, then scenes. ← steps back.", "font": "Helvetica Neue", "italic": true, "size": 0.04, "color": "#555", "align": "left", "x": 0.42, "y": 0.5, "width": 0.6 },
+      "miku": { "type": "image", "src": 13, "fasten": null, "x": 0.85, "y": 0.5, "size": 0.7, "z": 10 },
+      "star": { "type": "image", "src": 900, "fasten": null, "x": 0.12, "y": 0.78, "size": 0.18, "z": 10 }
+    }
+  },
+  {
+    "id": 2,
+    "reset": true,
+    "slide": true,
+    "transition": { "effect": "magicMove", "dur": 0.8 },
+    "_note": "MAGIC MOVE: title shrinks to the top-left, sub leaves (fades), miku moves left and shrinks, star grows and becomes the sign (crossfade), a new caption fades in.",
+    "objects": {
+      "bg": { "type": "shape", "path": "M 0 0 H 1 V 1 H 0 Z", "size": 3, "aspect": 3, "fill": "#f4f1ea", "stroke": "none", "strokeWidth": 0, "z": -150 },
+      "title": { "type": "text", "style": "slide", "instant": true, "text": "Slides on the rig", "font": "Helvetica Neue", "weight": 700, "size": 0.05, "color": "#1b1b1b", "align": "left", "x": 0.3, "y": 0.06, "width": 0.5 },
+      "miku": { "type": "image", "src": 13, "fasten": null, "x": 0.2, "y": 0.55, "size": 0.45, "z": 10, "rotation": -8 },
+      "star": { "type": "image", "src": 901, "fasten": null, "x": 0.65, "y": 0.5, "size": 0.5, "z": 10 },
+      "caption": { "type": "text", "style": "slide", "instant": true, "text": "same id = linked. The star kept its id and changed its src, so it crossfaded.", "font": "Helvetica Neue", "size": 0.032, "color": "#333", "align": "center", "x": 0.5, "y": 0.86, "width": 0.7 }
+    }
+  },
+  {
+    "id": 3,
+    "reset": true,
+    "slide": true,
+    "transition": { "effect": "wipe", "dir": "up", "dur": 0.7 },
+    "_note": "WIPE UP into a builds slide. Steps: 1 dissolve, 2 fade+move, 3 move from left, 4 line draw arrow, 5 miku pulses in, 6 video starts, 7 keyboard text, 8 miku fades out.",
+    "objects": {
+      "bg": { "type": "shape", "path": "M 0 0 H 1 V 1 H 0 Z", "size": 3, "aspect": 3, "fill": "#1d1f2a", "stroke": "none", "strokeWidth": 0, "z": -150 },
+      "h": { "type": "text", "style": "slide", "instant": true, "text": "Builds", "font": "Helvetica Neue", "weight": 700, "size": 0.08, "color": "#fff", "align": "left", "x": 0.25, "y": 0.06, "width": 0.4 },
+      "b1": { "type": "text", "style": "slide", "instant": true, "text": "• dissolve", "font": "Helvetica Neue", "size": 0.045, "color": "#eee", "align": "left", "x": 0.25, "y": 0.26, "width": 0.4, "in": { "effect": "dissolve", "step": 1 } },
+      "b2": { "type": "text", "style": "slide", "instant": true, "text": "• fade and move (up)", "font": "Helvetica Neue", "size": 0.045, "color": "#eee", "align": "left", "x": 0.25, "y": 0.36, "width": 0.4, "in": { "effect": "fadeMove", "dir": "up", "step": 2 } },
+      "b3": { "type": "text", "style": "slide", "instant": true, "text": "• move in from the left", "font": "Helvetica Neue", "size": 0.045, "color": "#eee", "align": "left", "x": 0.25, "y": 0.46, "width": 0.4, "in": { "effect": "move", "dir": "right", "dur": 0.6, "step": 3 } },
+      "arrow": { "type": "shape", "path": "M 0 1 C 0.3 0, 0.7 0, 1 1", "size": 0.25, "aspect": 1.6, "stroke": "#ffcc33", "strokeWidth": 0.008, "arrowEnd": true, "x": 0.5, "y": 0.6, "z": 20, "in": { "effect": "lineDraw", "dur": 1.2, "step": 4 } },
+      "miku": { "type": "image", "src": 13, "fasten": null, "x": 0.72, "y": 0.5, "size": 0.5, "z": 10, "in": { "effect": "pulse", "dur": 0.6, "step": 5 }, "out": { "effect": "fade", "step": 8 } },
+      "clip": { "type": "video", "src": 4, "fasten": null, "play": "onStep", "loop": true, "x": 0.72, "y": 0.5, "size": 0.45, "z": 30, "in": { "effect": "wipe", "dir": "right", "dur": 0.7, "step": 6 } },
+      "typed": { "type": "text", "style": "slide", "speed": "fast", "text": "…and this line types itself out, Keynote keyboard-style.", "font": "Helvetica Neue", "size": 0.035, "color": "#ffcc33", "align": "left", "x": 0.3, "y": 0.84, "width": 0.5, "in": { "effect": "keyboard", "step": 7 } }
+    }
+  },
+  {
+    "id": 4,
+    "reset": true,
+    "transition": { "effect": "fade", "dur": 0.6 },
+    "_note": "A PUPPET SCENE in the middle of the deck: webcam full frame with a dialogue line. Fades in from the slide.",
+    "objects": {
+      "cam": { "type": "webcam", "fit": "cover", "z": -100 },
+      "line": { "type": "text", "style": "bubble", "speaker": "shm", "x": 0.5, "y": 0.8, "width": 0.7, "text": "and now we're back in the puppet show, no app switch." }
+    }
+  },
+  {
+    "id": 5,
+    "reset": true,
+    "slide": true,
+    "transition": { "effect": "push", "dir": "left", "dur": 0.7 },
+    "_note": "PUSH LEFT back into slides. A diagonal wipe build and a scale build.",
+    "objects": {
+      "bg": { "type": "shape", "path": "M 0 0 H 1 V 1 H 0 Z", "size": 3, "aspect": 3, "fill": "#f4f1ea", "stroke": "none", "strokeWidth": 0, "z": -150 },
+      "h": { "type": "text", "style": "slide", "instant": true, "text": "Directions", "font": "Helvetica Neue", "weight": 700, "size": 0.08, "color": "#1b1b1b", "align": "left", "x": 0.3, "y": 0.06, "width": 0.5 },
+      "pic": { "type": "image", "src": 21, "fasten": null, "x": 0.3, "y": 0.55, "size": 0.55, "z": 10, "in": { "effect": "wipe", "dir": "downRight", "dur": 0.9, "step": 1 } },
+      "box": { "type": "shape", "path": "M 0 0 H 1 V 1 H 0 Z", "size": 0.3, "aspect": 1.4, "stroke": "#c0392b", "strokeWidth": 0.006, "fill": "none", "x": 0.72, "y": 0.5, "z": 20, "in": { "effect": "lineDraw", "dur": 1, "step": 2 } },
+      "t": { "type": "text", "style": "slide", "instant": true, "text": "scale", "font": "Helvetica Neue", "weight": 700, "size": 0.07, "color": "#c0392b", "align": "center", "valign": "middle", "x": 0.72, "y": 0.5, "width": 0.3, "in": { "effect": "scale", "dur": 0.5, "step": 3 } }
+    }
+  },
+  {
+    "id": 6,
+    "reset": true,
+    "slide": true,
+    "transition": { "effect": "dissolve", "dur": 0.8 },
+    "_note": "End card, dissolve.",
+    "objects": {
+      "bg": { "type": "shape", "path": "M 0 0 H 1 V 1 H 0 Z", "size": 3, "aspect": 3, "fill": "#1d1f2a", "stroke": "none", "strokeWidth": 0, "z": -150 },
+      "h": { "type": "text", "style": "slide", "instant": true, "text": "fin", "font": "Helvetica Neue", "weight": 700, "size": 0.15, "color": "#fff", "align": "center", "valign": "middle", "x": 0.5, "y": 0.5, "width": 0.5 }
+    }
+  }
+]

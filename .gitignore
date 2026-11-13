@@ -57,3 +57,6 @@ node_modules/
 shows/*/.backups/
 # ...and of assets/meta.json, written before each save by the same route.
 assets/.backups/
+
+# keynote-parser venv for scripts/import-keynote.py (scripts/try-keynote-parser.sh)
+.venv-kp/

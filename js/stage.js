@@ -8,6 +8,8 @@
 // once in drawVideoInto(). In 2.5.0 the webcam was CSS-mirrored, so every overlay
 // canvas was too, so every draw needed its own ctx.scale(-1,1) un-flip (§9.2).
 
+import { Transitions } from './transition.js';
+
 export const BACKGROUND = -200;
 export const FOREGROUND = 200;
 
@@ -107,6 +109,7 @@ export class Renderer {
     this.stage = stage;
     this.objects = [];
     this.beforeFrame = null;   // optional fn(now) — tracking runs here, before objects draw
+    this.transition = null;    // a stage transition in flight (js/transition.js), or null
     this.running = false;
     this._last = 0;
     // ?perf — where the frame actually goes. Measuring beats guessing; every stage that
@@ -115,6 +118,16 @@ export class Renderer {
   }
 
   _mark(key, ms) { if (this.perf) this.perf[key] = (this.perf[key] ?? 0) + ms; }
+
+  _paint(g, list, stage, now) {
+    for (const o of list) {
+      try { o.draw(g, stage, now); }
+      catch (err) {
+        console.error(`[renderer] ${o.type}#${o.id}`, err);
+        o.visible = false;   // one bad object must not kill the show mid-performance
+      }
+    }
+  }
 
   setObjects(objects) { this.objects = objects; }
 
@@ -155,15 +168,15 @@ export class Renderer {
     // hand-picked z-index ints, which is what collided in 2.5.0.
     // `isMask` objects are painted only into the mask buffer of whatever they mask, never
     // onto the stage — the spotlight circles themselves are never visible.
-    const drawable = this.objects.filter((o) => o.draw && o.visible !== false && !o.isMask);
+    // `_hidden` is a build waiting for its step — transient, unlike `visible`.
+    const drawable = this.objects.filter((o) => o.draw && o.visible !== false && !o.isMask && !o._hidden);
     drawable.sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
-    for (const o of drawable) {
-      try { o.draw(g, stage, now); }
-      catch (err) {
-        console.error(`[renderer] ${o.type}#${o.id}`, err);
-        o.visible = false;   // one bad object must not kill the show mid-performance
-      }
-    }
+    // A stage transition paints the outgoing snapshot and clips / shifts the incoming
+    // objects around this one pass.
+    const T = this.transition;
+    if (T) Transitions.beforeObjects(g, stage, T);
+    this._paint(g, drawable, stage, now);
+    if (T) Transitions.afterObjects(g, stage, T);
 
     if (P) {
       this._mark('draw', performance.now() - t);

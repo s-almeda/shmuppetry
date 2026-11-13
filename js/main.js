@@ -157,6 +157,24 @@ async function main() {
     if (el.titleMain) el.titleMain.textContent = config.title;
   }
 
+  // `aspect` pins the stage's shape (a deck is 16:9) and letterboxes it in the window.
+  // Slides place objects by fraction of width and size them by fraction of height, so a
+  // stage of the wrong shape moves everything apart and wraps text differently.
+  if (config.aspect) {
+    const host = el.stage.parentElement;
+    const fitStage = () => {
+      el.stage.style.flex = '0 0 auto';
+      el.stage.style.alignSelf = 'center';
+      el.stage.style.margin = 'auto 0';
+      el.stage.style.width = el.stage.style.height = '';
+      const w = host.clientWidth - 10, h = host.clientHeight - 10;
+      const W = Math.min(w, h * config.aspect);
+      el.stage.style.width = `${Math.floor(W)}px`;
+      el.stage.style.height = `${Math.floor(W / config.aspect)}px`;
+    };
+    fitStage();
+    window.addEventListener('resize', fitStage);
+  }
   const stage = new Stage({ el: el.stage, canvas: el.canvas, mirror: config.mirror !== false });
   stage.sync();
 
@@ -193,6 +211,7 @@ async function main() {
   renderer.beforeFrame = (now) => {
     mic.update(now - lastNow);
     lastNow = now;
+    player?.tick(now);   // Magic Move, builds, transitions
     tracking.update(now);
     detector.update();
     faces.update(now);
@@ -229,10 +248,14 @@ async function main() {
   // Dependencies passed explicitly — NOT a grab-bag that modules mutate to hand
   // capability back to the core, which is what 2.5.0's featureCtx became (§6).
   const deps = { stage, camera, assets, tracking, silhouette, detector, mic, faces, renderer, paper: config.paper, domLayer: el.domLayer };
-  const make = (spec) => {
+  const domDeps = Object.create(deps);
+  domDeps.dom = true;
+  const make = (spec, opts) => {
     const Type = TYPES[spec.type];
     if (!Type) { console.warn(`[scene] unknown object type "${spec.type}" (${spec.id})`); return null; }
-    return new Type(spec, deps);
+    // Slide objects get the same deps with `dom: true` (objects.js placeBox). A prototype
+    // rather than a copy, so `find`, `list` and `tweens`, wired up later, still reach them.
+    return new Type(spec, opts?.dom ? domDeps : deps);
   };
 
   boot(65, 'loading script…');
@@ -247,7 +270,7 @@ async function main() {
   const edit = new EditMode({ showName, banner: el.dirty });
   deps.edit = edit;
   player = new Player({
-    make, renderer, tracking, camera,
+    make, renderer, tracking, camera, stage, domLayer: el.domLayer,
     bodyBase: document.body.className,
     // showcase.afterScene runs FIRST: it re-asserts the detector flags and the .editing
     // class that goto() has just overwritten, before the panel paints from that state.
@@ -270,6 +293,7 @@ async function main() {
   // combinations. Wired after the player exists, since the pool lives there.
   deps.find = (id) => player.pool.live.get(id);
   deps.list = () => player.pool.objects;
+  deps.tweens = player.tweens;   // an image crossfades through the same clock
   player.load(scenes);
   remote = new Remote({ showName, player, assets });
   panel.mount();

@@ -7,7 +7,8 @@ import { DrawingObject } from './drawing.js';
 import { resolvePlacement } from './stage.js';
 import { resample, BONES } from './silhouette.js';
 import { FACE_PARTS, HAND_PARTS } from './tracking.js';
-import { isReady, naturalSize, fillMeta } from './assets.js';
+import { isReady, naturalSize, fillMeta, makeMediaEl } from './assets.js';
+import { NEUTRAL_FX } from './builds.js';
 
 const round = (n) => (typeof n === 'number' ? +n.toFixed(4) : n);
 const MOUNTS = ['hat', 'glasses', 'nose', 'beard', 'mouthTop', 'mouthBottom'];
@@ -27,12 +28,79 @@ function placeDom(el, obj, stage) {
     y += obj.pin.y;
   }
   ({ x, y } = obj._constrain(x, y));
-  el.style.left = `${x * 100}%`;
-  el.style.top = `${y * 100}%`;
+  // Build / transition channels (js/builds.js). Position offsets fold into left/top so
+  // the skin's own transform is untouched; alpha folds into --o for the same reason.
+  const fx = obj.fx ?? NEUTRAL_FX;
+  el.style.left = `${(x + fx.dx) * 100}%`;
+  el.style.top = `${(y + fx.dy) * 100}%`;
   el.style.zIndex = String(Math.round(obj.z));
-  el.style.setProperty('--o', obj.opacity);
-  el.hidden = obj.visible === false;
-  return obj.visible !== false;
+  el.style.setProperty('--o', obj.opacity * fx.alpha);
+  const shown = obj.visible !== false && !obj._hidden;
+  el.hidden = !shown;
+  return shown;
+}
+
+// ── Slide objects as page elements ────────────────────────────────────────
+// On a SLIDE scene, images, videos and shapes are DOM elements in the same layer as the
+// text, so the page's own stacking orders them by z — text can sit behind a picture,
+// exactly as in Keynote. (On a puppet scene they stay on the canvas, which the webcam,
+// cutouts and masks need.) The geometry is the canvas's own: a w×h box whose top edge is
+// `dy` below the object's point, rotated and scaled about that point — so a slide lands in
+// the same place whichever way it is drawn, and the editor's hit-testing stays shared.
+//
+// `pad` widens a wipe's clip beyond the box, for strokes that overhang it (a 1px-tall
+// line box with a 12px stroke would otherwise be clipped to nothing).
+function placeBox(el, obj, stage, w, h, dy, pad = 0) {
+  const fx = obj.fx ?? NEUTRAL_FX;
+  const px = (obj.x + fx.dx) * stage.w, py = (obj.y + fx.dy) * stage.h;
+  const sc = (obj.scale ?? 1) * fx.scale;
+  el.style.width = `${w}px`;
+  el.style.height = `${h}px`;
+  // Origin at the object's point, expressed inside the box, so rotate/scale pivot where
+  // the canvas pivots — the centre for every slide object, since slides never anchor.
+  el.style.transformOrigin = `${w / 2}px ${-dy}px`;
+  el.style.transform = `translate(${px - w / 2}px, ${py + dy}px) rotate(${obj.rotation || 0}deg) scale(${obj.flipX ? -sc : sc}, ${sc})`;
+  el.style.zIndex = String(Math.round(obj.z ?? 0));
+  el.style.opacity = String((obj.opacity ?? 1) * fx.alpha);
+  const poly = fx.clip;
+  el.style.clipPath = poly == null ? ''
+    : `polygon(${(poly.length ? poly : [[0, 0], [0, 0], [0, 0]]).map(([u, v]) => `${-pad + u * (w + 2 * pad)}px ${-pad + v * (h + 2 * pad)}px`).join(',')})`;
+  const shown = obj.visible !== false && !obj._hidden && fx.alpha > 0;
+  el.hidden = !shown;
+  return shown;
+}
+
+function slideEl(obj, tag = 'div') {
+  const el = tag === 'svg' ? document.createElementNS('http://www.w3.org/2000/svg', 'svg') : document.createElement(tag);
+  el.setAttribute('class', 'slide-obj');
+  // Inline, so the editor's `body.editing #dom-layer > *` (which hands text the pointer
+  // while you type) can't make pictures start swallowing clicks.
+  el.style.pointerEvents = 'none';
+  el.dataset.id = obj.id ?? '';
+  obj.deps.domLayer?.appendChild(el);
+  return el;
+}
+
+// Scale and clip go on an INNER wrapper, so they happen about the box's own centre rather
+// than the anchor point the skin translates from.
+function fxInner(el, fx = NEUTRAL_FX) {
+  el.style.transform = fx.scale !== 1 ? `scale(${fx.scale})` : '';
+  const poly = fx.clip;
+  el.style.clipPath = poly == null ? ''
+    : `polygon(${(poly.length ? poly : [[0, 0], [0, 0], [0, 0]]).map(([x, y]) => `${x * 100}% ${y * 100}%`).join(',')})`;
+}
+
+// Clip the current (object-local, centred) ctx to a wipe polygon over a w×h box whose
+// top edge sits at `dy` — the same box the subclass is about to draw into.
+function clipPolygon(g, poly, w, h, dy) {
+  g.beginPath();
+  if (!poly.length) { g.rect(0, 0, 0, 0); g.clip(); return; }
+  poly.forEach(([px, py], i) => {
+    const X = -w / 2 + px * w, Y = dy + py * h;
+    i ? g.lineTo(X, Y) : g.moveTo(X, Y);
+  });
+  g.closePath();
+  g.clip();
 }
 
 export class StageObject {
@@ -103,7 +171,12 @@ export class StageObject {
   //
   // The mask is the masking objects' own PIXELS, not a shape — so any art works, a circle
   // SVG included, and alpha edges come through soft.
+  // Drawn as a page element instead of on the canvas — slide scenes only (see placeBox).
+  // The pool hands slide objects a `deps` with `dom: true`; a type opts in with domCapable.
+  get isDom() { return !!this.deps?.dom && !!this.constructor.domCapable; }
+
   draw(g, stage, t) {
+    if (this.isDom) return;
     if (this.maskedBy?.length) return this._drawMasked(g, stage, t);
     this._paintSelf(g, stage, t);
   }
@@ -144,7 +217,10 @@ export class StageObject {
   }
 
   _paintSelf(g, stage, t) {
-    if (this.opacity <= 0) return;
+    if (this.opacity <= 0 || this._hidden) return;
+    // Transient build / transition channels — see js/builds.js. Never authored state.
+    const fx = this.fx ?? NEUTRAL_FX;
+    if (fx.alpha <= 0 || (fx.clip && !fx.clip.length)) return;
 
     let x = this.x, y = this.y;
     if (this.fasten) {
@@ -183,6 +259,7 @@ export class StageObject {
     // authored state and would be written out by serialize(), baking one frame of a hop
     // into the scene file.
     y += this._bob ?? 0;
+    x += fx.dx; y += fx.dy;
 
     // Locks and clamps apply AFTER the fastener, so an object can follow one axis of a
     // hand while the other is pinned. The marquee is `lockX: 0.5, maxY: 0.5` — held to
@@ -198,11 +275,19 @@ export class StageObject {
     const rot = this.rotation + (this.constructor.followsPinAngle ? this.pin?.angle ?? 0 : 0);
 
     g.save();
-    g.globalAlpha = this.opacity;
+    g.globalAlpha = this.opacity * fx.alpha;
     g.translate(x * stage.w, y * stage.h);
     if (rot) g.rotate((rot * Math.PI) / 180);
     if (this.flipX) g.scale(-1, 1);
-    if (this.scale !== 1) g.scale(this.scale, this.scale);
+    const sc = this.scale * fx.scale;
+    if (sc !== 1) g.scale(sc, sc);
+    // A wipe needs the box the subclass is about to draw into. Types without `bounds`
+    // fall back to a plain fade, which is what the effect table says to do.
+    if (fx.clip) {
+      const b = this.bounds?.(stage);
+      if (b) clipPolygon(g, fx.clip, b.w, b.h, b.dy);
+      else g.globalAlpha *= Math.min(1, fx.clip.length ? 1 : 0);
+    }
     try { this.render(g, stage, t); } finally { g.restore(); }
   }
 
@@ -305,6 +390,10 @@ export class StageObject {
     for (const k of ['lockX', 'lockY', 'minX', 'maxX', 'minY', 'maxY']) {
       out[k] = this[k] == null ? null : round(this[k]);
     }
+    // Builds (js/builds.js) are written only when set: a scene's `in`/`out` is a patch
+    // like anything else, and the importer writes slide scenes absolute anyway.
+    if (this.in) out.in = this.in;
+    if (this.out) out.out = this.out;
     if (this._note) out._note = this._note;
     return out;
   }
@@ -316,6 +405,7 @@ export class StageObject {
 
 export class ImageObject extends StageObject {
   static followsPinAngle = true;   // a hat tilts with the head it sits on
+  static domCapable = true;
 
   // Offer every mount on the live face, plus the same mounts carried by any cut-out
   // BodyPart on stage — `face.hat` puts a hat on the cutout rather than on the webcam.
@@ -386,7 +476,11 @@ export class ImageObject extends StageObject {
       }
     }
     if (this.src !== this._loaded) {
-      this.el = this.src != null ? this.deps.assets?.get(this.src) : null;
+      // A slide object owns its element: one <img> can only be in one place in the page,
+      // and a video it plays and seeks must not be the one a puppet scene is showing.
+      this.el = this.src == null ? null
+        : this.isDom ? this._ownEl(this.src)
+        : this.deps.assets?.get(this.src);
       this._loaded = this.src;
       // `001_beret_hat.png` mounts itself at the hat unless the scene says otherwise, so
       // dropping art in and naming it is enough (§7).
@@ -451,7 +545,17 @@ export class ImageObject extends StageObject {
     this._lostMs = 0;
   }
 
+  _ownEl(ref) {
+    const url = this.deps.assets?.src(ref);
+    if (!url) return null;
+    const el = makeMediaEl(url);
+    el.className = 'slide-media';
+    el.draggable = false;
+    return el;
+  }
+
   update(dt, now, stage) {
+    if (this.isDom) { this._domUpdate(stage); return; }
     this._reacquire(dt);
     if (!this.bounce && this.talkSrc == null) { this._bob = 0; return; }
     const mic = this.deps.mic;
@@ -473,7 +577,9 @@ export class ImageObject extends StageObject {
     // nothing on the first loud syllable is worse than one whose mouth opens a beat late.
     const el = this.talking && isReady(this.talkEl) ? this.talkEl : this.el;
     if (!isReady(el)) return;
-    const nat = naturalSize(el);
+    const natFull = naturalSize(el);
+    // A crop changes the art's shape: the box keeps the CROPPED region's aspect.
+    const nat = this.crop?.length === 4 ? { w: natFull.w * this.crop[2], h: natFull.h * this.crop[3] } : natFull;
 
     // ── Face alignment ────────────────────────────────────────────────────
     // `align: "face"` puts the art's OWN face onto the tracked one, using the box recorded
@@ -502,6 +608,39 @@ export class ImageObject extends StageObject {
       }
     }
 
+    const { w, h, dy } = this._box(stage, nat);
+    // `crop: [x, y, w, h]` as fractions of the source — a Keynote mask. The box is the
+    // visible window, so the cropped region is stretched to fill it exactly.
+    const blit = (img, alphaMul = 1) => {
+      const c = this.crop;
+      if (c?.length === 4) {
+        const n = naturalSize(img);
+        g.drawImage(img, c[0] * n.w, c[1] * n.h, c[2] * n.w, c[3] * n.h, -w / 2, dy, w, h);
+      } else g.drawImage(img, -w / 2, dy, w, h);
+    };
+    // No clip needed: the canvas is exactly the stage, so it clips its own bounds.
+    // A crossfade (Magic Move with a changed src) draws the previous frame underneath,
+    // fading out, in the SAME box — the new art's size, so the cut lands where it ends.
+    if (this._xfade && isReady(this._xfade.el)) {
+      g.save();
+      g.globalAlpha *= 1 - this._xfade.k;
+      blit(this._xfade.el);
+      g.restore();
+      g.globalAlpha *= this._xfade.k;
+    }
+    blit(el);
+  }
+
+  // The w×h box the art is drawn into, centred on x and with its top edge at `dy` —
+  // shared by render() and by wipes, which clip to it.
+  bounds(stage) {
+    const el = this.el;
+    if (!isReady(el)) return null;
+    const n = naturalSize(el);
+    return this._box(stage, this.crop?.length === 4 ? { w: n.w * this.crop[2], h: n.h * this.crop[3] } : n);
+  }
+
+  _box(stage, nat) {
     let w, h;
     if (this.fit === 'cover' || this.fit === 'contain') {
       const pick = this.fit === 'cover' ? Math.max : Math.min;
@@ -529,8 +668,50 @@ export class ImageObject extends StageObject {
     // nudge offsets, which is what 2.5.0 ended up doing (§2.2).
     const anchor = this.anchor ?? this.pin?.anchor ?? 'center';
     const dy = anchor === 'bottom' ? -h : anchor === 'top' ? 0 : -h / 2;
-    // No clip needed: the canvas is exactly the stage, so it clips its own bounds.
-    g.drawImage(el, -w / 2, dy, w, h);
+    return { w, h, dy };
+  }
+
+  // The slide path: the same box render() computes, applied to an element.
+  _domUpdate(stage) {
+    this._wrap ??= slideEl(this);
+    const wrap = this._wrap, el = this.el;
+    if (el && el.parentNode !== wrap) wrap.prepend(el);
+    if (!isReady(el)) { wrap.hidden = true; return; }
+    const n = naturalSize(el);
+    const c = this.crop?.length === 4 ? this.crop : null;
+    const { w, h, dy } = this._box(stage, c ? { w: n.w * c[2], h: n.h * c[3] } : n);
+    if (!placeBox(wrap, this, stage, w, h, dy)) return;
+    // A crop shows a window of the picture: the element is the WHOLE picture at the
+    // scale that makes the window fill the box, shifted so the window lines up.
+    const fit = (img) => {
+      if (c) Object.assign(img.style, { width: `${w / c[2]}px`, height: `${h / c[3]}px`, left: `${-c[0] * w / c[2]}px`, top: `${-c[1] * h / c[3]}px` });
+      else Object.assign(img.style, { width: '100%', height: '100%', left: '0', top: '0' });
+    };
+    fit(el);
+    // Magic Move onto a different picture: the previous one sits underneath, fading out.
+    const x = this._xfade;
+    if (x) {
+      if (!x.dom) { x.dom = this._ownEl(x.src); if (x.dom) wrap.appendChild(x.dom); }
+      if (x.dom) { fit(x.dom); x.dom.style.opacity = String(1 - x.k); x.dom.style.zIndex = '0'; }
+      el.style.opacity = String(x.k); el.style.position = 'absolute'; el.style.zIndex = '1';
+    } else {
+      el.style.opacity = ''; el.style.zIndex = '';
+    }
+  }
+
+  // Magic Move onto a different picture: keep the old element around and fade across.
+  crossfadeFrom(prevSrc, dur = 0.6) {
+    const el = this.isDom ? true : this.deps.assets?.get(prevSrc);
+    if (!el) return;
+    const x = { el: this.isDom ? null : el, src: prevSrc, k: 0 };
+    this._xfade = x;
+    this.deps.tweens?.add({
+      target: x, to: { k: 1 }, dur, ease: 'linear',
+      onDone: () => {
+        if (this._xfade === x) this._xfade = null;
+        x.dom?.remove();
+      },
+    });
   }
 
   // Step to the next source. The video element is swapped by apply(), so a .webm puppet
@@ -541,7 +722,15 @@ export class ImageObject extends StageObject {
     this._load();
   }
 
-  dispose() { if (this.el?.tagName === 'VIDEO') this.el.muted = true; }
+  dispose() {
+    if (this.isDom) {
+      this.el?.pause?.();
+      this._xfade?.dom?.remove();
+      this._wrap?.remove(); this._wrap = null;
+      return;
+    }
+    if (this.el?.tagName === 'VIDEO') this.el.muted = true;
+  }
 
   serialize() {
     const out = super.serialize();
@@ -561,6 +750,7 @@ export class ImageObject extends StageObject {
     out.cycleOn = this.cycleOn || null;
     out.breakMs = this.cycleOn ? (this.breakMs ?? 120) : null;
     if (this.anchor) out.anchor = this.anchor;
+    if (this.crop?.length === 4) out.crop = this.crop.map(round);
     return out;
   }
 }
@@ -664,6 +854,19 @@ export class TextBox extends StageObject {
     { key: 'metaFrom', label: 'meta from', type: 'text' },
     { key: 'template', label: 'template', type: 'textarea' },
     { key: 'text', label: 'text', type: 'textarea' },
+    // Slide typography (style "slide"): the box is plain text in a named font, sized as
+    // a fraction of stage height so it keeps Keynote's proportions at any window size.
+    { key: 'font', label: 'font', type: 'text' },
+    { key: 'size', label: 'size', type: 'range', min: 0.01, max: 0.3, step: 0.001 },
+    { key: 'weight', label: 'weight', type: 'number', min: 100, max: 900, step: 100 },
+    { key: 'italic', label: 'italic', type: 'checkbox' },
+    { key: 'color', label: 'color', type: 'text' },
+    { key: 'align', label: 'align', type: 'select', options: ['left', 'center', 'right'] },
+    { key: 'valign', label: 'v-align', type: 'select', options: ['top', 'middle', 'bottom'] },
+    { key: 'lineHeight', label: 'line height', type: 'range', min: 0.8, max: 2, step: 0.05 },
+    // Keynote's "shrink text to fit": the box height, as a fraction of stage height. Text
+    // that would overflow it (or its width) is drawn smaller; text that fits is untouched.
+    { key: 'fitHeight', label: 'fit height', type: 'range', min: 0, max: 1, step: 0.005 },
   ];
 
   apply(spec) {
@@ -674,6 +877,9 @@ export class TextBox extends StageObject {
     this.width ??= 0.92;
     return this;
   }
+
+  // Run the typewriter again from the first character — the `keyboard` build.
+  retype() { this._typed = 0; this._acc = 0; this._next = 0; this._rendered = this.text; }
 
   // ── Provenance ──────────────────────────────────────────────────────────
   // `from` names an image object on stage; `template` is filled from that image's current
@@ -709,9 +915,13 @@ export class TextBox extends StageObject {
   _ensureEl() {
     if (this._el) return;
     const el = document.createElement('div');
+    // `.textbox-fx` is the build wrapper: scale and clip happen on it, about the box's
+    // own centre, leaving the skin's anchor transform on the outer element alone.
     el.innerHTML =
+      '<div class="textbox-fx">' +
       '<menu role="tablist" class="textbox-tabs"><button role="tab" aria-selected="true" class="textbox-name" type="button"></button></menu>' +
-      '<div role="tabpanel" class="textbox-text"></div>';
+      '<div role="tabpanel" class="textbox-text"></div></div>';
+    this._fx = el.querySelector('.textbox-fx');
     this._tabs = el.querySelector('.textbox-tabs');
     this._name = el.querySelector('.textbox-name');
     this._body = el.querySelector('.textbox-text');
@@ -775,7 +985,9 @@ export class TextBox extends StageObject {
     }
 
     const el = this._el;
-    el.className = `textbox textbox-${this.style}${this.hoverFade ? ' textbox-hoverfade' : ''}${this.typing ? ' typing' : ''}`;
+    el.className = `textbox textbox-${this.style}${this.hoverFade ? ' textbox-hoverfade' : ''}${this.typing ? ' typing' : ''}`
+      + (this.valign ? ` textbox-v${this.valign}` : '');
+    fxInner(this._fx, this.fx);
     // placeDom, not hand-rolled left/top. This used to set them directly, which meant a
     // TextBox silently ignored `fasten` and the lockX/maxY constraints that every other
     // DOM object gets for free — so a line of dialogue could not be puppeted by a hand.
@@ -789,8 +1001,20 @@ export class TextBox extends StageObject {
     el.style.setProperty('--fade', this.fadeTo ?? 0.12);
     if (this.tilt != null) el.style.setProperty('--tilt', `${this.tilt}deg`);
     // Type scales with the stage, so a line occupies the same share of the frame at
-    // every window size.
-    el.style.fontSize = `${Math.max(12, stage.h * 0.036)}px`;
+    // every window size. `size` is an explicit em as a fraction of stage height — what
+    // the importer writes from a Keynote point size — and wins over the skin's default.
+    const basePx = this.size ? this.size * stage.h : Math.max(12, stage.h * 0.036);
+    el.style.fontSize = `${basePx * (this._shrink ?? 1)}px`;
+    // Slide typography is inline, since it is per-box rather than per-skin.
+    // `font` may be a comma list — the importer writes "PostScriptName, Family Guess" —
+    // and each entry is quoted so names with spaces and dashes both resolve.
+    el.style.fontFamily = this.font
+      ? String(this.font).split(',').map((f) => `"${f.trim()}"`).join(', ') + ', sans-serif' : '';
+    el.style.fontWeight = this.weight ?? '';
+    el.style.fontStyle = this.italic ? 'italic' : '';
+    el.style.color = this.color ?? '';
+    el.style.textAlign = this.align ?? '';
+    el.style.lineHeight = this.lineHeight ?? '';
 
     // No speaker → no tab. Set this every frame, not only when the name changes: an
     // object created without a speaker starts at '' and would never trip a change check,
@@ -800,6 +1024,33 @@ export class TextBox extends StageObject {
     this._tabs.hidden = !name;
     const shown = this.text.slice(0, this._typed);
     if (this._body.textContent !== shown) this._body.textContent = shown;
+    this._fit(stage, basePx);
+  }
+
+  // Shrink-to-fit, measured only when something that affects layout changed — reading
+  // layout every frame for every box would force a reflow per box per frame. Measured on
+  // the FULL text, so a typewriter does not grow the type as it goes.
+  _fit(stage, basePx) {
+    if (!this.fitHeight) { this._shrink = 1; this._fitKey = null; return; }
+    const key = `${this.text}|${basePx}|${stage.w}x${stage.h}|${this.width}|${this.fitHeight}|${this.font}|${this.weight}|${this.lineHeight}`;
+    if (key === this._fitKey || this._el.hidden) return;
+    this._fitKey = key;
+    const body = this._body, el = this._el;
+    const typed = body.textContent;
+    body.textContent = this.text;
+    const maxH = this.fitHeight * stage.h, maxW = this.width * stage.w;
+    let k = 1;
+    for (let i = 0; i < 8; i++) {
+      el.style.fontSize = `${basePx * k}px`;
+      const h = body.scrollHeight, w = body.scrollWidth;
+      if (h <= maxH + 1 && w <= maxW + 1) break;
+      // Area scales with k², height roughly with k once wrapping settles; step by the
+      // worse of the two ratios and let the loop correct the rest.
+      k *= Math.max(0.5, Math.min(maxH / h, maxW / w, 0.97));
+    }
+    this._shrink = k;
+    el.style.fontSize = `${basePx * k}px`;
+    body.textContent = typed;
   }
 
   dispose() { this._el?.remove(); this._el = null; }
@@ -823,6 +1074,10 @@ export class TextBox extends StageObject {
     // a card that dropped `template` could never be switched back to literal text.
     out.metaFrom = this.metaFrom ?? null;
     out.template = this.template ?? null;
+    // Slide typography, written only when set — puppet-show dialogue never carries it.
+    for (const k of ['font', 'size', 'weight', 'italic', 'color', 'align', 'valign', 'lineHeight', 'fitHeight']) {
+      if (this[k] != null && this[k] !== false) out[k] = typeof this[k] === 'number' ? round(this[k]) : this[k];
+    }
     return out;
   }
 }
@@ -1806,4 +2061,305 @@ export class LandmarksObject extends StageObject {
   }
 }
 
-export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, label: LabelBoxObject, audio: AudioObject, drawing: DrawingObject, landmarks: LandmarksObject };
+// ── Shape ─────────────────────────────────────────────────────────────────
+// A vector path: the lines, arrows, boxes and connectors a slide draws. `path` is SVG
+// path syntax in a UNIT box (0..1 across, 0..1 down); `size` is the box's height as a
+// fraction of stage height and `aspect` its width/height, so the same path can be a
+// hairline or a banner. Stroke width is a fraction of stage height too, like everything.
+//
+// Line Draw is the whole reason this is not an SVG image: the stroke is drawn from its
+// start to the point `fx.draw` of the way along, with the arrowhead riding the front.
+
+const PATH_CMDS = /([MLHVCQZmlhvcqz])([^MLHVCQZmlhvcqz]*)/g;
+
+// Parse into absolute commands: { c: 'M'|'L'|'C'|'Q'|'Z', p: [numbers] }.
+function parsePath(d) {
+  const out = [];
+  let x = 0, y = 0, sx = 0, sy = 0;
+  for (const [, cmd, rest] of String(d ?? '').matchAll(PATH_CMDS)) {
+    const n = rest.trim().split(/[\s,]+/).filter((t) => t !== '').map(Number);
+    const rel = cmd === cmd.toLowerCase();
+    const C = cmd.toUpperCase();
+    let i = 0;
+    const take = (k) => { const v = n.slice(i, i + k); i += k; return v; };
+    if (C === 'Z') { out.push({ c: 'Z', p: [] }); x = sx; y = sy; continue; }
+    while (i < n.length) {
+      if (C === 'M' || C === 'L') {
+        let [px, py] = take(2); if (rel) { px += x; py += y; }
+        out.push({ c: C === 'M' && i === 2 ? 'M' : 'L', p: [px, py] });
+        if (C === 'M' && i === 2) { sx = px; sy = py; }
+        x = px; y = py;
+      } else if (C === 'H') { let [px] = take(1); if (rel) px += x; out.push({ c: 'L', p: [px, y] }); x = px; }
+      else if (C === 'V') { let [py] = take(1); if (rel) py += y; out.push({ c: 'L', p: [x, py] }); y = py; }
+      else if (C === 'C') {
+        let [a, b, c, d, e, f] = take(6);
+        if (rel) { a += x; b += y; c += x; d += y; e += x; f += y; }
+        out.push({ c: 'C', p: [a, b, c, d, e, f] }); x = e; y = f;
+      } else if (C === 'Q') {
+        let [a, b, c, d] = take(4);
+        if (rel) { a += x; b += y; c += x; d += y; }
+        out.push({ c: 'Q', p: [a, b, c, d] }); x = c; y = d;
+      } else break;
+    }
+  }
+  return out;
+}
+
+// Flatten to polyline points in the given px box, with cumulative lengths — what Line
+// Draw and the arrowhead need. Curves are sampled at 16 steps; nothing here is big.
+function flattenPath(cmds, W, H) {
+  const pts = []; let cur = null, start = null;
+  const push = (x, y) => pts.push([x * W, y * H]);
+  for (const { c, p } of cmds) {
+    if (c === 'M') { cur = [p[0], p[1]]; start = cur; push(...cur); }
+    else if (c === 'L') { cur = [p[0], p[1]]; push(...cur); }
+    else if (c === 'C' && cur) {
+      const [x0, y0] = cur;
+      for (let i = 1; i <= 16; i++) {
+        const t = i / 16, u = 1 - t;
+        push(u * u * u * x0 + 3 * u * u * t * p[0] + 3 * u * t * t * p[2] + t * t * t * p[4],
+             u * u * u * y0 + 3 * u * u * t * p[1] + 3 * u * t * t * p[3] + t * t * t * p[5]);
+      }
+      cur = [p[4], p[5]];
+    } else if (c === 'Q' && cur) {
+      const [x0, y0] = cur;
+      for (let i = 1; i <= 16; i++) {
+        const t = i / 16, u = 1 - t;
+        push(u * u * x0 + 2 * u * t * p[0] + t * t * p[2], u * u * y0 + 2 * u * t * p[1] + t * t * p[3]);
+      }
+      cur = [p[2], p[3]];
+    } else if (c === 'Z' && start) { cur = start; push(...start); }
+  }
+  const len = [0];
+  for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  return { pts, len, total: len[len.length - 1] ?? 0 };
+}
+
+// Point and tangent at distance d along the flattened polyline.
+function pointAt({ pts, len, total }, d) {
+  if (pts.length < 2) return null;
+  d = Math.max(0, Math.min(total, d));
+  let i = 1;
+  while (i < len.length - 1 && len[i] < d) i++;
+  const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
+  const seg = len[i] - len[i - 1] || 1;
+  const t = (d - len[i - 1]) / seg;
+  return { x: ax + (bx - ax) * t, y: ay + (by - ay) * t, angle: Math.atan2(by - ay, bx - ax) };
+}
+
+export class ShapeObject extends StageObject {
+  static domCapable = true;
+  static fields = [
+    ...StageObject.fields,
+    { key: 'path', label: 'path', type: 'text' },
+    { key: 'size', label: 'size', type: 'range', min: 0.01, max: 2, step: 0.005 },
+    { key: 'aspect', label: 'aspect', type: 'range', min: 0.05, max: 20, step: 0.01 },
+    { key: 'stroke', label: 'stroke', type: 'text' },
+    { key: 'strokeWidth', label: 'stroke w', type: 'range', min: 0, max: 0.05, step: 0.0005 },
+    { key: 'fill', label: 'fill', type: 'text' },
+    { key: 'arrowStart', label: 'arrow start', type: 'checkbox' },
+    { key: 'arrowEnd', label: 'arrow end', type: 'checkbox' },
+    { key: 'arrowStyle', label: 'arrow style', type: 'select', options: ['filled', 'open'] },
+    { key: 'dash', label: 'dash', type: 'text' },
+  ];
+
+  apply(spec) {
+    super.apply(spec);
+    this.path ??= 'M 0 0.5 L 1 0.5';
+    this.size ??= 0.2;
+    this.aspect ??= 1;
+    this.stroke ??= '#000000';
+    this.strokeWidth ??= 0.004;
+    if (this.path !== this._parsedFor) { this._cmds = parsePath(this.path); this._parsedFor = this.path; }
+    return this;
+  }
+
+  bounds(stage) {
+    const h = this.size * stage.h, w = h * this.aspect;
+    return { w, h, dy: -h / 2 };
+  }
+
+  render(g, stage) {
+    const { w, h, dy } = this.bounds(stage);
+    const draw = Math.max(0, Math.min(1, this.fx?.draw ?? 1));
+    if (draw <= 0) return;
+    const flat = flattenPath(this._cmds, w, h);
+    const sw = this.strokeWidth * stage.h;
+    g.translate(-w / 2, dy);
+    const p = new Path2D();
+    for (const { c, p: q } of this._cmds) {
+      if (c === 'M') p.moveTo(q[0] * w, q[1] * h);
+      else if (c === 'L') p.lineTo(q[0] * w, q[1] * h);
+      else if (c === 'C') p.bezierCurveTo(q[0] * w, q[1] * h, q[2] * w, q[3] * h, q[4] * w, q[5] * h);
+      else if (c === 'Q') p.quadraticCurveTo(q[0] * w, q[1] * h, q[2] * w, q[3] * h);
+      else if (c === 'Z') p.closePath();
+    }
+    // Fills only land once the outline is complete — a half-drawn box with a full fill
+    // would give the shape away before the line reached it.
+    if (this.fill && this.fill !== 'none' && draw >= 1) { g.fillStyle = this.fill; g.fill(p); }
+    if (sw > 0 && this.stroke && this.stroke !== 'none') {
+      g.strokeStyle = this.stroke;
+      g.lineWidth = sw;
+      g.lineCap = this.lineCap ?? 'round';
+      g.lineJoin = 'round';
+      if (this.dash) g.setLineDash(String(this.dash).split(/[\s,]+/).map((v) => Number(v) * sw));
+      if (draw < 1 && flat.total > 0) {
+        // Line Draw: dash the stroke so exactly the first `draw` of its length is visible.
+        g.setLineDash([flat.total * draw, flat.total + 1]);
+        g.lineDashOffset = 0;
+      }
+      g.stroke(p);
+      g.setLineDash([]);
+      // Arrowheads: filled triangles aligned with the path's tangent at each end. The
+      // end one rides the drawing front so it is "pulled" along the line as it draws.
+      // `arrowStyle: "open"` is Keynote's chevron (two stroked strokes); anything else is
+      // a filled triangle. Both put their point exactly on the line's end.
+      const open = this.arrowStyle === 'open';
+      const head = open ? sw * 2.6 + 3 : sw * 3.5 + 2;
+      const tip = (pt, flip) => {
+        if (!pt) return;
+        g.save();
+        g.translate(pt.x, pt.y);
+        g.rotate(pt.angle + (flip ? Math.PI : 0));
+        if (open) {
+          g.strokeStyle = this.stroke; g.lineWidth = sw; g.lineCap = 'round'; g.lineJoin = 'round';
+          g.beginPath(); g.moveTo(-head, -head * 0.75); g.lineTo(0, 0); g.lineTo(-head, head * 0.75); g.stroke();
+        } else {
+          g.fillStyle = this.stroke;
+          g.beginPath(); g.moveTo(0, 0); g.lineTo(-head, -head * 0.45); g.lineTo(-head, head * 0.45); g.closePath(); g.fill();
+        }
+        g.restore();
+      };
+      if (this.arrowEnd) tip(pointAt(flat, flat.total * draw), false);
+      if (this.arrowStart) tip(pointAt(flat, 0), true);
+    }
+  }
+
+  // Slide path: an <svg> sized to the box, its path written in box pixels so stroke
+  // widths are never stretched by the box's aspect. Line Draw is the stroke's dash; the
+  // arrowheads are separate paths placed from the same flattened polyline the canvas uses.
+  update(dt, now, stage) {
+    if (!this.isDom) return;
+    const NS = 'http://www.w3.org/2000/svg';
+    if (!this._wrap) {
+      this._wrap = slideEl(this, 'svg');
+      this._wrap.setAttribute('overflow', 'visible');
+      this._path = document.createElementNS(NS, 'path');
+      this._heads = [document.createElementNS(NS, 'path'), document.createElementNS(NS, 'path')];
+      this._wrap.append(this._path, ...this._heads);
+    }
+    const { w, h, dy } = this.bounds(stage);
+    const sw = this.strokeWidth * stage.h;
+    if (!placeBox(this._wrap, this, stage, w, h, dy, sw * 4 + 2)) return;
+    const svg = this._wrap, p = this._path;
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const key = `${this.path}|${w}|${h}`;
+    if (key !== this._dKey) {
+      this._dKey = key;
+      const f = (v) => +v.toFixed(2);
+      p.setAttribute('d', this._cmds.map(({ c, p: q }) => {
+        if (c === 'Z') return 'Z';
+        const pts = []; for (let i = 0; i < q.length; i += 2) pts.push(`${f(q[i] * w)} ${f(q[i + 1] * h)}`);
+        return `${c} ${pts.join(' ')}`;
+      }).join(' '));
+      this._flat = flattenPath(this._cmds, w, h);
+      try { this._len = p.getTotalLength(); } catch { this._len = this._flat.total; }
+    }
+    const draw = Math.max(0, Math.min(1, this.fx?.draw ?? 1));
+    const stroke = sw > 0 && this.stroke && this.stroke !== 'none' ? this.stroke : 'none';
+    p.setAttribute('fill', this.fill && this.fill !== 'none' && draw >= 1 ? this.fill : 'none');
+    p.setAttribute('stroke', stroke);
+    p.setAttribute('stroke-width', String(sw));
+    p.setAttribute('stroke-linecap', this.lineCap ?? 'round');
+    p.setAttribute('stroke-linejoin', 'round');
+    if (draw < 1) { p.setAttribute('stroke-dasharray', `${this._len * draw} ${this._len + 1}`); }
+    else if (this.dash) p.setAttribute('stroke-dasharray', String(this.dash).split(/[\s,]+/).map((v) => Number(v) * sw).join(' '));
+    else p.removeAttribute('stroke-dasharray');
+    p.style.visibility = draw <= 0 ? 'hidden' : '';
+    const open = this.arrowStyle === 'open';
+    const head = open ? sw * 2.6 + 3 : sw * 3.5 + 2;
+    const shape = open ? `M ${-head} ${-head * 0.75} L 0 0 L ${-head} ${head * 0.75}` : `M 0 0 L ${-head} ${-head * 0.45} L ${-head} ${head * 0.45} Z`;
+    const tips = [this.arrowEnd ? [pointAt(this._flat, this._flat.total * draw), 0] : null,
+                  this.arrowStart ? [pointAt(this._flat, 0), Math.PI] : null];
+    tips.forEach((tip, i) => {
+      const el = this._heads[i];
+      if (!tip || !tip[0] || stroke === 'none' || draw <= 0) { el.style.display = 'none'; return; }
+      const [pt, flip] = tip;
+      el.style.display = '';
+      el.setAttribute('d', shape);
+      el.setAttribute('transform', `translate(${pt.x} ${pt.y}) rotate(${((pt.angle + flip) * 180) / Math.PI})`);
+      el.setAttribute('fill', open ? 'none' : stroke);
+      el.setAttribute('stroke', open ? stroke : 'none');
+      el.setAttribute('stroke-width', String(sw));
+      el.setAttribute('stroke-linecap', 'round');
+      el.setAttribute('stroke-linejoin', 'round');
+    });
+  }
+
+  dispose() { this._wrap?.remove(); this._wrap = null; }
+
+  serialize() {
+    const out = super.serialize();
+    out.path = this.path;
+    out.size = round(this.size);
+    out.aspect = round(this.aspect);
+    out.stroke = this.stroke;
+    out.strokeWidth = round(this.strokeWidth);
+    out.fill = this.fill ?? null;
+    out.arrowStart = !!this.arrowStart;
+    out.arrowEnd = !!this.arrowEnd;
+    out.arrowStyle = this.arrowStyle === 'open' ? 'open' : null;
+    out.dash = this.dash ?? null;
+    if (this.lineCap) out.lineCap = this.lineCap;
+    return out;
+  }
+}
+
+// ── Video ─────────────────────────────────────────────────────────────────
+// A movie on a slide. An ImageObject already draws a <video> (puppets are .webm), so
+// this only adds Keynote's playback rules: `play: "onStep"` parks the clip on its first
+// frame until its build step fires (or the scene appears, if it has no build); `loop`
+// defaults OFF, as Keynote's does; `audio: true` unmutes, as for any image.
+
+export class VideoObject extends ImageObject {
+  static fields = [
+    ...ImageObject.fields,
+    { key: 'play', label: 'play', type: 'select', options: ['auto', 'onStep'] },
+    { key: 'loop', label: 'loop', type: 'checkbox' },
+  ];
+
+  apply(spec) {
+    super.apply(spec);
+    this.play ??= 'auto';
+    const v = this.el;
+    if (v?.tagName === 'VIDEO') {
+      v.loop = !!this.loop;
+      v.autoplay = false;
+      // Fresh element for a scene that wants it parked: the shared asset cache plays
+      // everything on creation, so park it explicitly.
+      if (this.play === 'onStep' && !this._playing) { v.pause(); try { v.currentTime = 0; } catch { /* not seekable yet */ } }
+    }
+    return this;
+  }
+
+  // Called by the builds controller as the object's step fires and by the player on
+  // scene entry. Restarts from the top on every play, as a slide's movie does.
+  setPlaying(on) {
+    const v = this.el;
+    this._playing = on;
+    if (v?.tagName !== 'VIDEO') return;
+    if (on) { try { v.currentTime = 0; } catch { /* ignore */ } v.play?.().catch(() => {}); }
+    else v.pause?.();
+  }
+
+  dispose() { if (!this.isDom) this.el?.pause?.(); super.dispose(); }
+
+  serialize() {
+    const out = super.serialize();
+    out.play = this.play;
+    out.loop = !!this.loop;
+    return out;
+  }
+}
+
+export const TYPES = { image: ImageObject, webcam: WebcamFeed, text: TextBox, bodyPart: BodyPart, button: ButtonObject, progress: ProgressObject, label: LabelBoxObject, audio: AudioObject, drawing: DrawingObject, landmarks: LandmarksObject, shape: ShapeObject, video: VideoObject };

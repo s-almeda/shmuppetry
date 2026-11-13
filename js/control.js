@@ -60,7 +60,9 @@ const fill = (ul, items, make = (s) => s) => {
 function render(data) {
   const shifted = offset !== 0;
   $('where').textContent = data.index < 0 ? '—'
-    : `scene ${data.index + 1} / ${data.total}  ·  id ${data.id}` + (shifted ? `   (rig at ${live.index + 1})` : '');
+    : `scene ${data.index + 1} / ${data.total}  ·  id ${data.id}`
+      + (data.step?.n ? `  ·  build ${data.step.at}/${data.step.n}` : '')
+      + (shifted ? `   (rig at ${live.index + 1})` : '');
   $('where').classList.toggle('shifted', shifted);
   fill($('now'), data.now);
   $('cue').textContent = data.next?.cue ?? '';

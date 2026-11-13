@@ -1,0 +1,271 @@
+[
+  {
+    "id": 1,
+    "reset": true,
+    "slide": true,
+    "_note": "keynote slide 1",
+    "transition": {
+      "effect": "push",
+      "dur": 0.75,
+      "dir": "left"
+    },
+    "objects": {
+      "bg": {
+        "type": "shape",
+        "path": "M 0 0 H 1 V 1 H 0 Z",
+        "size": 3,
+        "aspect": 3,
+        "fill": "#ffffff",
+        "stroke": "none",
+        "strokeWidth": 0,
+        "z": -150,
+        "fasten": null
+      },
+      "t_This_wipes_in_from_the_lef": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This wipes in from the left",
+        "x": 0.5,
+        "y": 0.5028,
+        "width": 0.85,
+        "size": 0.1037,
+        "align": "center",
+        "valign": "bottom",
+        "fasten": null,
+        "fitHeight": 0.3315,
+        "font": "HelveticaNeue-Medium, Helvetica Neue",
+        "weight": 500,
+        "color": "#000000",
+        "z": 3,
+        "in": {
+          "effect": "wipe",
+          "dur": 1.0,
+          "step": 1,
+          "dir": "right"
+        }
+      },
+      "t_This_wipes_in_from_bottom_": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This wipes in from bottom left to top right",
+        "x": 0.5,
+        "y": 0.5194,
+        "width": 0.85,
+        "size": 0.05,
+        "align": "center",
+        "valign": "top",
+        "fasten": null,
+        "fitHeight": 0.1083,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 5,
+        "in": {
+          "effect": "wipe",
+          "dur": 1.0,
+          "step": 2,
+          "dir": "upRight"
+        }
+      },
+      "t_This_from_right": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This from right",
+        "x": 0.4255,
+        "y": 0.6604,
+        "width": 0.1617,
+        "size": 0.0444,
+        "align": "left",
+        "valign": "middle",
+        "fasten": null,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 7,
+        "in": {
+          "effect": "wipe",
+          "dur": 1.0,
+          "step": 3,
+          "dir": "left"
+        }
+      },
+      "t_This_from_bottom_right_and": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This from bottom right, and faster now ",
+        "x": 0.6304,
+        "y": 0.7376,
+        "width": 0.3752,
+        "size": 0.0444,
+        "align": "left",
+        "valign": "middle",
+        "fasten": null,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 9,
+        "in": {
+          "effect": "wipe",
+          "dur": 0.3,
+          "step": 4,
+          "dir": "upLeft"
+        }
+      },
+      "t_This_from_the_top": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This from the top",
+        "x": 0.5662,
+        "y": 0.8149,
+        "width": 0.3752,
+        "size": 0.0444,
+        "align": "left",
+        "valign": "middle",
+        "fasten": null,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 11,
+        "in": {
+          "effect": "wipe",
+          "dur": 0.3,
+          "step": 5,
+          "dir": "down"
+        }
+      },
+      "t_This_from_the_bottom": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This from the bottom",
+        "x": 0.5269,
+        "y": 0.8786,
+        "width": 0.1909,
+        "size": 0.0444,
+        "align": "left",
+        "valign": "middle",
+        "fasten": null,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 13,
+        "in": {
+          "effect": "wipe",
+          "dur": 0.3,
+          "step": 6,
+          "dir": "up"
+        }
+      }
+    }
+  },
+  {
+    "id": 2,
+    "reset": true,
+    "slide": true,
+    "_note": "keynote slide 2",
+    "transition": {
+      "effect": "push",
+      "dur": 0.75,
+      "dir": "left"
+    },
+    "objects": {
+      "bg": {
+        "type": "shape",
+        "path": "M 0 0 H 1 V 1 H 0 Z",
+        "size": 3,
+        "aspect": 3,
+        "fill": "#ffffff",
+        "stroke": "none",
+        "strokeWidth": 0,
+        "z": -150,
+        "fasten": null
+      },
+      "t_This_slide_pushes_in": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This slide pushes in",
+        "x": 0.5,
+        "y": 0.5028,
+        "width": 0.85,
+        "size": 0.1037,
+        "align": "center",
+        "valign": "bottom",
+        "fasten": null,
+        "fitHeight": 0.3315,
+        "font": "HelveticaNeue-Medium, Helvetica Neue",
+        "weight": 500,
+        "color": "#000000",
+        "z": 3
+      },
+      "t_This_dissolves_in": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This dissolves in",
+        "x": 0.5,
+        "y": 0.5194,
+        "width": 0.85,
+        "size": 0.05,
+        "align": "center",
+        "valign": "top",
+        "fasten": null,
+        "fitHeight": 0.1083,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 5,
+        "in": {
+          "effect": "dissolve",
+          "dur": 1.0,
+          "step": 1
+        }
+      },
+      "t_This_dissolves_in_right_af": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This dissolves in right after, without a click",
+        "x": 0.5415,
+        "y": 0.6444,
+        "width": 0.85,
+        "size": 0.05,
+        "align": "center",
+        "valign": "top",
+        "fasten": null,
+        "fitHeight": 0.1083,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 7,
+        "in": {
+          "effect": "dissolve",
+          "dur": 1.0,
+          "step": 1,
+          "delay": 1.0
+        }
+      },
+      "t_This_dissolves_at_the_same": {
+        "type": "text",
+        "style": "slide",
+        "instant": true,
+        "text": "This dissolves at the same time as the above, without a click",
+        "x": 0.5415,
+        "y": 0.7435,
+        "width": 0.85,
+        "size": 0.05,
+        "align": "center",
+        "valign": "top",
+        "fasten": null,
+        "fitHeight": 0.1083,
+        "font": "HelveticaNeue, Helvetica Neue",
+        "color": "#000000",
+        "z": 9,
+        "in": {
+          "effect": "dissolve",
+          "dur": 1.0,
+          "step": 1,
+          "delay": 1.0
+        }
+      }
+    }
+  }
+]

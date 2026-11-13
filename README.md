@@ -200,3 +200,31 @@ server/dev-server.js  static files + loopback-guarded write routes
   to force instant dialogue.
 - **Every path is relative.** GitHub Pages serves from `/<repo>/`, so an absolute path 404s
   there and only there — it works perfectly right up until deploy.
+
+## slides
+
+A talk can be one script: puppet scenes and slides interleaved, no app switch. A slide is
+an ordinary scene with `"slide": true` whose objects are `text` (style `slide`), `image`,
+`video` and `shape`. Keynote is authoring only — `scripts/import-keynote.py` reads a
+`.key` once and writes these scenes; after that the deck lives here.
+
+- **Magic Move**: `"transition": { "effect": "magicMove", "dur": 0.7 }` on a scene tweens
+  every object that keeps its id from the previous scene. Same id = linked. A kept id with
+  a new `src` crossfades; ids that leave fade out; new ids fade in.
+- **Transitions**: `fade`, `dissolve`, `wipe`, `move`, `push`, each with `dir` and `dur`.
+  No `transition` is a hard cut, so puppet shows behave exactly as before.
+- **Builds**: `"in": { "effect": "wipe", "dir": "right", "dur": 0.6, "step": 2 }` and
+  `"out": …` on any object. Effects: fade, dissolve, move, fadeMove, wipe, pulse, pop,
+  scale, keyboard (typewriter), lineDraw (shapes). Space / → play the next step before the
+  next scene; ← undoes one; Shift+arrows skip straight between scenes. `dir` is the
+  direction of travel: `up`, `down`, `left`, `right`, `upLeft`, `upRight`, `downLeft`,
+  `downRight`.
+- **Editor**: `editor.html?show=<name>` — timeline on the left (puppet runs collapse into
+  one box), the real stage in the middle, inspector on the right. Drag to move, corner
+  handle to resize, double-click text to type, rename an id to link it. ⌘S saves the
+  whole script through the dev server; ⌘D duplicates a slide.
+- **Import**: `sh scripts/try-keynote-parser.sh` once (installs keynote-parser into
+  `.venv-kp`), then `.venv-kp/bin/python3 scripts/import-keynote.py deck.key <show>`.
+  `--into --after <sceneId>` splices into an existing show; `--png` flattens slides with
+  tables/charts via Keynote; `--dry` prints without writing. The report lists what was
+  approximated. `shows/slidetest` exercises every feature by hand.

@@ -1,3 +1,7 @@
+import { Tweens } from './tween.js';
+import { Builds } from './builds.js';
+import { Transitions, normalizeTransition } from './transition.js';
+
 // ── Scenes ────────────────────────────────────────────────────────────────
 // A scene resolves to the COMPLETE stage. The file may be sparse and inherit from the
 // previous scene; the editor always writes back fully resolved absolute state (§2.5).
@@ -62,6 +66,10 @@ export function resolveScript(scenes) {
       // _note — a scene that already puts cutouts on both hands wants to start with the
       // hand puppets off, and that must not then carry forward to every later scene.
       toggles: scene.toggles,
+      // How this scene ARRIVES. Per-scene and non-inheriting, like _note: a wipe into
+      // scene 12 says nothing about how scene 13 should come in.
+      transition: normalizeTransition(scene.transition),
+      slide: !!scene.slide,
       objects,
       ...flags,
     });
@@ -95,8 +103,11 @@ function mergeSpec(prior, patch, id) {
 // momentum across the cut.
 export class ObjectPool {
   constructor(make) {
-    this.make = make;        // (spec) => StageObject | null
+    this.make = make;        // (spec, { dom }) => StageObject | null
     this.live = new Map();   // id → StageObject
+    // Slide scenes draw their objects as page elements (objects.js placeBox); set per
+    // scene by the player before each sync.
+    this.dom = false;
   }
 
   get objects() { return [...this.live.values()]; }
@@ -112,11 +123,14 @@ export class ObjectPool {
     // Add or update what is on it.
     for (const [id, spec] of Object.entries(resolved)) {
       const existing = this.live.get(id);
-      if (existing && existing.type === (spec.type ?? existing.type)) {
+      // An object crossing between a puppet scene and a slide changes how it is drawn, so
+      // it is rebuilt rather than updated (only types that CAN be page elements care).
+      const sameMode = !existing?.constructor.domCapable || existing.isDom === this.dom;
+      if (existing && sameMode && existing.type === (spec.type ?? existing.type)) {
         existing.apply(spec);
       } else {
         if (existing) { try { existing.dispose(); } catch { /* already gone */ } }
-        const obj = this.make({ ...spec, id });
+        const obj = this.make({ ...spec, id }, { dom: this.dom });
         if (obj) this.live.set(id, obj);
         else this.live.delete(id);
       }
@@ -128,7 +142,7 @@ export class ObjectPool {
   add(spec) {
     let id = spec.id ?? spec.type;
     for (let i = 2; this.live.has(id); i++) id = `${spec.type}${i}`;
-    const obj = this.make({ ...spec, id });
+    const obj = this.make({ ...spec, id }, { dom: this.dom });
     if (obj) this.live.set(id, obj);
     return obj;
   }
@@ -177,7 +191,7 @@ const NEW_OBJECT = {
 // Walks the script scene by scene, following the stage directions (§2.5).
 
 export class Player {
-  constructor({ make, renderer, tracking, camera, bodyBase, onSceneChange } = {}) {
+  constructor({ make, renderer, tracking, camera, bodyBase, onSceneChange, stage, domLayer } = {}) {
     this.renderer = renderer;
     this.tracking = tracking;
     this.camera = camera;
@@ -187,7 +201,14 @@ export class Player {
     this.resolved = [];     // fully resolved absolute stages
     this.index = -1;
     this.onSceneChange = onSceneChange ?? (() => {});
+    // Motion between and within scenes (js/tween.js, js/builds.js, js/transition.js).
+    // `tick` runs them from the renderer's frame clock.
+    this.tweens = new Tweens();
+    this.builds = new Builds({ pool: this.pool, tweens: this.tweens });
+    this.transitions = new Transitions({ pool: this.pool, tweens: this.tweens, renderer, stage, domLayer });
   }
+
+  tick(now) { this.tweens.update(now); }
 
   get scene() { return this.resolved[this.index] ?? null; }
   get length() { return this.resolved.length; }
@@ -205,11 +226,21 @@ export class Player {
     this.resolved = resolveScript(this.script);
   }
 
-  goto(i, { instant = false } = {}) {
+  // `instant` paints the scene with every typewriter finished and no transition.
+  // `built` lands with every build already played — what stepping BACK into a scene
+  // should show, as in Keynote.
+  goto(i, { instant = false, built = false } = {}) {
     if (!this.resolved.length) return;
     const next = Math.max(0, Math.min(i, this.resolved.length - 1));
+    const from = this.index;
     this.index = next;
     const scene = this.resolved[next];
+    // Whatever was mid-flight lands now, so the outgoing stage is exactly its scene.
+    this.tweens.finishAll();
+    this.renderer.transition = null;
+    // A transition only plays going FORWARD one scene — jumping around the script, or
+    // stepping back, is a hard cut: you are navigating, not performing.
+    const t = !instant && next === from + 1 ? scene.transition : null;
     // Freeze holds ALL tracking: landmarks stop updating, so every cutout, mount and
     // fastener downstream holds its pose without knowing anything about freezing.
     if (this.tracking) this.tracking.frozen = !!scene.freeze;
@@ -231,7 +262,24 @@ export class Player {
     // toggle turning on is a key appearing and turning off is a key missing. Re-adding
     // objects after sync would have to reimplement all three, and would rebuild objects
     // that should have persisted across the cut.
-    const objects = this.pool.sync(this.decorate ? this.decorate(scene) : scene.objects);
+    const resolved = this.decorate ? this.decorate(scene) : scene.objects;
+    this.pool.dom = !!scene.slide;
+    const handle = this.transitions.before(t);
+    // Under a Magic Move, objects that leave fade out rather than vanish: they are kept
+    // in the pool for the length of the tween by handing sync() a stage that still has
+    // them, and removed when their fade lands.
+    let target = resolved;
+    if (t?.effect === 'magicMove') {
+      const leaving = [...this.pool.live.keys()].filter((id) => !(id in resolved));
+      if (leaving.length) {
+        target = { ...resolved };
+        for (const o of this.transitions.leaving(leaving, t)) target[o.id] = o.serialize();
+      }
+    }
+    const objects = this.pool.sync(target);
+    this.transitions.after(handle, resolved);
+    // Builds: objects with a pending `in` start hidden, unless we arrive from ahead.
+    this.builds.prepare(resolved, { done: built || (from > next) });
     // Freeze holds the SOUND as well as the picture and the tracking. Applied AFTER sync
     // so it overrides the resolved spec for the length of the freeze without editing it —
     // step to a scene that is not frozen and the scene's own `playing` value comes back,
@@ -244,17 +292,27 @@ export class Player {
   }
 
   next() { this.goto(this.index + 1); }
-  prev() { this.goto(this.index - 1); }
+  // Stepping back lands on the previous scene with its builds played — the state you
+  // left it in — so ← is always exactly one step back, build or scene.
+  prev() { this.goto(this.index - 1, { built: true }); }
 
-  // Space is one key with two jobs, as in 2.5.0: finish the current line if it is still
-  // typing, otherwise advance. A fast reader never waits out a line they have read.
+  // Space is one key with three jobs, as in 2.5.0 plus Keynote: finish the current line
+  // if it is still typing, else play the next build step, else advance. A fast reader
+  // never waits out a line they have read.
   advance() {
-    const typing = this.pool.objects.filter((o) => o.typing);
+    const typing = this.pool.objects.filter((o) => o.typing && !o._hidden);
     if (typing.length) {
       for (const o of typing) o.finishTyping();
       return;
     }
+    if (this.builds.next()) { this.onSceneChange(this.scene, this); return; }
     this.next();
+  }
+
+  // ← undoes one build step if any has played, otherwise steps back a scene.
+  back() {
+    if (this.builds.back()) { this.onSceneChange(this.scene, this); return; }
+    this.prev();
   }
 
   // Apply live edits back into the authored script. The scene becomes fully resolved
@@ -325,8 +383,9 @@ export class Player {
           e.preventDefault();
           this.advance();
           break;
-        case 'ArrowRight': e.preventDefault(); this.next(); break;
-        case 'ArrowLeft': e.preventDefault(); this.prev(); break;
+        // Shift skips the builds: straight to the next / previous scene.
+        case 'ArrowRight': e.preventDefault(); e.shiftKey ? this.next() : this.advance(); break;
+        case 'ArrowLeft': e.preventDefault(); e.shiftKey ? this.prev() : this.back(); break;
         default: return;
       }
     });

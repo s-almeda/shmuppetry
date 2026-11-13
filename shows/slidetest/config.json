@@ -1,0 +1,9 @@
+{
+  "_note": "Playback test deck for the slide features: Magic Move, crossfade, stage transitions, builds, shapes with Line Draw, video on a step, and a puppet scene in the middle. Open with ?show=slidetest&nocam and step with Space. Not a real show.",
+  "title": "slide features test",
+  "skin": "default",
+  "aspect": 1.778,
+  "mirror": true,
+  "capabilities": [],
+  "showcase": []
+}

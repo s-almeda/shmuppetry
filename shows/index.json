@@ -24,6 +24,21 @@
       "name": "stochastic_final",
       "title": "stochastic final presentation",
       "scenes": 30
+    },
+    {
+      "name": "slidetest",
+      "title": "slide features test",
+      "scenes": 6
+    },
+    {
+      "name": "example_test",
+      "title": "example_test",
+      "scenes": 14
+    },
+    {
+      "name": "simple_test",
+      "title": "simple_test",
+      "scenes": 2
     }
   ]
 }

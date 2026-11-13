@@ -377,3 +377,27 @@ body.editing .textbox-name:focus { outline: 1px dotted rgba(0, 92, 167, 0.7); ou
 .admin-menu .admin-label { margin: 6px 0 0; font-weight: bold; }
 .admin-menu .admin-shows { display: flex; flex-direction: column; gap: 4px; }
 .admin-menu button { text-align: left; }
+
+/* ── Slide text ──────────────────────────────────────────────────────────────
+   style:"slide" — plain typography with no chrome, as imported from a deck. Font, size,
+   weight, colour and alignment are inline per box (TextBox.update). The anchor follows
+   the box's vertical alignment: x is always the box's centre, y its top / middle / bottom
+   edge, which is what a Keynote text box's geometry converts to. */
+.textbox.textbox-slide { transform: translate(-50%, 0); line-height: 1.2; white-space: pre-wrap; }
+.textbox.textbox-slide.textbox-vmiddle { transform: translate(-50%, -50%); }
+.textbox.textbox-slide.textbox-vbottom { transform: translate(-50%, -100%); }
+/* `.textbox.textbox-slide` rather than `.textbox-slide`: the skin's `.textbox .textbox-text`
+   paints the greige panel, has the same specificity, and loads AFTER base.css — so the
+   shorter selector lost the tie and every slide text box came out as an xp.css panel. */
+.textbox.textbox-slide .textbox-tabs { display: none !important; }
+.textbox.textbox-slide .textbox-text { background: none; border: 0; box-shadow: none; padding: 0; margin: 0; font: inherit; color: inherit; min-height: 0; }
+.textbox.textbox-slide .textbox-text::after { display: none; }
+/* Build wrapper: scale and clip about the box's own centre (objects.js fxInner). */
+.textbox-fx { transform-origin: 50% 50%; }
+
+/* ── Slide objects as page elements (objects.js placeBox) ─────────────────────
+   Positioned entirely by transform from the top-left of the DOM layer. Never take the
+   pointer: the rig has nothing to click on a slide, and the editor hit-tests itself. */
+#dom-layer > .slide-obj { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+#dom-layer > div.slide-obj { overflow: hidden; }   /* images: a crop is a window */
+.slide-obj .slide-media { position: absolute; display: block; max-width: none; user-select: none; }
